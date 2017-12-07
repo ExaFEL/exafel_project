@@ -30,11 +30,12 @@ Verify the conda python is default:
 which python
 ```
 
-Acquire the bootstrap script for cloning the CCTBX and required sources, then perform build:
+Acquire the bootstrap script for cloning the CCTBX and required sources, perform build, and source the path:
 ```bash
 curl -L https://raw.githubusercontent.com/cctbx/cctbx_project/master/libtbx/auto_build/bootstrap.py -o bootstrap.py
 python bootstrap.py hot update --builder=dials #No need for closed source packages, so using DIALS is fine
 python bootstrap.py build --builder=dials --with-python=$(which python) --nproc=<cores available>
+source ./build/setpaths.sh
 ```
 
 The build may fail to recognise the architecture, (Linux on x86 vs Linux on PPC). We have no PPC test system here, so pass 
