@@ -9,4 +9,11 @@ Uses methane monooxygenase as the macromolecular crystal, for a spread simulatio
 Writes images in individual files; later will use new code from Aaron to write NeXus.h5 containers
 
 
-Weather plot [script](./weather.py): 
+Usage for the weather plot [script](./weather.py): 
+```
+libtbx.python weather.py main_log_dir=/global/cfs/cdirs/lcls/sauter/LY99/cytochrome_sim rank_log_dir=$SCRATCH/cytochrome_sim jobid=5893005
+#where
+#  main_log_dir is the working area where you submit your jobs and write your slurm logs
+#  rank_log_dir is the directory defined in the slurm script for holding the output data and rank logs
+#  jobid is the SLURM jobid
+'''
