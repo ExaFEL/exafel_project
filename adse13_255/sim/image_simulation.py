@@ -223,6 +223,7 @@ if __name__=="__main__":
     UMAT_nm.append( site.axis_and_angle_as_r3_rotation_matrix(m,deg=False) )
   SIM.set_mosaic_blocks(UMAT_nm)
   SIM.Fhkl=sfall_channels[0] # instead of sfall_main
+  breakpoint()
   Amatrix_rot = (rotation *
              sqr(sfall_channels[0].unit_cell().orthogonalization_matrix())).transpose()
 
