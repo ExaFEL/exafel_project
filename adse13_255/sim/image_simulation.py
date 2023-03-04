@@ -103,8 +103,7 @@ if __name__=="__main__":
     sfall_channels[x] = SF_model.get_amplitudes(at_angstrom = wavlen[x])
     
   print("\n# Use case: modularized api argchk=True, cuda_background=True")
-  SIM6 = modularized_exafel_api_for_KOKKOS(SIM,
-                                           DETECTOR,
+  SIM6 = modularized_exafel_api_for_KOKKOS(DETECTOR,
                                            BEAM, 
                                            CRYSTAL,
                                            flux,
