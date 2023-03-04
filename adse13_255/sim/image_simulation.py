@@ -127,6 +127,7 @@ if __name__=="__main__":
   spectra = spectra.generate_recast_renormalized_image(image=0%100000,energy=7120.,total_flux=1e12)
   wavlen, flux, wavelength_A = next(spectra) # list of lambdas, list of fluxes, average wavelength
   
+  breakpoint()
   # print("\nassume three energy channels")
   # wavlen = flex.double([BEAM.get_wavelength()-0.002, BEAM.get_wavelength(), BEAM.get_wavelength()+0.002])
   # flux = flex.double([(1./6.)*SIM.flux, (3./6.)*SIM.flux, (2./6.)*SIM.flux])
