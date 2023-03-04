@@ -205,7 +205,7 @@ if __name__=="__main__":
   from LS49.adse13_196.revapi.LY99_pad import microcrystal
   CRYSTAL = microcrystal(Deff_A = 4000, length_um = 4., beam_diameter_um = 1.0) # assume smaller than 10 um crystals
   from LS49 import legacy_random_orientations
-  random_orientation = legacy_random_orientations(1)
+  random_orientation = legacy_random_orientations(1)[0]
   rotation = sqr(random_orientation)
 
   SIM.mosaic_spread_deg = 0.05 # interpreted by UMAT_nm as a half-width stddev
@@ -223,9 +223,7 @@ if __name__=="__main__":
     UMAT_nm.append( site.axis_and_angle_as_r3_rotation_matrix(m,deg=False) )
   SIM.set_mosaic_blocks(UMAT_nm)
   SIM.Fhkl=sfall_channels[0] # instead of sfall_main
-  breakpoint()
-  Amatrix_rot = (rotation *
-             sqr(sfall_channels[0].unit_cell().orthogonalization_matrix())).transpose()
+  Amatrix_rot = (rotation * sqr(sfall_channels[0].unit_cell().orthogonalization_matrix())).transpose()
 
   SIM.Amatrix_RUB = Amatrix_rot
   # fastest option, least realistic
