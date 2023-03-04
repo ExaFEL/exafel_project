@@ -103,6 +103,11 @@ if __name__=="__main__":
     sfall_channels[x] = SF_model.get_amplitudes(at_angstrom = wavlen[x])
     
   print("\n# Use case: modularized api argchk=True, cuda_background=True")
-  SIM6 = modularized_exafel_api_for_KOKKOS(argchk=True, cuda_background=True)
+  SIM6 = modularized_exafel_api_for_KOKKOS(SIM,
+                                           DETECTOR,
+                                           BEAM, 
+                                           CRYSTAL,
+                                           flux,
+                                           sfall_channels, argchk=True, cuda_background=True)
   SIM6.to_smv_format(fileout="test_full_e_006.img")
   SIM6.to_cbf("test_full_e_006.cbf")
