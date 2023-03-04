@@ -2,13 +2,16 @@
 
 from __future__ import absolute_import, division, print_function
 from scipy import constants
+import numpy as np
+
 from scitbx.array_family import flex
-from scitbx.matrix import sqr
+from scitbx.matrix import sqr, col
 from simtbx.nanoBragg import nanoBragg, shapetype
 
-from simtbx.nanoBragg.tst_gauss_argchk import water, basic_crystal, basic_detector, amplitudes
+from simtbx.nanoBragg.tst_gauss_argchk import water, basic_detector, amplitudes
 
 from dxtbx.model.beam import BeamFactory
+from dxtbx.model.crystal import CrystalFactory
 
 def modularized_exafel_api_for_KOKKOS(SIM,
                                       DETECTOR,
@@ -104,7 +107,31 @@ def basic_beam():
              'transmission': 1.0,
              'wavelength': WAVELEN}
   return BeamFactory.from_dict(beam_descr)
-      
+
+def basic_crystal():
+  print("Make a randomly oriented xtal")
+  # make a randomly oriented crystal..
+  np.random.seed(3142019)
+  # make random rotation about principle axes
+  x = col((-1, 0, 0))
+  y = col((0, -1, 0))
+  z = col((0, 0, -1))
+  rx, ry, rz = np.random.uniform(-180, 180, 3)
+  RX = x.axis_and_angle_as_r3_rotation_matrix(rx, deg=True)
+  RY = y.axis_and_angle_as_r3_rotation_matrix(ry, deg=True)
+  RZ = z.axis_and_angle_as_r3_rotation_matrix(rz, deg=True)
+  M = RX*RY*RZ
+  real_a = M*col((79, 0, 0))
+  real_b = M*col((0, 79, 0))
+  real_c = M*col((0, 0, 38))
+  # dxtbx crystal description
+  cryst_descr = {'__id__': 'crystal',
+               'real_space_a': real_a.elems,
+               'real_space_b': real_b.elems,
+               'real_space_c': real_c.elems,
+               'space_group_hall_symbol': ' P 4nw 2abw'}
+  return CrystalFactory.from_dict(cryst_descr)
+
 if __name__=="__main__":
   from simtbx.kokkos import gpu_instance
   kokkos_run = gpu_instance(deviceId = 0)
@@ -120,17 +147,16 @@ if __name__=="__main__":
 
   SIM = nanoBragg(DETECTOR, BEAM, panel_id=0)
   
-  
-  
-  from LS49.spectra.generate_spectra import spectra_simulation
-  spectra = spectra_simulation()
-  spectra = spectra.generate_recast_renormalized_image(image=0%100000,energy=7120.,total_flux=1e12)
-  wavlen, flux, wavelength_A = next(spectra) # list of lambdas, list of fluxes, average wavelength
-  
-  breakpoint()
-  # print("\nassume three energy channels")
-  # wavlen = flex.double([BEAM.get_wavelength()-0.002, BEAM.get_wavelength(), BEAM.get_wavelength()+0.002])
-  # flux = flex.double([(1./6.)*SIM.flux, (3./6.)*SIM.flux, (2./6.)*SIM.flux])
+  if 0:
+    # energy spectrum
+    from LS49.spectra.generate_spectra import spectra_simulation
+    spectra = spectra_simulation()
+    spectra = spectra.generate_recast_renormalized_image(image=0%100000,energy=7120.,total_flux=1e12)
+    wavlen, flux, wavelength_A = next(spectra) # list of lambdas, list of fluxes, average wavelength
+  else:
+    print("\nassume three energy channels")
+    wavlen = flex.double([BEAM.get_wavelength()-0.002, BEAM.get_wavelength(), BEAM.get_wavelength()+0.002])
+    flux = flex.double([(1./6.)*SIM.flux, (3./6.)*SIM.flux, (2./6.)*SIM.flux])
   
   sfall_channels = {}
   for x in range(len(wavlen)):
