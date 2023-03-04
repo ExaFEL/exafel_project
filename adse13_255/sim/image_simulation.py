@@ -1,17 +1,21 @@
 """Simulate an image with Kokkos"""
 
 from __future__ import absolute_import, division, print_function
+from scipy import constants
 from scitbx.array_family import flex
 from scitbx.matrix import sqr
 from simtbx.nanoBragg import nanoBragg, shapetype
 
-from simtbx.nanoBragg.tst_gauss_argchk import water, basic_crystal, basic_beam, basic_detector, amplitudes
+from simtbx.nanoBragg.tst_gauss_argchk import water, basic_crystal, basic_detector, amplitudes
+
+from dxtbx.model.beam import BeamFactory
 
 def modularized_exafel_api_for_KOKKOS(SIM,
                                       DETECTOR,
                                       BEAM, 
                                       CRYSTAL,
                                       flux,
+                                      wavlen,
                                       sfall_channels,
                                       argchk=False, cuda_background=True):
   
@@ -83,6 +87,24 @@ def modularized_exafel_api_for_KOKKOS(SIM,
       SIM.add_background()
   return SIM
 
+
+def basic_beam():
+  print("Make a beam")
+  # make a beam
+  ENERGY = 9000
+  ENERGY_CONV = 1e10*constants.c*constants.h / constants.electron_volt
+  WAVELEN = ENERGY_CONV/ENERGY
+  # dxtbx beam model description
+  beam_descr = {'direction': (0.0, 0.0, 1.0),
+             'divergence': 0.0,
+             'flux': 1e11,
+             'polarization_fraction': 1.,
+             'polarization_normal': (0.0, 1.0, 0.0),
+             'sigma_divergence': 0.0,
+             'transmission': 1.0,
+             'wavelength': WAVELEN}
+  return BeamFactory.from_dict(beam_descr)
+      
 if __name__=="__main__":
   from simtbx.kokkos import gpu_instance
   kokkos_run = gpu_instance(deviceId = 0)
@@ -91,15 +113,23 @@ if __name__=="__main__":
   BEAM = basic_beam()
   DETECTOR = basic_detector()
   CRYSTAL = basic_crystal()
+  
   SF_model = amplitudes(CRYSTAL)
   SF_model.random_structure(CRYSTAL)
   SF_model.ersatz_correct_to_P1()
 
   SIM = nanoBragg(DETECTOR, BEAM, panel_id=0)
   
-  print("\nassume three energy channels")
-  wavlen = flex.double([BEAM.get_wavelength()-0.002, BEAM.get_wavelength(), BEAM.get_wavelength()+0.002])
-  flux = flex.double([(1./6.)*SIM.flux, (3./6.)*SIM.flux, (2./6.)*SIM.flux])
+  
+  
+  from LS49.spectra.generate_spectra import spectra_simulation
+  spectra = spectra_simulation()
+  spectra = spectra.generate_recast_renormalized_image(image=0%100000,energy=7120.,total_flux=1e12)
+  wavlen, flux, wavelength_A = next(spectra) # list of lambdas, list of fluxes, average wavelength
+  
+  # print("\nassume three energy channels")
+  # wavlen = flex.double([BEAM.get_wavelength()-0.002, BEAM.get_wavelength(), BEAM.get_wavelength()+0.002])
+  # flux = flex.double([(1./6.)*SIM.flux, (3./6.)*SIM.flux, (2./6.)*SIM.flux])
   
   sfall_channels = {}
   for x in range(len(wavlen)):
@@ -111,6 +141,7 @@ if __name__=="__main__":
                                            BEAM, 
                                            CRYSTAL,
                                            flux,
+                                           wavlen,
                                            sfall_channels, argchk=True, cuda_background=True)
   SIM6.to_smv_format(fileout="test_full_e_006.img")
   SIM6.to_cbf("test_full_e_006.cbf")
