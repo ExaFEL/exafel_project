@@ -4,6 +4,8 @@ from __future__ import absolute_import, division, print_function
 from scipy import constants
 import numpy as np
 
+import scitbx
+import math
 from scitbx.array_family import flex
 from scitbx.matrix import sqr, col
 from simtbx.nanoBragg import nanoBragg, shapetype
@@ -32,9 +34,10 @@ def modularized_exafel_api_for_KOKKOS(SIM,
     kokkos_channels_singleton.structure_factors_to_GPU_direct(
     x, sfall_channels[x].indices(), sfall_channels[x].data())
   assert kokkos_channels_singleton.get_nchannels() == len(flux)
-  SIM.Ncells_abc = (20,20,20)
-  SIM.Amatrix = sqr(CRYSTAL.get_A()).transpose()
-  SIM.oversample = 2
+  N = CRYSTAL.number_of_cells(sfall_channels[0].unit_cell())
+  SIM.Ncells_abc = (N,N,N)
+  # SIM.Amatrix = sqr(CRYSTAL.get_A()).transpose()
+  SIM.oversample = 1
   if argchk:
     print("\npolychromatic KOKKOS argchk")
     SIM.xtal_shape = shapetype.Gauss_argchk
@@ -59,8 +62,9 @@ def modularized_exafel_api_for_KOKKOS(SIM,
             x, SIM.wavelength_A, SIM.flux, SIM.fluence))
       kokkos_simulation.add_energy_channel_from_gpu_amplitudes(
         x, kokkos_channels_singleton, kokkos_detector)
-  per_image_scale_factor = 1.0
+  per_image_scale_factor = CRYSTAL.domains_per_crystal
   kokkos_detector.scale_in_place(per_image_scale_factor) # apply scale directly in KOKKOS
+  
   SIM.wavelength_A = BEAM.get_wavelength() # return to canonical energy for subsequent background
 
   if cuda_background:
@@ -132,6 +136,16 @@ def basic_crystal():
                'space_group_hall_symbol': ' P 4nw 2abw'}
   return CrystalFactory.from_dict(cryst_descr)
 
+
+from LS49.sim.step5_pad import data
+local_data = data()
+# Fe_oxidized_model = local_data.get("Fe_oxidized_model")
+# Fe_reduced_model = local_data.get("Fe_reduced_model")
+# Fe_metallic_model = local_data.get("Fe_metallic_model")
+
+
+  
+  
 if __name__=="__main__":
   from simtbx.kokkos import gpu_instance
   kokkos_run = gpu_instance(deviceId = 0)
@@ -139,15 +153,13 @@ if __name__=="__main__":
   # make the dxtbx objects
   BEAM = basic_beam()
   DETECTOR = basic_detector()
-  CRYSTAL = basic_crystal()
-  
-  SF_model = amplitudes(CRYSTAL)
-  SF_model.random_structure(CRYSTAL)
-  SF_model.ersatz_correct_to_P1()
+
 
   SIM = nanoBragg(DETECTOR, BEAM, panel_id=0)
   
-  if 0:
+
+  
+  if 1:
     # energy spectrum
     from LS49.spectra.generate_spectra import spectra_simulation
     spectra = spectra_simulation()
@@ -158,9 +170,65 @@ if __name__=="__main__":
     wavlen = flex.double([BEAM.get_wavelength()-0.002, BEAM.get_wavelength(), BEAM.get_wavelength()+0.002])
     flux = flex.double([(1./6.)*SIM.flux, (3./6.)*SIM.flux, (2./6.)*SIM.flux])
   
+  # breakpoint()
+  wavelength_A = 1.74 # general ballpark X-ray wavelength in Angstroms
+  wavlen = flex.double([12398.425/(7070.5 + w) for w in range(100)])
+  direct_algo_res_limit = 1.7
+
+  local_data = data() # later put this through broadcast
+
+  from LS49.sim.util_fmodel import gen_fmodel
+  GF = gen_fmodel(resolution=direct_algo_res_limit,
+                  pdb_text=local_data.get("pdb_lines"),algorithm="fft",wavelength=wavelength_A)
+  GF.set_k_sol(0.435)
+  GF.make_P1_primitive()
+
+  # Generating sf for my wavelengths
   sfall_channels = {}
   for x in range(len(wavlen)):
-    sfall_channels[x] = SF_model.get_amplitudes(at_angstrom = wavlen[x])
+
+    GF.reset_wavelength(wavlen[x])
+    GF.reset_specific_at_wavelength(
+                     label_has="FE1",tables=local_data.get("Fe_oxidized_model"),newvalue=wavlen[x])
+    GF.reset_specific_at_wavelength(
+                     label_has="FE2",tables=local_data.get("Fe_reduced_model"),newvalue=wavlen[x])
+    sfall_channels[x]=GF.get_amplitudes()
+    
+  from LS49.adse13_196.revapi.LY99_pad import microcrystal
+  CRYSTAL = microcrystal(Deff_A = 4000, length_um = 4., beam_diameter_um = 1.0) # assume smaller than 10 um crystals
+  from LS49 import legacy_random_orientations
+  random_orientation = legacy_random_orientations(1)
+  rotation = sqr(random_orientation)
+
+  SIM.mosaic_spread_deg = 0.05 # interpreted by UMAT_nm as a half-width stddev
+                             # mosaic_domains setter MUST come after mosaic_spread_deg setter
+  SIM.mosaic_domains = 25
+  print ("MOSAIC",SIM.mosaic_domains)
+  UMAT_nm = flex.mat3_double()
+  mersenne_twister = flex.mersenne_twister(seed=0)
+  scitbx.random.set_random_seed(1234)
+  rand_norm = scitbx.random.normal_distribution(mean=0, sigma=SIM.mosaic_spread_deg * math.pi/180.)
+  g = scitbx.random.variate(rand_norm)
+  mosaic_rotation = g(SIM.mosaic_domains)
+  for m in mosaic_rotation:
+    site = col(mersenne_twister.random_double_point_on_sphere())
+    UMAT_nm.append( site.axis_and_angle_as_r3_rotation_matrix(m,deg=False) )
+  SIM.set_mosaic_blocks(UMAT_nm)
+  SIM.Fhkl=sfall_channels[0] # instead of sfall_main
+  Amatrix_rot = (rotation *
+             sqr(sfall_channels[0].unit_cell().orthogonalization_matrix())).transpose()
+
+  SIM.Amatrix_RUB = Amatrix_rot
+  # fastest option, least realistic
+  SIM.xtal_shape=shapetype.Gauss_argchk # both crystal & RLP are Gaussian  
+  
+  
+  
+  
+  
+  # sfall_channels = {}
+  # for x in range(len(wavlen)):
+  #   sfall_channels[x] = SF_model.get_amplitudes(at_angstrom = wavlen[x])
     
   print("\n# Use case: modularized api argchk=True, cuda_background=True")
   SIM6 = modularized_exafel_api_for_KOKKOS(SIM,
