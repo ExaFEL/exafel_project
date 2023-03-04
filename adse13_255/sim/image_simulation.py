@@ -166,8 +166,7 @@ if __name__=="__main__":
   SIM = nanoBragg(DETECTOR, BEAM, panel_id=0)
   
 
-  
-  if 1:
+  if True:
     # energy spectrum
     from LS49.spectra.generate_spectra import spectra_simulation
     spectra = spectra_simulation()
@@ -208,7 +207,7 @@ if __name__=="__main__":
   random_orientation = legacy_random_orientations(1)[0]
   rotation = sqr(random_orientation)
 
-  SIM.mosaic_spread_deg = 0.05 # interpreted by UMAT_nm as a half-width stddev
+  SIM.mosaic_spread_deg = 0.2 #0.05 # interpreted by UMAT_nm as a half-width stddev
                              # mosaic_domains setter MUST come after mosaic_spread_deg setter
   SIM.mosaic_domains = 25
   print ("MOSAIC",SIM.mosaic_domains)
@@ -231,8 +230,6 @@ if __name__=="__main__":
   
   
   
-  
-  
   # sfall_channels = {}
   # for x in range(len(wavlen)):
   #   sfall_channels[x] = SF_model.get_amplitudes(at_angstrom = wavlen[x])
@@ -245,5 +242,5 @@ if __name__=="__main__":
                                            flux,
                                            wavlen,
                                            sfall_channels, argchk=True, cuda_background=True)
-  SIM6.to_smv_format(fileout="test_full_e_006.img")
+  SIM6.to_smv_format(fileout="test_full_e_006.img",intfile_scale=1,rotmat=True,gz=True)
   SIM6.to_cbf("test_full_e_006.cbf")
