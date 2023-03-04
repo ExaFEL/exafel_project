@@ -151,7 +151,7 @@ def data():
     pdb_lines = open("1m2a.pdb","r").read(),
     Fe_oxidized_model = george_sherrell("pf-rd-ox_fftkk.out"),
     Fe_reduced_model = george_sherrell("pf-rd-red_fftkk.out"),
-    Fe_metallic_model = george_sherrell("/Fe_fake.dat")
+    Fe_metallic_model = george_sherrell("Fe_fake.dat")
   )
   
 if __name__=="__main__":
