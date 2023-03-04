@@ -84,6 +84,9 @@ def modularized_exafel_api_for_KOKKOS(DETECTOR,
   return SIM
 
 if __name__=="__main__":
+  from simtbx.kokkos import gpu_instance
+  kokkos_run = gpu_instance(deviceId = 0)
+  
   # make the dxtbx objects
   BEAM = basic_beam()
   DETECTOR = basic_detector()
