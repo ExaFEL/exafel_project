@@ -113,7 +113,7 @@ if __name__=="__main__":
   SWC = several_wavelength_case(BEAM, DETECTOR, CRYSTAL, SF_model)
   
   from simtbx.kokkos import gpu_instance
-  kokkos_run = gpu_instance(deviceId = 0)
+  # kokkos_run = gpu_instance(deviceId = 0)
 
   print("\n# Use case: modularized api argchk=True, cuda_background=True")
   SIM6 = SWC.modularized_exafel_api_for_KOKKOS(argchk=True, cuda_background=True)
