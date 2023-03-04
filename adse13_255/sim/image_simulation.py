@@ -137,14 +137,22 @@ def basic_crystal():
   return CrystalFactory.from_dict(cryst_descr)
 
 
-from LS49.sim.step5_pad import data
-local_data = data()
+# from LS49.adse13_196.revapi.LY99_pad import data
+
+
 # Fe_oxidized_model = local_data.get("Fe_oxidized_model")
 # Fe_reduced_model = local_data.get("Fe_reduced_model")
 # Fe_metallic_model = local_data.get("Fe_metallic_model")
 
 
-  
+def data():
+  from LS49.sim.fdp_plot import george_sherrell
+  return dict(
+    pdb_lines = open("1m2a.pdb","r").read(),
+    Fe_oxidized_model = george_sherrell("pf-rd-ox_fftkk.out"),
+    Fe_reduced_model = george_sherrell("pf-rd-red_fftkk.out"),
+    Fe_metallic_model = george_sherrell("/Fe_fake.dat")
+  )
   
 if __name__=="__main__":
   from simtbx.kokkos import gpu_instance
@@ -175,8 +183,8 @@ if __name__=="__main__":
   wavlen = flex.double([12398.425/(7070.5 + w) for w in range(100)])
   direct_algo_res_limit = 1.7
 
-  local_data = data() # later put this through broadcast
-
+  local_data = data()
+  
   from LS49.sim.util_fmodel import gen_fmodel
   GF = gen_fmodel(resolution=direct_algo_res_limit,
                   pdb_text=local_data.get("pdb_lines"),algorithm="fft",wavelength=wavelength_A)
