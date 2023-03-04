@@ -7,8 +7,7 @@ from simtbx.nanoBragg import nanoBragg, shapetype
 
 from simtbx.nanoBragg.tst_gauss_argchk import water, basic_crystal, basic_beam, basic_detector, amplitudes
 
-def modularized_exafel_api_for_KOKKOS(SIM,
-                                      DETECTOR,
+def modularized_exafel_api_for_KOKKOS(DETECTOR,
                                       BEAM, 
                                       CRYSTAL,
                                       flux,
@@ -18,12 +17,13 @@ def modularized_exafel_api_for_KOKKOS(SIM,
   from simtbx.kokkos import gpu_energy_channels
   kokkos_channels_singleton = gpu_energy_channels()
 
+  SIM = nanoBragg(DETECTOR, BEAM, panel_id=0)
   SIM.device_Id = 0
 
   assert kokkos_channels_singleton.get_nchannels() == 0 # uninitialized
   for x in range(len(flux)):
-          kokkos_channels_singleton.structure_factors_to_GPU_direct(
-          x, sfall_channels[x].indices(), sfall_channels[x].data())
+    kokkos_channels_singleton.structure_factors_to_GPU_direct(
+    x, sfall_channels[x].indices(), sfall_channels[x].data())
   assert kokkos_channels_singleton.get_nchannels() == len(flux)
   SIM.Ncells_abc = (20,20,20)
   SIM.Amatrix = sqr(CRYSTAL.get_A()).transpose()
