@@ -242,5 +242,5 @@ if __name__=="__main__":
                                            flux,
                                            wavlen,
                                            sfall_channels, argchk=True, cuda_background=True)
-  SIM6.to_smv_format(fileout="test_full_e_006.img",intfile_scale=1,rotmat=True,gz=True)
+  SIM6.to_smv_format(fileout="test_full_e_006.img")
   SIM6.to_cbf("test_full_e_006.cbf")
