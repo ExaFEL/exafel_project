@@ -16,4 +16,8 @@ libtbx.python weather.py main_log_dir=/global/cfs/cdirs/lcls/sauter/LY99/cytochr
 #  main_log_dir is the working area where you submit your jobs and write your slurm logs
 #  rank_log_dir is the directory defined in the slurm script for holding the output data and rank logs
 #  jobid is the SLURM jobid
-'''
+```
+
+Updated [slurm script sim_5946633.sh](./sim_5946633.sh) is work in progress trying to generalize the image simulation
+to take arbitrary PDB coordinates and allow phil-defined parameter choices.  This is the most up to date version, with much 
+more work to do.
