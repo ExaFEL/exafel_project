@@ -5,7 +5,7 @@
 #SBATCH -A lcls_g       # allocation
 #SBATCH -C gpu
 #SBATCH -q regular # regular or special queue
-#SBATCH -t 01:00:00      # wall clock time limit
+#SBATCH -t 00:05:00      # wall clock time limit
 #SBATCH --gpus-per-node 4
 #SBATCH --ntasks-per-gpu 8
 #SBATCH -o %j.out
@@ -34,17 +34,7 @@ export SIT_PSDM_DATA=/global/cfs/cdirs/lcls/psdm-sauter
 export CCTBX_GPUS_PER_NODE=1
 export XFEL_CUSTOM_WORKER_PATH=$MODULES/psii_spread/merging/application # User must export $MODULES path
 
-echo "
-noise=True
-psf=False
-attenuation=True
-context=kokkos_gpu
-beam {
-  mean_wavelength=7120.
-}
-" > trial.phil
-
 echo "jobstart $(date)";pwd
-srun -n 1024 -c 2 -G 32 libtbx.python $MODULES/exafel_project/kpp_utils/LY99_batch.py trial.phil 
+srun -n 1024 -c 2 -G 32 libtbx.python $MODULES/LS49/adse13_196/test_mpi.py
 echo "jobend $(date)";pwd
 
