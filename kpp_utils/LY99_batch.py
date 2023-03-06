@@ -42,7 +42,7 @@ def tst_one(image,spectra,crystal,random_orientation,sfall_channels,gpu_channels
               gpu_channels_singleton=gpu_channels_singleton,
               sfall_channels=sfall_channels,params=params)
 
-def run_LY99_batch(test_without_mpi=True):
+def run_LY99_batch(test_without_mpi=False):
   params,options = parse_input()
   log_by_rank = bool(int(os.environ.get("LOG_BY_RANK",0)))
   rank_profile = bool(int(os.environ.get("RANK_PROFILE",1)))
