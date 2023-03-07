@@ -115,11 +115,11 @@ def run_LY99_batch(test_without_mpi=False):
     # singleton will instantiate, regardless of gpu, device count, or exascale API
 
   comm.barrier()
+  breakpoint()
   for idx in parcels:
     cache_time = time()
     print("idx------start-------->",idx,"rank",rank,time())
     # if rank==0: os.system("nvidia-smi")
-    breakpoint()
     tst_one(image=idx,spectra=transmitted_info["spectra"],
         crystal=transmitted_info["crystal"],
         random_orientation=transmitted_info["random_orientations"][idx],
