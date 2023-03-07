@@ -96,7 +96,7 @@ def run_LY99_batch(test_without_mpi=False):
   parcels = list(range(rank,N_total,N_stride))
 
   print(rank, time(), "finished with single broadcast, now set up the rank logger")
-  breakpoint()
+
   if log_by_rank:
     expand_dir = os.path.expandvars(params.logger.outdir)
     log_path = os.path.join(expand_dir,"rank_%d.log"%rank)
@@ -119,6 +119,7 @@ def run_LY99_batch(test_without_mpi=False):
     cache_time = time()
     print("idx------start-------->",idx,"rank",rank,time())
     # if rank==0: os.system("nvidia-smi")
+    breakpoint()
     tst_one(image=idx,spectra=transmitted_info["spectra"],
         crystal=transmitted_info["crystal"],
         random_orientation=transmitted_info["random_orientations"][idx],
