@@ -96,14 +96,13 @@ def run_LY99_batch(test_without_mpi=False):
   parcels = list(range(rank,N_total,N_stride))
 
   print(rank, time(), "finished with single broadcast, now set up the rank logger")
-  breakpoint()
   if log_by_rank:
     expand_dir = os.path.expandvars(params.logger.outdir)
     log_path = os.path.join(expand_dir,"rank_%d.log"%rank)
     error_path = os.path.join(expand_dir,"rank_%d.err"%rank)
     #print("Rank %d redirecting stdout/stderr to"%rank, log_path, error_path)
     sys.stdout = io.TextIOWrapper(open(log_path,'ab', 0), write_through=True)
-    sys.stderr = io.TextIOWrapper(open(error_path,'ab', 0), write_through=True)
+    sys.sntderr = io.TextIOWrapper(open(error_path,'ab', 0), write_through=True)
 
   print(rank, time(), "finished with the rank logger, now construct the GPU cache container")
   gpu_instance = get_exascale("gpu_instance", params.context)
