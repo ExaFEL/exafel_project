@@ -1,0 +1,19 @@
+simulator.detector.force_zero_thickness=True
+spectrum_from_imageset = True
+downsamp_spec.delta_en=1
+predictions {
+  verbose = True
+  laue_mode = True
+  qcut = 0.0025
+  label_weak_col = "rlp"
+  threshold = 1e-3
+  # oversample_override = 2
+  # Nabc_override = None
+  # pink_stride_override = None
+  # default_Famplitude = 2
+  default_Famplitude = 1e3
+  resolution_range = [1,40]
+  method = *diffbragg exascale
+  use_peak_detection = False
+  weak_fraction = 0.7
+}

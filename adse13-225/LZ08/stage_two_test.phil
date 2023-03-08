@@ -1,0 +1,69 @@
+prep_time=60
+refiner.sigma_r = 10
+refiner.adu_per_photon = 1
+refiner.reference_geom = /pscratch/sd/c/cctbx/cxilz0820/common/diffbragg/split_000.expt
+use_restraints=False
+
+spectrum_from_imageset = True
+downsamp_spec {
+  skip = False
+  delta_en = .5
+}
+method = "L-BFGS-B"
+sigmas {
+  RotXYZ = 0.001 0.001 0.001
+}
+init {
+  Nabc = 30 31 32
+  G = 1e6
+}
+mins {
+  RotXYZ = -15 -15 -15
+}
+maxs {
+  Nabc = 1000 1000 1000
+  RotXYZ = 15 15 15
+}
+fix {
+  detz_shift = True
+}
+ucell_edge_perc = 15
+ucell_ang_abs = 1
+space_group = "P41212"
+logging {
+  rank0_level = low normal *high
+  disable = False
+}
+simulator {
+  oversample = 1
+  structure_factors {
+    #mtz_name = /pscratch/sd/c/cctbx/cxilz0820/common/diffbragg/CRY1Aae_refine_156.mtz 
+    #mtz_column = "F-model,PHIF-model"
+    from_pdb.name = /pscratch/sd/c/cctbx/cxilz0820/common/reference/CRY1Aae_refine_156.pdb
+  }
+  beam {
+    size_mm = 0.001
+  }
+  detector {
+    force_zero_thickness = True
+  }
+}
+refiner {
+#  mask = /pscratch/sd/c/cctbx/cxilz0820/common/diffbragg/hotborder_rect_lowres_ring1p9_mask5_psana.mask 
+  load_data_from_refl = True
+  randomize_devices = False
+  num_devices = 4
+  stage_two {
+    save_model_freq = 250
+    min_multiplicity = 1
+  }
+}
+roi {
+  mask_outside_trusted_range = True
+  fit_tilt = True
+  pad_shoebox_for_background_estimation = 10
+  reject_edge_reflections = False
+  reject_roi_with_hotpix = False
+  hotpixel_mask = /pscratch/sd/c/cctbx/cxilz0820/common/diffbragg/hotborder_rect_lowres_ring1p9_mask5_psana.mask 
+  fit_tilt_using_weights = False
+}

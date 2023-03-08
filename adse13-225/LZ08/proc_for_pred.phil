@@ -1,0 +1,43 @@
+spotfinder {
+  lookup {
+    mask = "/pscratch/sd/c/cctbx/cxilz0820/common/masks/hotborder_rect_lowres_ring1p9_mask4_psana.mask"
+  }
+  filter {
+    min_spot_size = 2
+    d_min = 2
+    d_max = 30
+    max_strong_pixel_fraction = 0.25
+  }
+  threshold {
+    dispersion {
+      global_threshold = 0
+      kernel_size = 2 2
+      global_threshold = 10
+    }
+  }
+}
+indexing {
+  known_symmetry {
+    space_group = "P 41 21 2"
+    unit_cell = 89 89 271 90 90 90
+  }
+  multiple_lattice_search {
+    max_lattices = 10
+  }
+  stills {
+    method_list = fft1d real_space_grid_search
+  }
+}
+integration {
+  lookup {
+    mask = "/pscratch/sd/c/cctbx/cxilz0820/common/masks/hotborder_rect_lowres_ring1p9_mask4_psana.mask"
+  }
+  profile.gaussian_rs.parameters.sigma_b = 0.02
+}
+profile {
+  gaussian_rs {
+    parameters {
+      sigma_b_cutoff = 100
+    }
+  }
+}
