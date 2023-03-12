@@ -11,9 +11,9 @@ diffBragg stage 2 completes iterative global refinement of a set of structure fa
 
 Stage 2 is composed of a few steps. In practical terms, and for this dataset:
 
-First, we need to generate simulated images matching each of the experimental images. As we update parameters, we update the simulated images and compare them with the real ones to determine whether there is an improvement in the agreement. This step is carried out by the command line program diffBragg.integrate which requires two sets of phil parameters, here pred.phil and proc_for_pred.phil. pred.phil describes parameters for simulated image generation, and proc_for_pred.phil describes parameters for processing the simulated images up through the integration step identically to how the experimental data were processed. The proc_for_pred.phil file therefore should match the parameters to stills_proccss. Many of the steps of stills_process are executed directly by diffBragg.integrate under the hood.
+First, we need to generate simulated images matching each of the experimental images. As we update parameters, we update the simulated images and compare them with the real ones to determine whether there is an improvement in the agreement. This step is carried out by the command line program diffBragg.integrate which requires two sets of phil parameters, here simulation.phil and sim_processing.phil. simulation.phil describes parameters for simulated image generation, and sim_processing.phil describes parameters for processing the simulated images up through the integration step identically to how the experimental data were processed. The sim_processing.phil file therefore should match the parameters to stills_proccss. Many of the steps of stills_process are executed directly by diffBragg.integrate under the hood.
 
-Important parameters in the image simulation step (pred.phil) are:
+Important parameters in the image simulation step (simulation.phil) are:
     spectrum_from_imageset = True # Reads spectra. For datasets without per-shot spectra, you could turn this off.
     laue_mode = True              # This should be True if the above is True.
     qcut                          # qcut is an opaque but critical parameter to tune. Mistuned qcut looks like bad spotfinder results.
@@ -21,23 +21,25 @@ Important parameters in the image simulation step (pred.phil) are:
     weak_fraction = 0.7           # Determines how many of the weak spots to include.
     threshold = 1e2               # Threshold is analogous to the same parameter in spotfinding.
 
-The diffBragg.integrate command line program takes arguments pred.phil, proc_for_pred.phil, input directory, and output directory. The input directory is where to look for the results of stage one processing. (The program will look for files in the organization and naming conventions used by stage one.) Additional command line arguments are as follows:
+The diffBragg.integrate command line program takes arguments simulation.phil, sim_processing.phil, input directory, and output directory. The input directory is where to look for the results of stage one processing. (The program will look for files in the organization and naming conventions used by stage one.) Additional command line arguments are as follows:
 
     --numdev 4                    # Specifies number of GPUs per node.
     --hopInputName pred           # Must match the column name of the predicted pixels in the pandas tables generated in stage one.
-    --cmdLinePhil <kwargs>        # Any arguments passed here will override any arguments in the proc.phil and proc_for_pred.phil as applicable.
+    --cmdlinePhil <kwargs>        # Any arguments passed here will override any arguments in the simulation.phil and sim_processing.phil files as applicable. 
+                                  # Note, however, that some arguments must be supplied in the phil file and not with the --cmdlinePhil flag.
 
 Following this step, the command line program ens.hopper must be run twice with different inputs. The first time reads the input and generates "pre-imported" files that will take significantly less time to read with each cycle of global refinement. The second time carries out global refinement. These two runs are differentiated by the flag --preImport (pass on the first run). On the second run, you should supply the matching path that the first one generated. 
 
 Parameters to ens.hopper describe the global parameters to refine. Here, these are encapsulated in stage_two_test.phil. A few are described below:
 
     prep_time = 60                # This time (in seconds) must be long enough for the "prep" steps to finish before all ranks start work.
+                                  # This must be supplied in the phil file. When rerunning the second time, diffBragg will announce that it does not recognize this parameter, which is fine.
     spectrum_from_imageset = True # Should match pred.phil.
     use_restraints = False        # If False, the restraints are the data themselves. Otherwise we restrain to a starting model.
 
 On the first run, we must also specify --outdir and supply a directory name that we then match in the second run as a command line argument (without keywords and without flags). Any other arguments to the first run of ens.hopper are safely ignored, including command line arguments.
 
-On the second run, we must be sure to pass load_data_from_refl=True (preceded by --cmdlinePhil if this is on the command line) and --refl ens.hopper.imported (before the --cmdlinePhil flag, if present). We will also need a new --outdir specified here.
+On the second run, we must be sure to pass --refl ens.hopper.imported (before the --cmdlinePhil flag, if present). We will also need a new --outdir specified here.
 
 These three steps, diffBragg.integrate, ens.hopper (preimport) and ens.hopper (real execution), should each be run with a separate srun command inside the SLURM job.
 
@@ -56,7 +58,9 @@ Several of these are critical and unintuitive. Some are explained here:
     HDF5_USE_FILE_LOCKING=FALSE   # allows many ranks to simultaneously read h5 files, which is critical for these data
     MPI4PY_RC_RECV_MPROBE='False' # required for mysterious reasons
     SIT_PSDM_DATA=/pscratch/sd/p/psdatmgr/data/pmscr 
-                                  # this must be set to the above on Perlmutter or to /global/cfs/cdirs/lcls/psdm-sauter if Perlmutter scratch is down *and* the data have been backed up to this alternative location. This variable dictates where psana looks for the data associated with an experiment when reading a locator file.
+                                  # this must be set to the above on Perlmutter or to /global/cfs/cdirs/lcls/psdm-sauter
+                                  # if Perlmutter scratch is down *and* the data have been backed up to this alternative location.
+                                  # This variable dictates where psana looks for the data associated with an experiment when reading a locator file.
     SIT_DATA=/global/common/software/lcls/psdm/data
                                   # another location for certain files needed by psana
     DIFFBRAGG_USE_CUDA=1          # this will eventually be replaced by DIFFBRAGG_USE_CUDA, but at present this covers all GPU acceleration.

@@ -1,6 +1,6 @@
 #! /bin/bash
 #SBATCH -N 2            # Number of nodes
-#SBATCH -J stage1       # job name
+#SBATCH -J stage2       # job name
 #SBATCH -A m2859_g      # allocation
 #SBATCH -C gpu
 #SBATCH -q regular
@@ -39,3 +39,22 @@ srun -n 8 -c 2 --ntasks-per-node=4 --cpu-bind=cores --gpu-bind=cores \
 simtbx.diffBragg.hopper stage_one_test.phil
 
 echo "stage one completed at $(date)";pwd
+
+cp $phil_dir/stage_two_test.phil .
+cp $phil_dir/simulation.phil .
+cp $phil_dir/sim_processing.phil .
+
+srun -n 8 -c 2 --ntasks-per-node=4 --cpu-bind=cores --gpu-bind=cores \
+diffBragg.integrate simulation.phil sim_processing.phil stage_one reintegrated \
+--numdev 4 --hopInputName pred --cmdlinePhil threshold=1e2
+
+srun -n 8 -c 2 --ntasks-per-node=4 --cpu-bind=cores --gpu-bind=cores \
+ens.hopper reintegrated/pred.pkl stage_two_test.phil \
+--outdir preimport --maxSigma 3 --saveFreq 10  --preImport --refl predicted_refls
+
+srun -n 8 -c 2 --ntasks-per-node=4 --cpu-bind=cores --gpu-bind=cores \
+ens.hopper preimport/preImport_for_ensemble.pkl stage_two_test.phil \
+--outdir global --maxSigma 3 --saveFreq 10 --refl ens.hopper.imported \
+--cmdlinePhil fix.Nabc=True fix.ucell=True fix.RotXYZ=True fix.Fhkl=False fix.G=False sigmas.G=1e-2
+
+echo "stage two completed at $(date)";pwd
