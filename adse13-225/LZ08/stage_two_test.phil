@@ -1,4 +1,3 @@
-prep_time = 60
 use_restraints = False
 spectrum_from_imageset = True
 downsamp_spec {

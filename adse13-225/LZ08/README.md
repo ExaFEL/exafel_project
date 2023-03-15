@@ -46,6 +46,8 @@ Parameters to ens.hopper describe the global parameters to refine. Here, these a
 
 **More on `prep_time`:** If this parameter is passed as a `--cmdlinePhil` argument, we encounter two errors: first, `Sorry: Unknown command line parameter definition: prep_time = 60`, and second, a traceback in `hopper_ensemble.py`. If it is supplied in the phil file as expected, we will encounter the message `WARNING: unused phil: prep_time (input line 1)` on the first execution, and it will be correctly interpreted on the second execution.
 
+*Update: prep_time should be deprecated in an incoming commit.*
+
 On the first run, we must also specify `--outdir` and supply a directory name (e.g. "preimport") that we then match in the second run as a command line argument (without keywords and without flags). Any other arguments to the first run of ens.hopper are safely ignored, including command line arguments.
 
 On the second run, we must be sure to pass `--refl ens.hopper.imported` (before the `--cmdlinePhil` flag, if present). We will also need a new `--outdir` specified here. This run will produce a directory `global` containing the structure factors at each saved iteration during global refinement, with the final result lacking an "iter" suffix, and the command line input saved as a text file. The final mtz is analogous to a merged mtz.
@@ -61,8 +63,8 @@ Several of these are critical and unintuitive. Some are explained here:
     CUDA_LAUNCH_BLOCKING=1        # required for mysterious reasons
     NUMEXPR_MAX_THREADS=128       # correctly sets number of processors per node on Perlmutter
     SLURM_CPU_BIND=cores          # forces ranks onto separate cores. This is duplicated in the flag --cpu-bind=cores.
-    OMP_PROC_BIND=spread
-    OMP_PLACES=threads
+    OMP_PROC_BIND=spread          # distribute threads as evenly as possible over processors
+    OMP_PLACES=threads            # pin threads to hardware threads
     HDF5_USE_FILE_LOCKING=FALSE   # allows many ranks to simultaneously read h5 files, which is critical for these data
     MPI4PY_RC_RECV_MPROBE='False' # required for mysterious reasons
     SIT_PSDM_DATA=/pscratch/sd/p/psdatmgr/data/pmscr 
@@ -84,7 +86,4 @@ At the beginning of the job script (before `srun`), you must set the environment
 `srun` commands should be supplied with additional flags as follows:
 
     -n 8                          # total number of GPUs available to the job
-    -c 2                          # expecting to update this ... see https://docs.nersc.gov/jobs/affinity/#perlmutter for best practices
-    --ntasks-per-node=4           # on Perlmutter, there are 4 GPUs per node, so we request 4 tasks
-    --cpu-bind=cores              # this is redundant with SLURM_CPU_BIND=cores but can be overriden here if necessary
-    --gpu-bind=cores              # matched to the above settings; again, see https://docs.nersc.gov/jobs/affinity/#perlmutter
+    -c 32                         # number of CPUs per task, which should be 2 * floor(64 / tasks_per_node) for GPUs. We have 4 tasks per node by default to match 4 GPUs per node.

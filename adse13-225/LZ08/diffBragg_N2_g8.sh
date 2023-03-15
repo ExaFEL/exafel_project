@@ -1,6 +1,6 @@
 #! /bin/bash
 #SBATCH -N 2            # Number of nodes
-#SBATCH -J diffBragg    # job name
+#SBATCH -J test         # job name
 #SBATCH -A m2859_g      # allocation
 #SBATCH -C gpu
 #SBATCH -q regular
@@ -34,15 +34,12 @@ export OMP_DISPLAY_AFFINITY=true
 export OMP_AFFINITY_FORMAT="host=%H, pid=%P, thread_num=%n, thread affinity=%A"
 
 echo "jobstart $(date)";pwd
-echo "using $n_sample images"
 
 mkdir /pscratch/sd/c/cctbx/cxilz0820/common/diffbragg/v4/trials/scale_${n_sample}
 cd /pscratch/sd/c/cctbx/cxilz0820/common/diffbragg/v4/trials/scale_${n_sample}
 
 mkdir stage_one
 cp $phil_dir/stage_one_test.phil .
-# for full set use the next line instead of the best500 spec file (not a good idea for small subsets)
-#head -$n_sample /pscratch/sd/c/cctbx/cxilz0820/common/results/trial_000_rg004_task021_reproduce_spec_file.out > spec_file.out
 head -$n_sample /pscratch/sd/c/cctbx/cxilz0820/common/diffbragg/v2/best500_spec_file.out > spec_file.out
 
 srun -n $n_tasks -c $cpus_per_task \
