@@ -6,7 +6,7 @@
 #SBATCH -A lcls_g       # allocation
 #SBATCH -C gpu
 #SBATCH -q regular
-#SBATCH -t 00:36:00
+#SBATCH -t 02:00:00
 #SBATCH --gpus-per-node=4
 #SBATCH --ntasks-per-gpu=2
 #SBATCH --gpus 128
