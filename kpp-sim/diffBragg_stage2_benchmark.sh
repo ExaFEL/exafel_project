@@ -1,5 +1,4 @@
-#!/bin/bash
-
+#!/bin/bash -l
 #SBATCH -N 32            # Number of nodes
 #SBATCH -J stage_2_32       # job name
 #SBATCH -L SCRATCH       # job requires SCRATCH files
@@ -10,6 +9,8 @@
 #SBATCH --gpus-per-node=4
 #SBATCH --ntasks-per-gpu=2
 #SBATCH --gpus 128
+#SBATCH -o %j.out
+#SBATCH -e %j.err
 
 export PERL_NDEV=1  # number GPU per node
 export PANDA=$MODULES/diffbragg_benchmarks/AD_SE_13_222/data_222/8_stage2_7_gathered_trimmed.pkl
@@ -20,7 +21,7 @@ export DIFFBRAGG_USE_CUDA=1
 
 echo "jobstart $(date)";pwd
 
-srun -n256 -G128 -c2 \
+srun -n 256 -G 128 -c 2 \
 simtbx.diffBragg.stage_two \
 $MODULES/diffbragg_benchmarks/AD_SE_13_222/data_222.phil \
 io.output_dir=$SLURM_JOB_ID \
