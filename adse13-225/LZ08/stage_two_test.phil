@@ -1,9 +1,4 @@
-prep_time=60
-refiner.sigma_r = 10
-refiner.adu_per_photon = 1
-refiner.reference_geom = /pscratch/sd/c/cctbx/cxilz0820/common/diffbragg/split_000.expt
-use_restraints=False
-
+use_restraints = False
 spectrum_from_imageset = True
 downsamp_spec {
   skip = False
@@ -37,9 +32,9 @@ logging {
 simulator {
   oversample = 1
   structure_factors {
-    #mtz_name = /pscratch/sd/c/cctbx/cxilz0820/common/diffbragg/CRY1Aae_refine_156.mtz 
-    #mtz_column = "F-model,PHIF-model"
-    from_pdb.name = /pscratch/sd/c/cctbx/cxilz0820/common/reference/CRY1Aae_refine_156.pdb
+    mtz_name = /pscratch/sd/c/cctbx/cxilz0820/common/diffbragg/CRY1Aae_refine_156.mtz 
+    mtz_column = "F-model,PHIF-model"
+    # from_pdb.name = /pscratch/sd/c/cctbx/cxilz0820/common/reference/CRY1Aae_refine_156.pdb
   }
   beam {
     size_mm = 0.001
@@ -49,8 +44,11 @@ simulator {
   }
 }
 refiner {
-#  mask = /pscratch/sd/c/cctbx/cxilz0820/common/diffbragg/hotborder_rect_lowres_ring1p9_mask5_psana.mask 
-  load_data_from_refl = True
+  # mask = /pscratch/sd/c/cctbx/cxilz0820/common/diffbragg/hotborder_rect_lowres_ring1p9_mask5_psana.mask 
+  # load_data_from_refl = True
+  sigma_r = 10
+  adu_per_photon = 1
+  reference_geom = /pscratch/sd/c/cctbx/cxilz0820/common/diffbragg/split_000.expt
   randomize_devices = False
   num_devices = 4
   stage_two {

@@ -1,9 +1,11 @@
-exp_ref_spec_file = /pscratch/sd/c/cctbx/cxilz0820/common/diffbragg/v2/best500_spec_file.out
-outdir = /pscratch/sd/c/cctbx/cxilz0820/common/diffbragg/v3/trials/out_test_repeat
+outdir = stage_one
+# sample: exp_ref_spec_file = /pscratch/sd/c/cctbx/cxilz0820/common/diffbragg/v2/best500_spec_file.out
+# full: exp_ref_spec_file = /pscratch/sd/c/cctbx/cxilz0820/common/results/trial_000_rg004_task021_reproduce_spec_file.out
+# below: locally created one of specified # of images
+exp_ref_spec_file = spec_file.out
 refiner.sigma_r = 10
 refiner.adu_per_photon = 1
 refiner.reference_geom = /pscratch/sd/c/cctbx/cxilz0820/common/diffbragg/split_000.expt
-###.expt file with optimized detector if you ran stills process + dials.refine(ensemble)
 use_restraints=False
 
 spectrum_from_imageset = True
