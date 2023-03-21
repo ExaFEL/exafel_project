@@ -257,9 +257,7 @@ def run_sim2smv(prefix,crystal,spectra,rotation,rank,gpu_channels_singleton,para
   print(burst_buffer_fileout, smv_fileout)
 
   extra = "PREFIX=%s;\nRANK=%d;\n"%(prefix,rank)
-  print('!!!!!!!!!')
-  utils.save_spectra_file(burst_buffer_fileout + ".lam", wavlen, flux)
-  print('!!!!!!!!!')
+  utils.save_spectra_file(burst_buffer_fileout + ".lam", wavlen, flux) # save per image spectrum
   SIM.to_smv_format_py(fileout=burst_buffer_fileout,intfile_scale=1,rotmat=True,extra=extra,gz=True)
   SIM.free_all()
 
