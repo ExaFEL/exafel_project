@@ -115,6 +115,9 @@ def run_LY99_batch(test_without_mpi=False):
     # singleton will instantiate, regardless of gpu, device count, or exascale API
 
   comm.barrier()
+  if params.output.format == "h5":
+    fileout_name="image_rank_%05d.h5"%rank
+    # set up the h5 file please
   for idx in parcels:
     cache_time = time()
     print("idx------start-------->",idx,"rank",rank,time())

@@ -27,6 +27,10 @@ def parse_input():
         .type = float
         .help = spectra from big data are coerced to this total flux
     }
+    output {
+      format = *smv cbf h5
+        .type = choice
+    }
   """
   phil_scope = parse(master_phil)
   # The script usage

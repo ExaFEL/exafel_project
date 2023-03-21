@@ -256,7 +256,11 @@ def run_sim2smv(prefix,crystal,spectra,rotation,rank,gpu_channels_singleton,para
   print(burst_buffer_fileout, smv_fileout)
 
   extra = "PREFIX=%s;\nRANK=%d;\n"%(prefix,rank)
-  SIM.to_smv_format_py(fileout=burst_buffer_fileout,intfile_scale=1,rotmat=True,extra=extra,gz=True)
+  if params.output.format == "h5":
+    pass
+    # implement h5 please
+  elif params.output.format == "smv":
+    SIM.to_smv_format_py(fileout=burst_buffer_fileout,intfile_scale=1,rotmat=True,extra=extra,gz=True)
 
   SIM.free_all()
 
