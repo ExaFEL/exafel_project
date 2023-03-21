@@ -3,6 +3,7 @@ from scitbx.array_family import flex
 from scitbx.matrix import sqr,col
 from simtbx.nanoBragg import shapetype
 from simtbx.nanoBragg import nanoBragg
+from simtbx.diffBragg import utils
 import libtbx.load_env # possibly implicit
 from cctbx import crystal
 import math
@@ -257,7 +258,7 @@ def run_sim2smv(prefix,crystal,spectra,rotation,rank,gpu_channels_singleton,para
 
   extra = "PREFIX=%s;\nRANK=%d;\n"%(prefix,rank)
   print('!!!!!!!!!')
-  print(burst_buffer_fileout)
+  utils.save_spectra_file(burst_buffer_fileout, wavlen, flux)
   print('!!!!!!!!!')
   SIM.to_smv_format_py(fileout=burst_buffer_fileout,intfile_scale=1,rotmat=True,extra=extra,gz=True)
   SIM.free_all()
