@@ -19,5 +19,13 @@ libtbx.python weather.py main_log_dir=/global/cfs/cdirs/lcls/sauter/LY99/cytochr
 ```
 
 Updated [slurm script sim_5946633.sh](./sim_5946633.sh) is work in progress trying to generalize the image simulation
-to take arbitrary PDB coordinates and allow phil-defined parameter choices.  This is the most up to date version, with much 
-more work to do.
+to take arbitrary PDB coordinates and allow phil-defined parameter choices.
+
+Updated [slurm script sim_6346286.sh](./sim_6346286.sh) is work in progress writing the image simulations to H5 containers,
+one file per rank, instead of all-individual files.  Data are treated as int32, thus avoiding the Bragg spot overflows 
+experienced with uint16 values in smv format.  Data are gzip-compressed in the H5.  There is one DETECTOR model overall
+for the H5 file.  Each diffraction event has its own BEAM and SPECTRUM model.  Data are written in standard NeXus and therefore
+suitable for DIALS input.  It needs to be confirmed that the data can be processed with dials.stills_process and cctbx.xfel.merge.
+For the moment, the output.format=h5 option requires the nxmx_writer branches of both cctbx_project and dxtbx, however these 
+will be merged in upcoming pull requests.
+This is the most up to date version, with much more work to do.

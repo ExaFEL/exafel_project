@@ -28,8 +28,12 @@ def parse_input():
         .help = spectra from big data are coerced to this total flux
     }
     output {
-      format = *smv cbf h5
+      format = *smv cbf h5 h5_stage1
         .type = choice
+        .help = smv: super marty view ADSC format for NESAP benchmark with gzip
+        .help = cbf: not really tested
+        .help = h5_stage1: transitional test to NeXus, one file per frame, coord system wrong, do not use
+        .help = h5: NeXus writer to H5 container, one file per rank
     }
   """
   phil_scope = parse(master_phil)
