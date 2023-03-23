@@ -48,7 +48,7 @@ def basic_detector_rayonix(): # from development, not actually used here but use
                  'identifier': '',
                  'image_size': im_shape,
                  'mask': [],
-                 'material': '',
+                 'material': 'Si',
                  'mu': 0.0,
                  'name': 'Panel',
                  'origin': (-im_shape[0]*pixsize/2., im_shape[1]*pixsize/2., -detdist),
@@ -56,7 +56,7 @@ def basic_detector_rayonix(): # from development, not actually used here but use
                  'pixel_size': (pixsize, pixsize),
                  'px_mm_strategy': {'type': 'SimplePxMmStrategy'},
                  'raw_image_offset': (0, 0),
-                 'thickness': 0.0,
+                 'thickness': 0.320, # Jungfrau thickness
                  'trusted_range': (-1e7, 1e7),
                  'type': ''}]}
   return DetectorFactory.from_dict(det_descr)
@@ -65,14 +65,15 @@ from LS49.sim.debug_utils import channel_extractor
 CHDBG_singleton = channel_extractor()
 
 def run_sim2smv(prefix,crystal,spectra,rotation,rank,gpu_channels_singleton,params,
-                quick=False,save_bragg=False,sfall_channels=None):
+                quick=False,save_bragg=False,sfall_channels=None, **kwargs):
   DETECTOR = basic_detector_rayonix()
   PANEL = DETECTOR[0]
   smv_fileout = prefix + ".img"
   burst_buffer_expand_dir = os.path.expandvars(params.logger.outdir)
   burst_buffer_fileout = os.path.join(burst_buffer_expand_dir,smv_fileout)
+  h5_stage1_fileout = os.path.join(burst_buffer_expand_dir,prefix+".h5")
   reference_fileout = os.path.join(".",smv_fileout)
-  if not quick:
+  if not quick and params.output.format == "smv":
     if not write_safe(reference_fileout):
       print("File %s already exists, skipping in rank %d"%(reference_fileout,rank))
       return
@@ -257,7 +258,34 @@ def run_sim2smv(prefix,crystal,spectra,rotation,rank,gpu_channels_singleton,para
   print(burst_buffer_fileout, smv_fileout)
 
   extra = "PREFIX=%s;\nRANK=%d;\n"%(prefix,rank)
-  utils.save_spectra_file(burst_buffer_fileout + ".lam", wavlen, flux) # save per image spectrum
-  SIM.to_smv_format_py(fileout=burst_buffer_fileout,intfile_scale=1,rotmat=True,extra=extra,gz=True)
-  SIM.free_all()
 
+  if params.output.format == "h5":
+    intfile_scale=1.0
+    """write a NeXus NXmx-format image file to disk from the raw pixel array
+    intfile_scale: multiplicative factor applied to raw pixels before output
+         intfile_scale > 0 : value of the multiplicative factor
+         intfile_scale = 1 (default): do not apply a factor
+         intfile_scale = 0 : compute a reasonable scale factor to set max pixel to 55000; given by get_intfile_scale()"""
+    if intfile_scale != 1.0:
+      cache_pixels = SIM.raw_pixels
+      if intfile_scale > 0: SIM.raw_pixels = SIM.raw_pixels * intfile_scale
+      else: SIM.raw_pixels = SIM.raw_pixels * SIM.get_intfile_scale()
+      # print("switch to scaled")
+
+    beam = SIM.imageset.get_beam(0)
+    from dxtbx.model import Spectrum
+    from cctbx import factor_ev_angstrom
+    spectrum= Spectrum(factor_ev_angstrom/wavlen, flux)
+    kwargs["writer"].add_beam_in_sequence(beam,spectrum)
+    kwargs["writer"].append_frame(data=(SIM.raw_pixels,))
+
+    if intfile_scale != 1.0:
+      SIM.raw_pixels = cache_pixels
+      # print("switch back to cached")
+
+  elif params.output.format == "h5_stage1":
+    SIM.to_nexus_nxmx(h5_stage1_fileout, intfile_scale=1)
+  elif params.output.format == "smv":
+    SIM.to_smv_format_py(fileout=burst_buffer_fileout,intfile_scale=1,rotmat=True,extra=extra,gz=True)
+
+  SIM.free_all()
