@@ -1,4 +1,4 @@
-spectrum_from_imageset = False
+spectrum_from_imageset = True
 exp_ref_spec_file = "stills_watchmans_ease_1and2.lst"
 method = "L-BFGS-B"
 outdir = "kokkos.test.3"
@@ -7,7 +7,7 @@ sigmas {
   RotXYZ = 0.001 0.001 0.001
 }
 init {
-  Nabc = 35.53566524 34.76488544 11.93933238
+  Nabc = 35 35 10
   G = 105111.0392
 }
 mins {
@@ -24,14 +24,14 @@ fix {
 }
 ucell_edge_perc = 15
 ucell_ang_abs = 1
-space_group = "P6522"
+space_group = "C121"
 logging {
   rank0_level = low normal *high
 }
 simulator {
   oversample = 1
   structure_factors {
-    mtz_name = "merging/merge2/iobs_all.mtz"
+    mtz_name = "/pscratch/sd/v/vidyagan/ferredoxin_sim/LY99/6448599/out/ly99sim_all.mtz"
     mtz_column = "Iobs(+),SIGIobs(+),Iobs(-),SIGIobs(-)"
   }
   beam {
@@ -44,7 +44,7 @@ simulator {
 refiner {
   num_devices = 8
   sigma_r = 10
-  adu_per_photon = 9.481
+  adu_per_photon = 1
   reference_geom = "PM-test/watchmans_ease_geom.expt"
 }
 roi {
@@ -53,6 +53,5 @@ roi {
   pad_shoebox_for_background_estimation = 10
   reject_edge_reflections = False
   reject_roi_with_hotpix = False
-  hotpixel_mask = "/global/cfs/cdirs/m3562/der/temp2.mask"
   fit_tilt_using_weights = False
 }
