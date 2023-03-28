@@ -286,6 +286,7 @@ def run_sim2smv(prefix,crystal,spectra,rotation,rank,gpu_channels_singleton,para
   elif params.output.format == "h5_stage1":
     SIM.to_nexus_nxmx(h5_stage1_fileout, intfile_scale=1)
   elif params.output.format == "smv":
+    utils.save_spectra_file(burst_buffer_fileout + ".lam", wavlen, flux) # save per image spectrum
     SIM.to_smv_format_py(fileout=burst_buffer_fileout,intfile_scale=1,rotmat=True,extra=extra,gz=True)
 
   SIM.free_all()
