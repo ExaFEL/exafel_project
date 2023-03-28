@@ -1,5 +1,5 @@
 spectrum_from_imageset = True
-exp_ref_spec_file = "stills_watchmans_ease_1and2.lst"
+exp_ref_spec_file = "exp_ref_spec"
 method = "L-BFGS-B"
 outdir = "kokkos.test.3"
 sigmas {
