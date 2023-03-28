@@ -38,6 +38,6 @@ export XFEL_CUSTOM_WORKER_PATH=$MODULES/psii_spread/merging/application # User m
 
 echo "jobstart $(date)";pwd
 
-srun -n 1024 -G 32 -c 2 hopper $MODULES/exafel_project/kpp-sim/hopper_stage1.phil
+srun -n 1024 -G 128 -c 2 hopper $MODULES/exafel_project/kpp-sim/hopper_stage1.phil
 
 echo "jobend $(date)";pwd
