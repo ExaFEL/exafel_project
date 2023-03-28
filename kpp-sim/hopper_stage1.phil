@@ -45,7 +45,7 @@ refiner {
   num_devices = 8
   sigma_r = 10
   adu_per_photon = 1
-  reference_geom = "/pscratch/sd/v/vidyagan/ferredoxin_sim/LY99/6443545/idx-image_rank_00276_27058_refined.expt "
+  reference_geom = "/pscratch/sd/v/vidyagan/ferredoxin_sim/LY99/6443545/idx-image_rank_00276_27058_refined.expt"
 }
 roi {
   mask_outside_trusted_range = True
