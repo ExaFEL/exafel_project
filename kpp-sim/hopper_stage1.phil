@@ -42,7 +42,7 @@ simulator {
   }
 }
 refiner {
-  num_devices = 4
+  num_devices = 1
   randomize_devices = False
   sigma_r = 10
   adu_per_photon = 1
