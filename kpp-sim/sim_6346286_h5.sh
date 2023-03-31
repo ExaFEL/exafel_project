@@ -2,7 +2,7 @@
 #SBATCH -N 32             # Number of nodes
 #SBATCH -J ferredoxin_sim_h5
 #SBATCH -L SCRATCH       # job requires SCRATCH files
-#SBATCH -A lcls_g       # allocation
+#SBATCH -A m2859_g       # allocation
 #SBATCH -C gpu
 #SBATCH -q regular # regular or special queue
 #SBATCH -t 00:45:00      # wall clock time limit

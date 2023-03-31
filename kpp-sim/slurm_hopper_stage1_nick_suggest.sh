@@ -3,7 +3,7 @@
 #SBATCH -N 32            # Number of nodes
 #SBATCH -J stage_1_32       # job name
 #SBATCH -L SCRATCH       # job requires SCRATCH files
-#SBATCH -A lcls_g       # allocation
+#SBATCH -A m2859_g       # allocation
 #SBATCH -C gpu
 #SBATCH -q regular
 #SBATCH -t 00:36:00

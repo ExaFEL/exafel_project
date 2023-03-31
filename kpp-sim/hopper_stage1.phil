@@ -43,7 +43,7 @@ simulator {
 }
 refiner {
   num_devices = 4
-  randomize_devices = True
+  randomize_devices = False
   sigma_r = 10
   adu_per_photon = 1
   reference_geom = "/pscratch/sd/v/vidyagan/ferredoxin_sim/LY99/6443545/idx-image_rank_00276_27058_refined.expt"
