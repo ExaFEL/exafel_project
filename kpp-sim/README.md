@@ -29,3 +29,21 @@ suitable for DIALS input.  It needs to be confirmed that the data can be process
 For the moment, the output.format=h5 option requires the nxmx_writer branches of both cctbx_project and dxtbx, however these 
 will be merged in upcoming pull requests.
 This is the most up to date version, with much more work to do.
+
+compare_timings.py - show that reading in 100,000 patterns is faster from composite H5 than SMV.  This is the wall
+time to read data from Perlmutter $SCR to RAM (non-persistent over loop) using 8 cpu nodes, 256 cpu ranks (32 ranks/cpu node).
+
+| Format | Compression   | dtype           | Total size  | # files | Read time | Intake rate |
+|--------|---------------|-----------------|-------------|---------|-----------|-------------|
+| SMV    | external gzip | unsigned short  | 1.63 TB     | 100,000 | 197 s     | 0.066 Tb/s  |
+| HDF5   | internal gzip | uint16 typecast | 1.77 TB     | 1024    | 167 s     | 0.085 Tb/s  |
+| HDF5   | internal gzip | int32           | 1.73 TB     | 1024    | 181 s     | 0.076 Tb/s  |
+
+compare_types.py - show that the uint16 HDF5 pixel values are identical to SMV.  However the metadata that determine 
+the integration results are different.  Thus data processing for the two data formats will differ.
+
+
+
+
+
+
