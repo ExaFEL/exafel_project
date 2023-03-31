@@ -1,11 +1,11 @@
 #!/bin/bash -l
-#SBATCH -N 4             # Number of nodes
-#SBATCH -J cytochrome_sim
+#SBATCH -N 32             # Number of nodes
+#SBATCH -J ferredoxin_sim
 #SBATCH -L SCRATCH       # job requires SCRATCH files
 #SBATCH -A m2859_g       # allocation
 #SBATCH -C gpu
 #SBATCH -q regular # regular or special queue
-#SBATCH -t 00:45:00      # wall clock time limit
+#SBATCH -t 00:50:00      # wall clock time limit
 #SBATCH --gpus-per-node 4
 #SBATCH --ntasks-per-gpu 8
 #SBATCH -o %j.out
@@ -18,7 +18,7 @@ export CCTBX_DEVICE_PER_NODE=1
 export N_START=0
 export LOG_BY_RANK=1 # Use Aaron's rank logger
 export RANK_PROFILE=0 # 0 or 1 Use cProfiler, default 1
-export N_SIM=12500 # total number of images to simulate
+export N_SIM=100000 # total number of images to simulate
 export ADD_BACKGROUND_ALGORITHM=cuda
 export DEVICES_PER_NODE=1
 export MOS_DOM=25
@@ -44,10 +44,11 @@ beam {
 }
 output {
   format=h5
+  h5.dtype=uint16
+  h5.typecast=True
 }
 " > trial.phil
 
 echo "jobstart $(date)";pwd
-srun -n 128 -c 2 -G 16 libtbx.python $MODULES/exafel_project/kpp_utils/LY99_batch.py trial.phil 
+srun -n 1024 -c 2 -G 128 libtbx.python $MODULES/exafel_project/kpp_utils/LY99_batch.py trial.phil
 echo "jobend $(date)";pwd
-
