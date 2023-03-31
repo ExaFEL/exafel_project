@@ -270,6 +270,15 @@ def run_sim2smv(prefix,crystal,spectra,rotation,rank,gpu_channels_singleton,para
       else: SIM.raw_pixels = SIM.raw_pixels * SIM.get_intfile_scale()
       # print("switch to scaled")
 
+    if params.output.h5.typecast: SIM.raw_pixels -= 0.5 # behave like SMV, round to lower integer
+
+    if params.output.h5.dtype == "int32": pass # OK, no transformation needed
+    else: # don't actually change the array type (int32), just respect smaller limits
+      import numpy as np
+      datatype = np.__dict__[params.output.h5.dtype] # use numpy built in types
+      SIM.raw_pixels.set_selected( SIM.raw_pixels < np.iinfo(datatype).min, np.iinfo(datatype).min ) # set in place
+      SIM.raw_pixels.set_selected( SIM.raw_pixels > np.iinfo(datatype).max - 1, np.iinfo(datatype).max -1 ) # mimic SMV, do not allow largest value
+
     beam = SIM.imageset.get_beam(0)
     from dxtbx.model import Spectrum
     from cctbx import factor_ev_angstrom

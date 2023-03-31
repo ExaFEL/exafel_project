@@ -24,7 +24,7 @@ from simtbx import get_exascale
 # sfall_main not used?
 # evaluate air + water as a singleton
 
-from exafel_project.kpp_utils.test_utils import parse_input
+from exafel_project.kpp_utils.phil import parse_input
 from exafel_project.kpp_utils.ferredoxin import basic_detector_rayonix
 
 def tst_one(image,spectra,crystal,random_orientation,sfall_channels,gpu_channels_singleton,rank,params,**kwargs):

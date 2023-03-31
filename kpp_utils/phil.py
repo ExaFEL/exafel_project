@@ -34,6 +34,16 @@ def parse_input():
         .help = cbf: not really tested
         .help = h5_stage1: transitional test to NeXus, one file per frame, coord system wrong, do not use
         .help = h5: NeXus writer to H5 container, one file per rank
+      h5 {
+        dtype = *int32 uint16
+          .type = choice
+          .help = the numerical type, must be overall convertible to int32, uint16 is unsigned short
+          .help = as in legacy nanoBragg::to_smv, the max limit for uint16 is 65534, not the usual 65535
+        typecast = False
+          .type = bool
+          .help = Subtract 0.5 from the float-valued pixels, thus the Nexus writer behaves like SMV (cast to lower integer)
+          .help = instead of nearest integer rounding.
+      }
     }
   """
   phil_scope = parse(master_phil)
