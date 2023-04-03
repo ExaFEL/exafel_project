@@ -12,10 +12,11 @@ from libtbx.development.timers import Profiler
 from simtbx import get_exascale
 
 def specific_expt(params):
+  P = Profiler("Initialize specific expt file %s"%(params.detector.reference))
   from dxtbx.model.experiment_list import ExperimentList
   expt_path = params.detector.reference
   print("Opening the reference model experiment",params.detector.reference)
-  return ExperimentList.from_file(expt_path)[0]
+  return ExperimentList.from_file(expt_path, check_format=False)[0]
 
 def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,params,
                 quick=False,save_bragg=False,sfall_channels=None, **kwargs):
