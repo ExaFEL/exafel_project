@@ -131,6 +131,7 @@ def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,pa
     multipanel=(len(DETECTOR),DETECTOR[0].get_image_size()[0],DETECTOR[0].get_image_size()[1])
     image_grid = flex.grid(multipanel)
     positive_mask = ~(flex.bool(image_grid, False))
+    positive_mask_iselection = positive_mask.iselection()
 
     # loop over energies
     for x in range(len(flux)):
@@ -143,12 +144,10 @@ def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,pa
       SIM.flux = flux[x]
 
       gpu_simulation.add_energy_channel_mask_allpanel(
-            x, gpu_channels_singleton, gpu_detector, positive_mask.iselection())
+            x, gpu_channels_singleton, gpu_detector, positive_mask_iselection)
       del P
     gpu_detector.scale_in_place(crystal.domains_per_crystal) # apply scale directly on GPU
     SIM.wavelength_A = wavelength_A # return to canonical energy for subsequent background
-    newapi = gpu_detector.get_raw_pixels()
-    print("NEWAPI HAVING NOW",newapi,newapi.focus())
 
     QQ = Profiler("nanoBragg background rank %d"%(rank))
     SIM.Fbg_vs_stol = water_bg
@@ -158,21 +157,20 @@ def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,pa
     SIM.flux=1e12
     SIM.beamsize_mm=0.003 # square (not user specified)
     SIM.exposure_s=1.0 # multiplies flux x exposure
-    #gpu_simulation.add_background(gpu_detector)            ###################################################################NKS
+    gpu_simulation.add_background(gpu_detector)
     SIM.Fbg_vs_stol = air_bg
     SIM.amorphous_sample_thick_mm = 10 # between beamstop and collimator
     SIM.amorphous_density_gcm3 = 1.2e-3
     SIM.amorphous_sample_molecular_weight_Da = 28 # nitrogen = N2
-    #gpu_simulation.add_background(gpu_detector)            ###################################################################NKS
+    gpu_simulation.add_background(gpu_detector)
 
-    # deallocate GPU arrays
-    # gpu_detector.write_raw_pixels(SIM)  # updates SIM.raw_pixels from GPU
-    # gpu_detector.each_image_free()
+    # gpu_detector.write_raw_pixels(SIM)  # updates SIM.raw_pixels from GPU ###################################################################NKS
+
     SIM.Amatrix_RUB = Amatrix_rot # return to canonical orientation
     del QQ
 
   nominal_data = gpu_detector.get_raw_pixels()
-  gpu_detector.each_image_free()
+  gpu_detector.each_image_free() # deallocate GPU arrays
 
   if params.psf:
     SIM.detector_psf_kernel_radius_pixels=10;

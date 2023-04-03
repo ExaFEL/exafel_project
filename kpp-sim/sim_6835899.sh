@@ -5,7 +5,7 @@
 #SBATCH -A m2859_g       # allocation
 #SBATCH -C gpu
 #SBATCH -q regular # regular or special queue
-#SBATCH -t 02:00:00      # wall clock time limit
+#SBATCH -t 01:30:00      # wall clock time limit
 #SBATCH --gpus-per-node 4
 #SBATCH --ntasks-per-gpu 8
 #SBATCH -o %j.out
@@ -44,7 +44,7 @@ beam {
 }
 detector {
   tiles=multipanel
-  reference=${WORK}/cytochrome_sim/t000_rg002_chunk000_reintegrated_000000.expt
+  reference=$MODULES/exafel_project/kpp-sim/t000_rg002_chunk000_reintegrated_000000.expt
 }
 output {
   format=h5
