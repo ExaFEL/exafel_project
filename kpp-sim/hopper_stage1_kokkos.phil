@@ -1,0 +1,60 @@
+spectrum_from_imageset = True
+exp_ref_spec_file = "/global/cfs/cdirs/m3562/users/vidyagan/p20231/diffbragg_stage1/exp_ref_spec"
+method = "L-BFGS-B"
+outdir = "hopper_stage_one"
+sigmas {
+  Nabc = 10 10 10
+  RotXYZ = 0.001 0.001 0.001
+}
+init {
+  Nabc = 35 35 10
+  G = 105111.0392
+}
+mins {
+  detz_shift = -1.5
+  RotXYZ = -15 -15 -15
+}
+maxs {
+  detz_shift = 1.5
+  Nabc = 1600 1600 1600
+  RotXYZ = 15 15 15
+}
+fix {
+  detz_shift = True
+}
+ucell_edge_perc = 15
+ucell_ang_abs = 1
+space_group = "C121"
+logging {
+  rank0_level = low normal *high
+}
+simulator {
+  oversample = 1
+  structure_factors {
+    mtz_name = "/pscratch/sd/v/vidyagan/ferredoxin_sim/LY99/6448599/out/ly99sim_all.mtz"
+    mtz_column = "Iobs(+),SIGIobs(+),Iobs(-),SIGIobs(-)"
+  }
+  beam {
+    size_mm = 0.001
+  }
+  detector {
+    force_zero_thickness = True
+  }
+}
+refiner {
+  num_devices = 1
+  sigma_r = 10
+  adu_per_photon = 1
+  reference_geom = "/pscratch/sd/v/vidyagan/ferredoxin_sim/LY99/6443545/idx-image_rank_00276_27058_refined.expt"
+}
+roi {
+  mask_outside_trusted_range = True
+  fit_tilt = True
+  pad_shoebox_for_background_estimation = 10
+  reject_edge_reflections = False
+  reject_roi_with_hotpix = False
+  fit_tilt_using_weights = False
+}
+downsamp_spec {
+  skip = True
+}
