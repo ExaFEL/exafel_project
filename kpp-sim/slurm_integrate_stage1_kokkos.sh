@@ -38,6 +38,6 @@ export XFEL_CUSTOM_WORKER_PATH=$MODULES/psii_spread/merging/application # User m
 
 echo "jobstart $(date)";pwd
 
-srun -n 256 -G 128 -c 2 hopper $MODULES/exafel_project/kpp-sim/hopper_stage1_kokkos.phil
+srun -n 256 -G 128 -c 2 diffBragg.integrate $MODULES/exafel_project/kpp-sim/integrate_stage1_kokkos.phil $MODULES/LS49/LY99/saul/index1.phil $SCRATCH/ferredoxin_sim/7450179/hopper_stage_one out --numdev 128
 
 echo "jobend $(date)";pwd
