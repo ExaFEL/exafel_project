@@ -824,7 +824,7 @@ class Processor(object):
 
       from libtbx import easy_pickle
       import os
-      from xfel.command_line.frame_extractor import ConstructFrame
+      from serialtbx.util.construct_frame import ConstructFrame
       from dials.array_family import flex
 
       # Split everything into separate experiments for pickling
