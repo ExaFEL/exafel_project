@@ -13,6 +13,7 @@ except ImportError:
 except AttributeError:
   pass
 
+from serialtbx.detector import cspad
 from xfel.cftbx.detector import cspad_cbf_tbx
 from xfel.cxi.cspad_ana import cspad_tbx, rayonix_tbx
 import pycbf, os, sys, copy, socket
@@ -997,11 +998,11 @@ class InMemScript(DialsProcessScript, DialsProcessorWithLogging):
     if self.params.format.file_format == 'cbf':
       if self.params.format.cbf.mode == "cspad":
         # get numpy array, 32x185x388
-        data = cspad_cbf_tbx.get_psana_corrected_data(self.psana_det, evt, use_default=False, dark=True,
-                                                    common_mode=self.common_mode,
-                                                    apply_gain_mask=self.params.format.cbf.cspad.gain_mask_value is not None,
-                                                    gain_mask_value=self.params.format.cbf.cspad.gain_mask_value,
-                                                    per_pixel_gain=self.params.format.cbf.cspad.per_pixel_gain)
+        data = cspad.get_psana_corrected_data(self.psana_det, evt, use_default=False, dark=True,
+                                              common_mode=self.common_mode,
+                                              apply_gain_mask=self.params.format.cbf.cspad.gain_mask_value is not None,
+                                              gain_mask_value=self.params.format.cbf.cspad.gain_mask_value,
+                                              per_pixel_gain=self.params.format.cbf.cspad.per_pixel_gain)
 
       elif self.params.format.cbf.mode == "rayonix":
         data = rayonix_tbx.get_data_from_psana_event(evt, self.params.input.address)
