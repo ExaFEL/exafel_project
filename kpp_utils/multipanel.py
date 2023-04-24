@@ -3,7 +3,6 @@ from scitbx.array_family import flex
 from scitbx.matrix import sqr,col
 from simtbx.nanoBragg import shapetype
 from simtbx.nanoBragg import nanoBragg
-from simtbx.diffBragg import utils
 import libtbx.load_env # possibly implicit
 from cctbx import crystal
 import math
@@ -11,73 +10,18 @@ import scitbx
 import os
 from libtbx.development.timers import Profiler
 from simtbx import get_exascale
-from dxtbx.model.detector import DetectorFactory
 
-from LS49 import ls49_big_data
-big_data = ls49_big_data
-def full_path(filename):
-  return os.path.join(big_data,filename)
+def specific_expt(params):
+  P = Profiler("Initialize specific expt file %s"%(params.detector.reference))
+  from dxtbx.model.experiment_list import ExperimentList
+  expt_path = params.detector.reference
+  print("Opening the reference model experiment",params.detector.reference)
+  return ExperimentList.from_file(expt_path, check_format=False)[0]
 
-def data():
-  from LS49.sim.fdp_plot import george_sherrell
-  return dict(
-    pdb_lines = open(full_path("1m2a.pdb"),"r").read(),
-    Fe_oxidized_model = george_sherrell(full_path("data_sherrell/pf-rd-ox_fftkk.out")),
-    Fe_reduced_model = george_sherrell(full_path("data_sherrell/pf-rd-red_fftkk.out")),
-    Fe_metallic_model = george_sherrell(full_path("data_sherrell/Fe_fake.dat"))
-  )
-
-def write_safe(fname):
-  # make sure file or compressed file is not already on disk
-  return (not os.path.isfile(fname)) and (not os.path.isfile(fname+".gz"))
-
-add_background_algorithm = str(os.environ.get("ADD_BACKGROUND_ALGORITHM","jh"))
-assert add_background_algorithm in ["jh","sort_stable","cuda"]
-
-def basic_detector_rayonix(): # from development, not actually used here but useful for reference
-  # make a detector panel
-  # monolithic camera description
-  print("Make a dxtbx detector")
-  detdist = 141.7
-  pixsize = 0.088 # Rayonix MX340-XFEL, 2x2 binning mode
-  im_shape = 3840, 3840
-  det_descr = {'panels':
-               [{'fast_axis': (1.0, 0.0, 0.0),
-                 'slow_axis': (0.0, -1.0, 0.0),
-                 'gain': 1.0,
-                 'identifier': '',
-                 'image_size': im_shape,
-                 'mask': [],
-                 'material': 'Si',
-                 'mu': 0.0,
-                 'name': 'Panel',
-                 'origin': (-im_shape[0]*pixsize/2., im_shape[1]*pixsize/2., -detdist),
-                 'pedestal': 0.0,
-                 'pixel_size': (pixsize, pixsize),
-                 'px_mm_strategy': {'type': 'SimplePxMmStrategy'},
-                 'raw_image_offset': (0, 0),
-                 'thickness': 0.320, # Jungfrau thickness
-                 'trusted_range': (-1e7, 1e7),
-                 'type': ''}]}
-  return DetectorFactory.from_dict(det_descr)
-
-from LS49.sim.debug_utils import channel_extractor
-CHDBG_singleton = channel_extractor()
-
-def run_sim2smv(prefix,crystal,spectra,rotation,rank,gpu_channels_singleton,params,
+def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,params,
                 quick=False,save_bragg=False,sfall_channels=None, **kwargs):
-  DETECTOR = basic_detector_rayonix()
+  DETECTOR = reference.detector
   PANEL = DETECTOR[0]
-  smv_fileout = prefix + ".img"
-  burst_buffer_expand_dir = os.path.expandvars(params.logger.outdir)
-  burst_buffer_fileout = os.path.join(burst_buffer_expand_dir,smv_fileout)
-  h5_stage1_fileout = os.path.join(burst_buffer_expand_dir,prefix+".h5")
-  reference_fileout = os.path.join(".",smv_fileout)
-  if not quick and params.output.format == "smv":
-    if not write_safe(reference_fileout):
-      print("File %s already exists, skipping in rank %d"%(reference_fileout,rank))
-      return
-
   direct_algo_res_limit = 1.7
 
   wavlen, flux, wavelength_A = next(spectra) # list of lambdas, list of fluxes, average wavelength
@@ -87,9 +31,12 @@ def run_sim2smv(prefix,crystal,spectra,rotation,rank,gpu_channels_singleton,para
   # use crystal structure to initialize Fhkl array
   N = crystal.number_of_cells(sfall_channels[0].unit_cell())
 
-  SIM = nanoBragg(detpixels_slowfast=PANEL.get_image_size(),pixel_size_mm=PANEL.get_pixel_size()[0],Ncells_abc=(N,N,N),
-    # workaround for problem with wavelength array, specify it separately in constructor.
-    wavelength_A=wavelength_A,verbose=0)
+  consistent_beam = reference.beam
+  consistent_beam.set_wavelength(wavelength_A)
+  SIM = nanoBragg(detector = DETECTOR, beam = consistent_beam)
+  SIM.Ncells_abc=(N,N,N)
+  print("beam, polar", SIM.beam_vector, SIM.polar_vector)
+
   SIM.adc_offset_adu = 0 # Do not offset by 40
   #SIM.adc_offset_adu = 10 # Do not offset by 40
   SIM.mosaic_spread_deg = 0.05 # interpreted by UMAT_nm as a half-width stddev
@@ -179,45 +126,52 @@ def run_sim2smv(prefix,crystal,spectra,rotation,rank,gpu_channels_singleton,para
     gpu_simulation = exascale_api(nanoBragg = SIM)
     gpu_simulation.allocate()
 
-    gpu_detector = gpud(deviceId=SIM.device_Id, nanoBragg=SIM)
+    gpu_detector = gpud(deviceId=SIM.device_Id, detector=DETECTOR, beam=consistent_beam)
     gpu_detector.each_image_allocate()
+
+    multipanel=(len(DETECTOR),DETECTOR[0].get_image_size()[0],DETECTOR[0].get_image_size()[1])
+    image_grid = flex.grid(multipanel)
+    positive_mask = ~(flex.bool(image_grid, False))
+    positive_mask_iselection = positive_mask.iselection()
 
     # loop over energies
     for x in range(len(flux)):
       P = Profiler("USE_EXASCALE_API nanoBragg Python and C++ rank %d"%(rank))
 
       print("USE_EXASCALE_API+++++++++++++++++++++++ Wavelength",x)
+
       # from channel_pixels function
       SIM.wavelength_A = wavlen[x]
       SIM.flux = flux[x]
-      gpu_simulation.add_energy_channel_from_gpu_amplitudes(
-        x, gpu_channels_singleton, gpu_detector)
+
+      gpu_simulation.add_energy_channel_mask_allpanel(
+            x, gpu_channels_singleton, gpu_detector, positive_mask_iselection)
       del P
     gpu_detector.scale_in_place(crystal.domains_per_crystal) # apply scale directly on GPU
     SIM.wavelength_A = wavelength_A # return to canonical energy for subsequent background
 
-    assert add_background_algorithm == "cuda"
-    if add_background_algorithm == "cuda":
-      QQ = Profiler("nanoBragg background rank %d"%(rank))
-      SIM.Fbg_vs_stol = water_bg
-      SIM.amorphous_sample_thick_mm = 0.1
-      SIM.amorphous_density_gcm3 = 1
-      SIM.amorphous_molecular_weight_Da = 18
-      SIM.flux=1e12
-      SIM.beamsize_mm=0.003 # square (not user specified)
-      SIM.exposure_s=1.0 # multiplies flux x exposure
-      gpu_simulation.add_background(gpu_detector)
-      SIM.Fbg_vs_stol = air_bg
-      SIM.amorphous_sample_thick_mm = 10 # between beamstop and collimator
-      SIM.amorphous_density_gcm3 = 1.2e-3
-      SIM.amorphous_sample_molecular_weight_Da = 28 # nitrogen = N2
-      gpu_simulation.add_background(gpu_detector)
+    QQ = Profiler("nanoBragg background rank %d"%(rank))
+    SIM.Fbg_vs_stol = water_bg
+    SIM.amorphous_sample_thick_mm = 0.1
+    SIM.amorphous_density_gcm3 = 1
+    SIM.amorphous_molecular_weight_Da = 18
+    SIM.flux=1e12
+    SIM.beamsize_mm=0.003 # square (not user specified)
+    SIM.exposure_s=1.0 # multiplies flux x exposure
+    gpu_simulation.add_background(gpu_detector)
+    SIM.Fbg_vs_stol = air_bg
+    SIM.amorphous_sample_thick_mm = 10 # between beamstop and collimator
+    SIM.amorphous_density_gcm3 = 1.2e-3
+    SIM.amorphous_sample_molecular_weight_Da = 28 # nitrogen = N2
+    gpu_simulation.add_background(gpu_detector)
 
-    # deallocate GPU arrays
-    gpu_detector.write_raw_pixels(SIM)  # updates SIM.raw_pixels from GPU
-    gpu_detector.each_image_free()
+    # gpu_detector.write_raw_pixels(SIM)  # updates SIM.raw_pixels from GPU ###################################################################NKS
+
     SIM.Amatrix_RUB = Amatrix_rot # return to canonical orientation
     del QQ
+
+  nominal_data = gpu_detector.get_raw_pixels()
+  gpu_detector.each_image_free() # deallocate GPU arrays
 
   if params.psf:
     SIM.detector_psf_kernel_radius_pixels=10;
@@ -248,54 +202,22 @@ def run_sim2smv(prefix,crystal,spectra,rotation,rank,gpu_channels_singleton,para
     print("detector_psf_fwhm_mm=",SIM.detector_psf_fwhm_mm)
     print("detector_psf_kernel_radius_pixels=",SIM.detector_psf_kernel_radius_pixels)
     #estimate_gain(SIM.raw_pixels,offset=0)
-    SIM.add_noise() #converts photons to ADU.
+    #SIM.add_noise() #converts photons to ADU.            ###################################################################NKS
     #estimate_gain(SIM.raw_pixels,offset=SIM.adc_offset_adu,algorithm="slow")
     #estimate_gain(SIM.raw_pixels,offset=SIM.adc_offset_adu,algorithm="kabsch")
   del QQ
 
-  print ("FULLY")
-  print(burst_buffer_expand_dir, params.logger.outdir)
-  print(burst_buffer_fileout, smv_fileout)
-
-  extra = "PREFIX=%s;\nRANK=%d;\n"%(prefix,rank)
-
   if params.output.format == "h5":
-    intfile_scale=1.0
-    """write a NeXus NXmx-format image file to disk from the raw pixel array
-    intfile_scale: multiplicative factor applied to raw pixels before output
-         intfile_scale > 0 : value of the multiplicative factor
-         intfile_scale = 1 (default): do not apply a factor
-         intfile_scale = 0 : compute a reasonable scale factor to set max pixel to 55000; given by get_intfile_scale()"""
-    if intfile_scale != 1.0:
-      cache_pixels = SIM.raw_pixels
-      if intfile_scale > 0: SIM.raw_pixels = SIM.raw_pixels * intfile_scale
-      else: SIM.raw_pixels = SIM.raw_pixels * SIM.get_intfile_scale()
-      # print("switch to scaled")
-
-    if params.output.h5.typecast: SIM.raw_pixels -= 0.5 # behave like SMV, round to lower integer
-
-    if params.output.h5.dtype == "int32": pass # OK, no transformation needed
-    else: # don't actually change the array type (int32), just respect smaller limits
-      import numpy as np
-      datatype = np.__dict__[params.output.h5.dtype] # use numpy built in types
-      SIM.raw_pixels.set_selected( SIM.raw_pixels < np.iinfo(datatype).min, np.iinfo(datatype).min ) # set in place
-      SIM.raw_pixels.set_selected( SIM.raw_pixels > np.iinfo(datatype).max - 1, np.iinfo(datatype).max -1 ) # mimic SMV, do not allow largest value
-
-    beam = SIM.imageset.get_beam(0)
     from dxtbx.model import Spectrum
     from cctbx import factor_ev_angstrom
     spectrum= Spectrum(factor_ev_angstrom/wavlen, flux)
-    kwargs["writer"].add_beam_in_sequence(beam,spectrum)
-    kwargs["writer"].append_frame(data=(SIM.raw_pixels,))
+    kwargs["writer"].add_beam_in_sequence(consistent_beam,spectrum)
 
-    if intfile_scale != 1.0:
-      SIM.raw_pixels = cache_pixels
-      # print("switch back to cached")
-
-  elif params.output.format == "h5_stage1":
-    SIM.to_nexus_nxmx(h5_stage1_fileout, intfile_scale=1)
-  elif params.output.format == "smv":
-    utils.save_spectra_file(burst_buffer_fileout + ".lam", wavlen, flux) # save per image spectrum
-    SIM.to_smv_format_py(fileout=burst_buffer_fileout,intfile_scale=1,rotmat=True,extra=extra,gz=True)
+    print ("ZINGA nominal", nominal_data, nominal_data.focus())
+    # ad hoc code to recast as tuple of panel arrays
+    npanel,nslow,nfast = nominal_data.focus()
+    nominal_data.reshape(flex.grid((npanel*nslow,nfast)))
+    reshape_data = tuple([ nominal_data[ip*nslow:(ip+1)*nslow, 0:nfast ] for ip in range(npanel)])
+    kwargs["writer"].append_frame(data=reshape_data)
 
   SIM.free_all()
