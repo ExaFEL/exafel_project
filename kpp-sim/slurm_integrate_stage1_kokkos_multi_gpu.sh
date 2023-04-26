@@ -19,7 +19,6 @@ export CCTBX_DEVICE_PER_NODE=1
 export N_START=0
 export LOG_BY_RANK=1 # Use Aaron's rank logger
 export RANK_PROFILE=0 # 0 or 1 Use cProfiler, default 1
-export N_SIM=500000 # total number of images to simulate
 export ADD_BACKGROUND_ALGORITHM=cuda
 export DEVICES_PER_NODE=1
 export MOS_DOM=25
@@ -38,6 +37,6 @@ export XFEL_CUSTOM_WORKER_PATH=$MODULES/psii_spread/merging/application # User m
 
 echo "jobstart $(date)";pwd
 
-srun -n 1 -G 4 -c 128 diffBragg.integrate $MODULES/exafel_project/kpp-sim/integrate_stage1_kokkos.phil $MODULES/LS49/LY99/saul/index1.phil $SCRATCH/ferredoxin_sim/7450179/hopper_stage_one out --numdev 4
+srun -n 4 -G 4 -c 32 diffBragg.integrate $MODULES/exafel_project/kpp-sim/integrate_stage1_kokkos.phil $MODULES/LS49/LY99/saul/index1.phil $SCRATCH/ferredoxin_sim/7450179/hopper_stage_one out --numdev 4
 
 echo "jobend $(date)";pwd
