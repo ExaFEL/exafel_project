@@ -42,6 +42,11 @@ time to read data from Perlmutter $SCR to RAM (non-persistent over loop) using 8
 compare_types.py - show that the uint16 HDF5 pixel values are identical to SMV.  However the metadata that determine 
 the integration results are different.  Thus data processing for the two data formats will differ.
 
+ferredoxin_index.sh and ferredoxin_merge.sh:  Slurm scripts for the H5 ferredoxin data processing. For SMV it
+would be necessary to change dispatch.pre_import to False.
+
+Updated [slurm script sim_6835899.sh](./sim_6835899.sh) writes out files in J16M detector format from SwissFEL.
+Beam and Detector objects are read in from the provided *.expt file.
 
 
 

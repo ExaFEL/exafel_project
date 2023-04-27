@@ -27,6 +27,14 @@ def parse_input():
         .type = float
         .help = spectra from big data are coerced to this total flux
     }
+    detector {
+      tiles = *single multipanel
+        .type = choice
+        .help = use fundamentally different function calls for single panel or multipanel detectors
+      reference = None
+        .type = path
+        .help = give the *.expt file to serve as reference for both beam and detector
+    }
     output {
       format = *smv cbf h5 h5_stage1
         .type = choice

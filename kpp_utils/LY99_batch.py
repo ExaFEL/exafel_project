@@ -121,19 +121,37 @@ def run_LY99_batch(test_without_mpi=False):
     from simtbx.nanoBragg import nexus_factory
     fileout_name="image_rank_%05d.h5"%rank
     kwargs["writer"] = nexus_factory(fileout_name) # break encapsulation, use kwargs to push writer to inner loop
-    DETECTOR = basic_detector_rayonix()
+    if params.detector.tiles == "single":
+      DETECTOR = basic_detector_rayonix()
+    else:
+      from exafel_project.kpp_utils.multipanel import specific_expt, run_sim2h5
+      specific = specific_expt(params)
+      DETECTOR = specific.detector
     kwargs["writer"].construct_detector(DETECTOR)
 
   for idx in parcels:
     cache_time = time()
     print("idx------start-------->",idx,"rank",rank,time())
     # if rank==0: os.system("nvidia-smi")
-    tst_one(image=idx,spectra=transmitted_info["spectra"],
+    if params.detector.tiles == "single":
+      tst_one(image=idx,spectra=transmitted_info["spectra"],
         crystal=transmitted_info["crystal"],
         random_orientation=transmitted_info["random_orientations"][idx],
         sfall_channels=transmitted_info["sfall_info"], gpu_channels_singleton=gpu_channels_singleton,
         rank=rank,params=params,**kwargs
-    )
+      )
+    else:
+      iterator = transmitted_info["spectra"].generate_recast_renormalized_image(
+        image=idx%100000,energy=params.beam.mean_wavelength,total_flux=params.beam.total_flux)
+      run_sim2h5(spectra = iterator,
+        reference = specific,
+        crystal = transmitted_info["crystal"],
+        rotation = sqr(transmitted_info["random_orientations"][idx]),
+        rank = rank,
+        gpu_channels_singleton=gpu_channels_singleton,
+        sfall_channels=transmitted_info["sfall_info"],
+        params=params,**kwargs
+      )
     print("idx------finis-------->",idx,"rank",rank,time(),"elapsed",time()-cache_time)
   comm.barrier()
   del gpu_channels_singleton
