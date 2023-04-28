@@ -34,7 +34,7 @@ def psii_amplitudes_spread(comm):
   size = comm.Get_size()
 
   wavelength_A = 1.89  # general ballpark X-ray wavelength in Angstroms
-  wavelengths = flex.double([ENERGY_CONV/(6520 + w) for w in range(81)])
+  wavelengths = flex.double([ENERGY_CONV/(6500 + w) for w in range(101)])
   direct_algo_res_limit = 1.85
 
   local_data = data()  # later put this through broadcast

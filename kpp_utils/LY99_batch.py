@@ -26,6 +26,9 @@ from simtbx import get_exascale
 
 from exafel_project.kpp_utils.phil import parse_input
 from exafel_project.kpp_utils.ferredoxin import basic_detector_rayonix
+from exafel_project.kpp_utils.amplitudes_spread_ferredoxin import ferredoxin
+from exafel_project.kpp_utils.psii_utils import psii_amplitudes_spread
+
 
 def tst_one(image,spectra,crystal,random_orientation,sfall_channels,gpu_channels_singleton,rank,params,**kwargs):
   iterator = spectra.generate_recast_renormalized_image(image=image%100000,energy=params.beam.mean_wavelength,
@@ -73,8 +76,8 @@ def run_LY99_batch(test_without_mpi=False):
   start_comp = time()
 
   # now inside the Python imports, begin energy channel calculation
-  from exafel_project.kpp_utils.amplitudes_spread_ferredoxin import ferredoxin
-  sfall_channels = ferredoxin(comm)
+  sfall_channels_d = {'ferredoxin': ferredoxin, 'PSII': psii_amplitudes_spread}
+  sfall_channels = sfall_channels_d[params.crystal.structure](comm)
   print(rank, time(), "finished with the calculation of channels, now construct single broadcast")
 
   if rank == 0:
