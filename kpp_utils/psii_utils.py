@@ -17,9 +17,9 @@ def full_path(filename):
 def data():
   from LS49.sim.fdp_plot import george_sherrell
   return dict(
-    pdb_lines=open(full_path("7RF1_refine_030_Aa_refine_032_refine_034.pdb"), "r").read(),  # TODO? Or not?
-    Mn_oxidized_model=george_sherrell(full_path("data_sherrell/Mn_spliced4+.dat")),  # TODO by Vidya
-    Mn_reduced_model=george_sherrell(full_path("data_sherrell/Mn_spliced3+.dat")),  # TODO by Vidya
+    pdb_lines=open(full_path("7RF1_refine_030_Aa_refine_032_refine_034.pdb"), "r").read(),
+    Mn_oxidized_model=george_sherrell(full_path("data_sherrell/MnO2_spliced.dat")),
+    Mn_reduced_model=george_sherrell(full_path("data_sherrell/Mn2O3_spliced.dat")),
     Mn_metallic_model=george_sherrell(full_path("data_sherrell/Mn.dat"))
   )
 
