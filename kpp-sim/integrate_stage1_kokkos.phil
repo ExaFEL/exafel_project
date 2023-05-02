@@ -16,5 +16,5 @@ predictions {
   resolution_range = [1,999]
   symbol_override = C121
   method = *diffbragg exascale
-  use_peak_detection = True
+  use_peak_detection = False
 }
