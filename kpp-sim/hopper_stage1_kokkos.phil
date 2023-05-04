@@ -25,6 +25,7 @@ fix {
 ucell_edge_perc = 15
 ucell_ang_abs = 1
 space_group = "C121"
+use_restraints = False
 logging {
   rank0_level = low normal *high
 }
