@@ -6,7 +6,8 @@ def bcast_dict_1by1(comm, data, root=0):
   """Broadcast dictionary elements one-by-one to avoid MPI overflow issues"""
   print(f'bcast1: {comm.rank=}, {datetime.now()=}')
   received = {}
-  keys = comm.bcast(list(data.keys()), root=root)
+  keys = list(data.keys()) if data is not None else None
+  keys = comm.bcast(keys, root=root)
   for key in keys:
     print(f'bcast2: {key=}, {datetime.now()=}')
     received[key] = comm.bcast(data[key], root=root)
