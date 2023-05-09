@@ -35,7 +35,7 @@ def gather_dict_1by1_alt(comm, data, root=0):
   rank = comm.rank
   print(f'gather1: {rank=}, {len(data)=}, {datetime.now()=}')
   received = []
-  max_data_lengths = max(comm.all2all(len(data), root=root))
+  max_data_lengths = max(comm.alltoall(len(data), root=root))
   data_list = list(data.items()) + [None] * max_data_lengths
   for index in range(max_data_lengths):
     print(f'gather2: {index=}, {datetime.now()=}')
