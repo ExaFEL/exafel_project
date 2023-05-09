@@ -4,13 +4,15 @@ from libtbx.mpi4py import MPI
 
 def bcast_dict_1by1(comm, data, root=0):
   """Broadcast dictionary elements one-by-one to avoid MPI overflow issues"""
+  rank = comm.rank
   print(f'bcast1: {comm.rank=}, {datetime.now()=}')
   received = {}
   keys = list(data.keys()) if data is not None else None
   keys = comm.bcast(keys, root=root)
   for key in keys:
     print(f'bcast2: {key=}, {datetime.now()=}')
-    received[key] = comm.bcast(data[key], root=root)
+    value = data[key] if rank == root else None
+    received[key] = comm.bcast(value, root=root)
   print(f'bcast3: {comm.rank=}, {datetime.now()=}')
   return received
 
