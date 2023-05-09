@@ -42,6 +42,7 @@ def gather_dict_1by1_alt(comm, data, root=0):
   for index in range(max_data_length):
     print(f'gather2: {index=}, {datetime.now()=}')
     gathered = comm.gather(data_list[index], root=root)
-    received.extend(g for g in gathered if g is not None)
+    if rank == root:
+      received.extend(g for g in gathered if g is not None)
   print(f'gather3: {rank=}, {len(received)=}, {datetime.now()=}')
   return received
