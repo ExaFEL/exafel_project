@@ -49,4 +49,5 @@ def gather_dict_1by1_alt(comm, data, root=0):
     if rank == root:
       received.extend(g for g in gathered if g is not None)
   print(f'gather3: {rank=}, {len(received)=}, {datetime.now()=}')
-  return received if rank == root else None
+  return {r[0]: r[1] for r in received if r is not None} \
+    if rank == root else None
