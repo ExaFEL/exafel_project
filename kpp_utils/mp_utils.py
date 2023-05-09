@@ -1,4 +1,5 @@
 from datetime import datetime
+from libtbx.mpi4py import MPI
 
 
 def bcast_dict_1by1(comm, data, root=0):
@@ -35,9 +36,9 @@ def gather_dict_1by1_alt(comm, data, root=0):
   rank = comm.rank
   print(f'gather1: {rank=}, {len(data)=}, {datetime.now()=}')
   received = []
-  max_data_lengths = max(comm.alltoall(len(data)))
-  data_list = list(data.items()) + [None] * max_data_lengths
-  for index in range(max_data_lengths):
+  max_data_length = comm.reduce(max(data), op=MPI.MAX, root=root)
+  data_list = list(data.items()) + [None] * max_data_length
+  for index in range(max_data_length):
     print(f'gather2: {index=}, {datetime.now()=}')
     gathered = comm.gather(data_list[index], root=root)
     received.extend(g for g in gathered if g is not None)
