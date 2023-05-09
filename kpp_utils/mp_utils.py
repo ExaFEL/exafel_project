@@ -17,25 +17,7 @@ def bcast_dict_1by1(comm, data, root=0):
   return received
 
 
-def gather_dict_1by1(comm, data, root=0):
-  """Gather dictionary elements by sending them one-by-one to avoid overflow"""
-  rank = comm.rank
-  print(f'gather1: {rank=}, {datetime.now()=}')
-  received = {}
-  key_rank_map = {key: rank for key in data.keys()}
-  if rank == 0:
-    key_rank_list = comm.gather(key_rank_map, root=root)
-    for key_rank_from_single_rank in key_rank_list:
-      key_rank_map.update(key_rank_from_single_rank)
-  key_rank_map = comm.bcast(key_rank_map, root=root)
-  for key, source in key_rank_map.items():
-    print(f'gather2: {key=}, {datetime.now()=}')
-    received[key] = comm.sendrecv(data[key], dest=root, source=source)
-  print(f'gather3: {rank=}, {datetime.now()=}')
-  return received
-
-
-def gather_dict_1by1_alt(comm, data, root=0):
+def collect_dict_1by1(comm, data, root=0):
   """Gather dictionary elements by sending them one-by-one to avoid overflow"""
   rank = comm.rank
   print(f'gather1: {rank=}, {len(data)=}, {datetime.now()=}')
