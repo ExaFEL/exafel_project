@@ -8,6 +8,8 @@ from scitbx.array_family import flex
 
 from scipy import constants
 
+from exafel_project.kpp_utils.mp_utils import gather_dict_1by1
+
 ENERGY_CONV = 1e10 * constants.c * constants.h / constants.electron_volt
 
 
@@ -68,10 +70,7 @@ def amplitudes_spread_psii(comm):
                                     newvalue=wavelengths[x])
     sfall_channels[x] = GF.get_amplitudes()
 
-  reports = comm.gather(sfall_channels, root=0)
-  if rank == 0:
-    sfall_channels = {}
-    for report in reports: sfall_channels.update(report)
+  sfall_channels = gather_dict_1by1(comm, sfall_channels, root=0)
   comm.barrier()
   return sfall_channels
 
