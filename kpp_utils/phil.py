@@ -27,6 +27,11 @@ def parse_input():
         .type = float
         .help = spectra from big data are coerced to this total flux
     }
+    crystal {
+      structure = *ferredoxin PSII
+        .type = choice
+        .help = type of crystal structure to be simulated
+    }
     detector {
       tiles = *single multipanel
         .type = choice

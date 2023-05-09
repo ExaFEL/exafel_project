@@ -1,17 +1,20 @@
 from __future__ import division, print_function
+from datetime import datetime
+import io
 from time import time
+import os
+import sys
 start_elapse = time()
 
 from scitbx.matrix import sqr
-import libtbx.load_env # possibly implicit
-from cctbx import crystal
+import libtbx.load_env  # possibly implicit
 from omptbx import omp_get_num_procs
 
 # %%% boilerplate specialize to packaged big data %%%
-import os
+
 from LS49.sim import step4_pad
 from LS49.spectra import generate_spectra
-from LS49 import ls49_big_data
+from LS49 import ls49_big_data, legacy_random_orientations
 step4_pad.big_data = ls49_big_data
 generate_spectra.big_data = ls49_big_data
 from simtbx import get_exascale
@@ -26,14 +29,15 @@ from simtbx import get_exascale
 
 from exafel_project.kpp_utils.phil import parse_input
 from exafel_project.kpp_utils.ferredoxin import basic_detector_rayonix
+from exafel_project.kpp_utils.amplitudes_spread_ferredoxin import ferredoxin
+from exafel_project.kpp_utils.psii_utils import psii_amplitudes_spread
+
 
 def tst_one(image,spectra,crystal,random_orientation,sfall_channels,gpu_channels_singleton,rank,params,**kwargs):
   iterator = spectra.generate_recast_renormalized_image(image=image%100000,energy=params.beam.mean_wavelength,
   total_flux=params.beam.total_flux)
   quick = False
-  if quick: prefix_root="LY99_batch_%06d"
-  else: prefix_root="LY99_MPIbatch_%06d"
-
+  prefix_root = "LY99_batch_%06d" if quick else "LY99_MPIbatch_%06d"
   file_prefix = prefix_root%image
   rand_ori = sqr(random_orientation)
   from exafel_project.kpp_utils.ferredoxin import run_sim2smv
@@ -43,12 +47,11 @@ def tst_one(image,spectra,crystal,random_orientation,sfall_channels,gpu_channels
               gpu_channels_singleton=gpu_channels_singleton,
               sfall_channels=sfall_channels,params=params,**kwargs)
 
+
 def run_LY99_batch(test_without_mpi=False):
   params,options = parse_input()
   log_by_rank = bool(int(os.environ.get("LOG_BY_RANK",0)))
   rank_profile = bool(int(os.environ.get("RANK_PROFILE",1)))
-  if log_by_rank:
-    import io, sys
   if rank_profile:
     import cProfile
     pr = cProfile.Profile()
@@ -69,22 +72,20 @@ def run_LY99_batch(test_without_mpi=False):
   N_total = int(os.environ["N_SIM"]) # number of items to simulate
   N_stride = size # total number of worker tasks
   print("hello from rank %d of %d"%(rank,size),"with omp_threads=",omp_get_num_procs())
-  import datetime
   start_comp = time()
 
   # now inside the Python imports, begin energy channel calculation
-  from exafel_project.kpp_utils.amplitudes_spread_ferredoxin import ferredoxin
-  sfall_channels = ferredoxin(comm)
+  sfall_channels_d = {'ferredoxin': ferredoxin, 'PSII': psii_amplitudes_spread}
+  sfall_channels = sfall_channels_d[params.crystal.structure](comm)
   print(rank, time(), "finished with the calculation of channels, now construct single broadcast")
 
   if rank == 0:
-    print("Rank 0 time", datetime.datetime.now())
+    print("Rank 0 time", datetime.now())
     from LS49.spectra.generate_spectra import spectra_simulation
     from LS49.sim.step4_pad import microcrystal
     print("hello2 from rank %d of %d"%(rank,size))
     SS = spectra_simulation()
     C = microcrystal(Deff_A = 4000, length_um = 4., beam_diameter_um = 1.0) # assume smaller than 10 um crystals
-    from LS49 import legacy_random_orientations
     random_orientations = legacy_random_orientations(N_total)
     transmitted_info = dict(spectra = SS,
                             crystal = C,
@@ -157,11 +158,12 @@ def run_LY99_batch(test_without_mpi=False):
   comm.barrier()
   del gpu_channels_singleton
   # avoid Kokkos allocation "device_Fhkl" being deallocated after Kokkos::finalize was called
-  print("Overall rank",rank,"at",datetime.datetime.now(),"seconds elapsed after srun startup %.3f"%(time()-start_elapse))
-  print("Overall rank",rank,"at",datetime.datetime.now(),"seconds elapsed after Python imports %.3f"%(time()-start_comp))
+  print("Overall rank",rank,"at",datetime.now(),"seconds elapsed after srun startup %.3f"%(time()-start_elapse))
+  print("Overall rank",rank,"at",datetime.now(),"seconds elapsed after Python imports %.3f"%(time()-start_comp))
   if rank_profile:
     pr.disable()
     pr.dump_stats("cpu_%d.prof"%rank)
+
 
 if __name__=="__main__":
   run_LY99_batch()
