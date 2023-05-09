@@ -6,9 +6,10 @@ def bcast_dict_1by1(comm, data, root=0):
   """Broadcast dictionary elements one-by-one to avoid MPI overflow issues"""
   print(f'bcast1: {comm.rank=}, {datetime.now()=}')
   received = {}
-  for key, value in data.items():
+  keys = comm.bcast(list(data.keys()), root=root)
+  for key in keys:
     print(f'bcast2: {key=}, {datetime.now()=}')
-    received[key] = comm.bcast([value], root=root)[0]
+    received[key] = comm.bcast(data[key], root=root)
   print(f'bcast3: {comm.rank=}, {datetime.now()=}')
   return received
 
@@ -39,10 +40,10 @@ def gather_dict_1by1_alt(comm, data, root=0):
   max_data_length = comm.reduce(len(data), op=MPI.MAX, root=root)
   max_data_length = comm.bcast(max_data_length, root=root)
   data_list = list(data.items()) + [None] * max_data_length
-  for index in range(max_data_length):
-    print(f'gather2: {index=}, {datetime.now()=}')
-    gathered = comm.gather(data_list[index], root=root)
+  for data_row in range(max_data_length):
+    print(f'gather2: {data_row=}, {datetime.now()=}')
+    gathered = comm.gather(data_list[data_row], root=root)
     if rank == root:
       received.extend(g for g in gathered if g is not None)
   print(f'gather3: {rank=}, {len(received)=}, {datetime.now()=}')
-  return received
+  return received if rank == root else None
