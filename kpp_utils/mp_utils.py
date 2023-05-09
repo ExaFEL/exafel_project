@@ -22,6 +22,7 @@ def collect_dict_1by1_alt(comm, data, root=0):
   data_list = list(data.items()) + [None] * max_data_length
   for data_row in range(max_data_length):
     for source in range(comm.size):
+      comm.barrier()
       print(f'sending from {source=} to {root=}')
       recv = comm.sendrecv(data_list[data_row], dest=root, source=source)
       if on_root and recv is not None:
