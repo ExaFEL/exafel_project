@@ -4,7 +4,8 @@ from libtbx.mpi4py import MPI
 
 def bcast_dict(comm, data, root=0):
   """Broadcast dict directly or using one of helper functions if too large"""
-  max_data_size = comm.reduce(getsizeof(data), MPI.MAX, root=0)
+  max_data_size = comm.reduce(getsizeof(data), MPI.MAX, root=root)
+  max_data_size = comm.bcast(max_data_size, root=root)
   if max_data_size * comm.size < 2 ** 31:
     data = comm.bcast(data, root=root)
   else:
