@@ -1,7 +1,18 @@
+from sys import getsizeof
 from libtbx.mpi4py import MPI
 
 
-def bcast_dict_1by1(comm, data, root=0):
+def bcast_dict(comm, data, root=0):
+  """Broadcast dict directly or using one of helper functions if too large"""
+  max_data_size = comm.reduce(getsizeof(data), MPI.MAX, root=0)
+  if max_data_size * comm.size < 2 ** 31:
+    data = comm.bcast(data, root=root)
+  else:
+    data = _bcast_dict_1by1(comm=comm, data=data, root=root)
+  return data
+
+
+def _bcast_dict_1by1(comm, data, root=0):
   """Broadcast dictionary elements one-by-one to avoid MPI overflow issues"""
   on_root = root == comm.rank
   received = {}
@@ -30,7 +41,7 @@ def collect_dict_1by1(comm, data, root=0):
         comm.send(data_list[row], dest=root, tag=tag)
       elif on_root:
         print(f'received from {source=} to {root=}')
-        received.append(comm.recv(data_list[row], source=source, tag=tag))
+        received.append(comm.recv(source=source, tag=tag))
   if on_root:
     data.update({r[0]: r[1] for r in received if r is not None})
   return data if on_root else None
