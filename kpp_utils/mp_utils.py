@@ -30,8 +30,7 @@ def collect_large_dict(comm: MPI.Comm, data: dict, root: int = 0) -> dict:
   then recreate the dictionary from "gathered" list elements."""
   rank = comm.rank
   on_root = root == rank
-  max_data_length = comm.reduce(len(data), op=MPI.MAX, root=root)
-  max_data_length = comm.bcast(max_data_length, root=root)
+  max_data_length = comm.allreduce(len(data), op=MPI.MAX)
   data_list = list(data.items()) + [None] * max_data_length
   received = []
   for i, row in enumerate(range(max_data_length)):
