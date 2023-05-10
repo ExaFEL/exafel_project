@@ -1,5 +1,4 @@
 from __future__ import division, print_function
-from datetime import datetime
 import io
 from time import time
 import os
@@ -8,7 +7,7 @@ start_elapse = time()
 
 from scitbx.matrix import sqr
 import libtbx.load_env  # possibly implicit
-from omptbx import omp_get_num_procs
+from omptbx import omp_get_num_procs, omp_set_num_threads
 
 # %%% boilerplate specialize to packaged big data %%%
 
@@ -31,7 +30,7 @@ from exafel_project.kpp_utils.phil import parse_input
 from exafel_project.kpp_utils.ferredoxin import basic_detector_rayonix
 from exafel_project.kpp_utils.amplitudes_spread_ferredoxin import ferredoxin
 from exafel_project.kpp_utils.psii_utils import psii_amplitudes_spread
-from exafel_project.kpp_utils.mp_utils import bcast_large_dict
+from exafel_project.kpp_utils.mp_utils import bcast_large_dict, rlog_factory
 
 
 def tst_one(image,spectra,crystal,random_orientation,sfall_channels,gpu_channels_singleton,rank,params,**kwargs):
@@ -67,24 +66,23 @@ def run_LY99_batch(test_without_mpi=False):
   comm = MPI.COMM_WORLD
   rank = comm.Get_rank()
   size = comm.Get_size()
-  import omptbx
-  workaround_nt = int(os.environ.get("OMP_NUM_THREADS",1))
-  omptbx.omp_set_num_threads(workaround_nt)
+  rlog = rlog_factory(rank)
+  workaround_nt = int(os.environ.get("OMP_NUM_THREADS", 1))
+  omp_set_num_threads(workaround_nt)
   N_total = int(os.environ["N_SIM"]) # number of items to simulate
   N_stride = size # total number of worker tasks
-  print("hello from rank %d of %d"%(rank,size),"with omp_threads=",omp_get_num_procs())
+  rlog(f'Initiate log, comm {size=} with {omp_get_num_procs()=}')
   start_comp = time()
 
   # now inside the Python imports, begin energy channel calculation
   sfall_channels_d = {'ferredoxin': ferredoxin, 'PSII': psii_amplitudes_spread}
   sfall_channels = sfall_channels_d[params.crystal.structure](comm)
-  print(rank, time(), "finished with the calculation of channels, now construct single broadcast")
+  rlog('Finished with the calculation of channels, now construct a broadcast')
 
   if rank == 0:
-    print("Rank 0 time", datetime.now())
+    rlog('Rank 0 starts constructing "transmitted_info" dictionary')
     from LS49.spectra.generate_spectra import spectra_simulation
     from LS49.sim.step4_pad import microcrystal
-    print("hello2 from rank %d of %d"%(rank,size))
     transmitted_info = {
       'spectra': spectra_simulation(),  # assume smaller than 10 um crystals
       'crystal': microcrystal(Deff_A=4000, length_um=4., beam_diameter_um=1.0),
@@ -96,8 +94,7 @@ def run_LY99_batch(test_without_mpi=False):
   transmitted_info['sfall_info'] = sfall_channels
   comm.barrier()
   parcels = list(range(rank,N_total,N_stride))
-
-  print(rank, time(), "finished with single broadcast, now set up the rank logger")
+  rlog('Finished with the broadcast, now set up the rank logger')
 
   if log_by_rank:
     expand_dir = os.path.expandvars(params.logger.outdir)
@@ -107,14 +104,13 @@ def run_LY99_batch(test_without_mpi=False):
     sys.stdout = io.TextIOWrapper(open(log_path,'ab', 0), write_through=True)
     sys.stderr = io.TextIOWrapper(open(error_path,'ab', 0), write_through=True)
 
-  print(rank, time(), "finished with the rank logger, now construct the GPU cache container")
+  rlog('Finished with the rank logger, now construct the GPU cache container')
   gpu_instance = get_exascale("gpu_instance", params.context)
   gpu_energy_channels = get_exascale("gpu_energy_channels", params.context)
 
-  gpu_run = gpu_instance( deviceId = rank % int(os.environ.get("DEVICES_PER_NODE",1)) )
-  gpu_channels_singleton = gpu_energy_channels (
-    deviceId = gpu_run.get_deviceID())
-    # singleton will instantiate, regardless of gpu, device count, or exascale API
+  gpu_run = gpu_instance(deviceId=rank % int(os.environ.get("DEVICES_PER_NODE", 1)))
+  gpu_channels_singleton = gpu_energy_channels(deviceId=gpu_run.get_deviceID())
+  # singleton will instantiate, regardless of gpu, device count, or exascale API
 
   comm.barrier()
   kwargs = {}
@@ -132,7 +128,7 @@ def run_LY99_batch(test_without_mpi=False):
 
   for idx in parcels:
     cache_time = time()
-    print("idx------start-------->",idx,"rank",rank,time())
+    rlog(f'idx------start--------> {idx}')
     # if rank==0: os.system("nvidia-smi")
     if params.detector.tiles == "single":
       tst_one(image=idx,spectra=transmitted_info["spectra"],
@@ -153,12 +149,12 @@ def run_LY99_batch(test_without_mpi=False):
         sfall_channels=transmitted_info["sfall_info"],
         params=params,**kwargs
       )
-    print("idx------finis-------->",idx,"rank",rank,time(),"elapsed",time()-cache_time)
+    rlog(f'idx------finis--------> {idx}, elapsed: {time()-cache_time}')
   comm.barrier()
   del gpu_channels_singleton
   # avoid Kokkos allocation "device_Fhkl" being deallocated after Kokkos::finalize was called
-  print("Overall rank",rank,"at",datetime.now(),"seconds elapsed after srun startup %.3f"%(time()-start_elapse))
-  print("Overall rank",rank,"at",datetime.now(),"seconds elapsed after Python imports %.3f"%(time()-start_comp))
+  rlog(f'Seconds elapsed after srun startup: {time()-start_elapse:.3f}')
+  rlog(f'Seconds elapsed after Python imports: {time()-start_comp:.3f}')
   if rank_profile:
     pr.disable()
     pr.dump_stats("cpu_%d.prof"%rank)
