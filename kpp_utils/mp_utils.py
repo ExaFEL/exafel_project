@@ -21,7 +21,7 @@ def collect_large_dict(comm, data, root=0):
   max_data_length = comm.reduce(len(data), op=MPI.MAX, root=root)
   max_data_length = comm.bcast(max_data_length, root=root)
   data_list = list(data.items()) + [None] * max_data_length
-  received = [None] * max_data_length * (comm.size - 1)
+  received = []
   for i, row in enumerate(range(max_data_length)):
     for j, source in enumerate(range(1, comm.size)):
       tag = i * (comm.size - 1) + j
