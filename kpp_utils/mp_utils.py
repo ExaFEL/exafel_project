@@ -13,7 +13,7 @@ of the preparatory stage, but otherwise circumvents the mpi-related issues.
 """
 
 
-def bcast_large_dict(comm, data, root=0):
+def bcast_large_dict(comm: MPI.Comm, data: dict, root: int = 0) -> dict:
   """Broadcast dictionary elements one-by-one to avoid MPI overflow issues"""
   on_root = root == comm.rank
   received = {}
@@ -25,8 +25,9 @@ def bcast_large_dict(comm, data, root=0):
   return received
 
 
-def collect_large_dict(comm, data, root=0):
-  """Gather dictionary elements by sending them one-by-one to avoid overflow"""
+def collect_large_dict(comm: MPI.Comm, data: dict, root: int = 0) -> dict:
+  """Gather dictionary elements one-by-one to avoid MPI overflow issues,
+  then recreate the dictionary from "gathered" list elements."""
   rank = comm.rank
   on_root = root == rank
   max_data_length = comm.reduce(len(data), op=MPI.MAX, root=root)
