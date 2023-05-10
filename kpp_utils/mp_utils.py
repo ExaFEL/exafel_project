@@ -7,13 +7,13 @@ def bcast_dict(comm, data, root=0):
   max_data_size = comm.reduce(getsizeof(data), MPI.MAX, root=root)
   max_data_size = comm.bcast(max_data_size, root=root)
   if max_data_size * comm.size < 2 ** 31:
-    data = comm.bcast(data, root=root)
+    received = comm.bcast(data, root=root)
   else:
-    data = _bcast_dict_1by1(comm=comm, data=data, root=root)
-  return data
+    received = _bcast_dict_1by1(comm=comm, data=data, root=root)
+  return received
 
 
-def _bcast_dict_1by1(comm, data, root=0):
+def _bcast_dict(comm, data, root=0):
   """Broadcast dictionary elements one-by-one to avoid MPI overflow issues"""
   on_root = root == comm.rank
   received = {}
@@ -23,6 +23,26 @@ def _bcast_dict_1by1(comm, data, root=0):
     value = data[key] if on_root else None
     received[key] = comm.bcast(value, root=root)
   return received
+
+
+def collect_dict(comm, data, root=0):
+  """Broadcast dict directly or using one of helper functions if too large"""
+  max_data_size = comm.reduce(getsizeof(data), MPI.MAX, root=root)
+  max_data_size = comm.bcast(max_data_size, root=root)
+  max_value_size = max([getsizeof(i) for i in data.values()])
+  max_value_size = comm.reduce(max_value_size, MPI.MAX, root=root)
+  max_value_size = comm.bcast(max_value_size, root=root)
+  if max_data_size * comm.size < 2 ** 31:
+    received = {} if comm.rank == root else None
+    received_list = comm.gather(data, root=root)
+    if comm.rank == root:
+      for received_item in received_list:
+        received.update(received_item)
+  elif max_value_size * comm.size < 2 ** 31:
+    received = _bcast_dict_1by1(comm=comm, data=data, root=root)
+  else:
+    received = _bcast_dict_1by1(comm=comm, data=data, root=root)
+  return data
 
 
 def collect_dict_1by1(comm, data, root=0):
