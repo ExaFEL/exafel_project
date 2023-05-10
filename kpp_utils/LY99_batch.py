@@ -7,7 +7,7 @@ start_elapse = time()
 
 from scitbx.matrix import sqr
 import libtbx.load_env # possibly implicit
-from omptbx import omp_get_num_procs
+from omptbx import omp_get_num_procs, omp_set_num_threads
 
 # %%% boilerplate specialize to packaged big data %%%
 
@@ -31,6 +31,7 @@ from exafel_project.kpp_utils.ferredoxin import basic_detector_rayonix
 from exafel_project.kpp_utils.amplitudes_spread_ferredoxin import amplitudes_spread_ferredoxin
 from exafel_project.kpp_utils.amplitudes_spread_psii import amplitudes_spread_psii
 from exafel_project.kpp_utils.mp_utils import bcast_large_dict
+
 
 def tst_one(image,spectra,crystal,random_orientation,sfall_channels,gpu_channels_singleton,rank,params,**kwargs):
   iterator = spectra.generate_recast_renormalized_image(image=image%100000,energy=params.beam.mean_wavelength,
