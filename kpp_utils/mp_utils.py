@@ -15,18 +15,22 @@ def bcast_dict_1by1(comm, data, root=0):
 
 def collect_dict_1by1(comm, data, root=0):
   """Gather dictionary elements by sending them one-by-one to avoid overflow"""
-  on_root = root == comm.rank
+  rank = comm.rank
+  on_root = root == rank
   max_data_length = comm.reduce(len(data), op=MPI.MAX, root=root)
   max_data_length = comm.bcast(max_data_length, root=root)
   data_list = list(data.items()) + [None] * max_data_length
   received = [None] * max_data_length * (comm.size - 1)
   for i, row in enumerate(range(max_data_length)):
     for j, source in enumerate(range(1, comm.size)):
-      ij = i * (comm.size - 1) + j
+      tag = i * (comm.size - 1) + j
       comm.barrier()
-      print(f'sending from {source=} to {root=}')
-      received[ij] = comm.sendrecv(data_list[row], dest=root, source=source)
-      print(f'received from {source=} to {root=}')
+      if rank == source:
+        print(f'sending from {source=} to {root=}')
+        comm.send(data_list[row], dest=root, tag=tag)
+      elif on_root:
+        print(f'received from {source=} to {root=}')
+        received.append(comm.recv(data_list[row], source=source, tag=tag))
   if on_root:
     data.update({r[0]: r[1] for r in received if r is not None})
   return data if on_root else None
