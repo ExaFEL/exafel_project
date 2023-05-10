@@ -93,7 +93,7 @@ def run_LY99_batch(test_without_mpi=False):
     transmitted_info = None
   transmitted_info = comm.bcast(transmitted_info, root=0)
   sfall_channels = bcast_dict(comm, sfall_channels, root=0)
-  transmitted_info['sfall_info'] = bcast_dict_1by1(comm, sfall_channels, root=0)
+  transmitted_info['sfall_info'] = sfall_channels
   comm.barrier()
   parcels = list(range(rank,N_total,N_stride))
 
