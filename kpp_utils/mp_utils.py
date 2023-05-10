@@ -1,5 +1,16 @@
-from sys import getsizeof
 from libtbx.mpi4py import MPI
+
+
+"""
+mpi4py has an internal limit for the length of passed element. The overall size
+of sent/received/gathered/broadcasted objects must be smaller than 2**31 bytes.
+Attempting to pass a larger object causes an `OverflowError` or `SystemError`.
+The dictionaries of structure factors created by the EXAFEL scripts can easily
+exceed this internal limit, which can raise errors with ambiguous traceback.
+The `*_large_*` functions defined below circumvent this issue by passing values
+either one-by-one or in slices, which can negatively affect the execution time
+of the preparatory stage, but otherwise circumvents the mpi-related issues.
+"""
 
 
 def bcast_large_dict(comm, data, root=0):
