@@ -31,7 +31,7 @@ from exafel_project.kpp_utils.phil import parse_input
 from exafel_project.kpp_utils.ferredoxin import basic_detector_rayonix
 from exafel_project.kpp_utils.amplitudes_spread_ferredoxin import ferredoxin
 from exafel_project.kpp_utils.psii_utils import psii_amplitudes_spread
-from exafel_project.kpp_utils.mp_utils import bcast_dict_1by1
+from exafel_project.kpp_utils.mp_utils import bcast_dict
 
 
 def tst_one(image,spectra,crystal,random_orientation,sfall_channels,gpu_channels_singleton,rank,params,**kwargs):
@@ -92,7 +92,7 @@ def run_LY99_batch(test_without_mpi=False):
   else:
     transmitted_info = None
   transmitted_info = comm.bcast(transmitted_info, root=0)
-  sfall_channels = bcast_dict_1by1(comm, sfall_channels, root=0)
+  sfall_channels = bcast_dict(comm, sfall_channels, root=0)
   transmitted_info['sfall_info'] = bcast_dict_1by1(comm, sfall_channels, root=0)
   comm.barrier()
   parcels = list(range(rank,N_total,N_stride))
