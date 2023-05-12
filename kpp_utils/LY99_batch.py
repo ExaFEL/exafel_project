@@ -50,6 +50,8 @@ def run_LY99_batch(test_without_mpi=False):
   params,options = parse_input()
   log_by_rank = bool(int(os.environ.get("LOG_BY_RANK",0)))
   rank_profile = bool(int(os.environ.get("RANK_PROFILE",1)))
+  if log_by_rank:
+    import io, sys
   if rank_profile:
     import cProfile
     pr = cProfile.Profile()
