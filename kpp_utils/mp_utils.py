@@ -1,3 +1,4 @@
+from __future__ import division
 from libtbx.mpi4py import MPI
 
 
