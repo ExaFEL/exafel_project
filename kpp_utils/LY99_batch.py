@@ -7,7 +7,7 @@ start_elapse = time()
 
 from scitbx.matrix import sqr
 import libtbx.load_env # possibly implicit
-from omptbx import omp_get_num_procs, omp_set_num_threads
+from omptbx import omp_get_num_procs
 
 # %%% boilerplate specialize to packaged big data %%%
 
