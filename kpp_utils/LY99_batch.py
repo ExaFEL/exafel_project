@@ -87,14 +87,14 @@ def run_LY99_batch(test_without_mpi=False):
     from LS49.sim.step4_pad import microcrystal
     print("hello2 from rank %d of %d"%(rank,size))
     SS = spectra_simulation()
-    C = microcrystal(Deff_A=4000, length_um=4., beam_diameter_um=1.0)  # assume smaller than 10 um crystals
+    C = microcrystal(Deff_A = 4000, length_um = 4., beam_diameter_um = 1.0) # assume smaller than 10 um crystals
     random_orientations = legacy_random_orientations(N_total)
-    transmitted_info = dict(spectra=SS,
-                            crystal=C,
-                            random_orientations=random_orientations)
+    transmitted_info = dict(spectra = SS,
+                            crystal = C,
+                            random_orientations = random_orientations)
   else:
     transmitted_info = None
-  transmitted_info = comm.bcast(transmitted_info, root=0)
+  transmitted_info = comm.bcast(transmitted_info, root = 0)
   sfall_channels = bcast_large_dict(comm, sfall_channels, root=0)
   transmitted_info['sfall_info'] = sfall_channels
   comm.barrier()
