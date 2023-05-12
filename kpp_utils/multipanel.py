@@ -170,9 +170,6 @@ def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,pa
     SIM.Amatrix_RUB = Amatrix_rot # return to canonical orientation
     del QQ
 
-  nominal_data = gpu_detector.get_raw_pixels()
-  gpu_detector.each_image_free() # deallocate GPU arrays
-
   if params.psf:
     SIM.detector_psf_kernel_radius_pixels=10;
     SIM.detector_psf_type=shapetype.Fiber # for Rayonix
@@ -202,10 +199,14 @@ def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,pa
     print("detector_psf_fwhm_mm=",SIM.detector_psf_fwhm_mm)
     print("detector_psf_kernel_radius_pixels=",SIM.detector_psf_kernel_radius_pixels)
     #estimate_gain(SIM.raw_pixels,offset=0)
-    #SIM.add_noise() #converts photons to ADU.            ###################################################################NKS
+    #SIM.add_noise() #converts photons to ADU.
+    nominal_data = gpu_simulation.add_noise(gpu_detector)
     #estimate_gain(SIM.raw_pixels,offset=SIM.adc_offset_adu,algorithm="slow")
     #estimate_gain(SIM.raw_pixels,offset=SIM.adc_offset_adu,algorithm="kabsch")
   del QQ
+
+  # nominal_data = gpu_detector.get_raw_pixels() # the normal way to gt the data, but shortcut due to noise call.
+  gpu_detector.each_image_free() # deallocate GPU arrays
 
   if params.output.format == "h5":
     from dxtbx.model import Spectrum
