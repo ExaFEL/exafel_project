@@ -9,7 +9,7 @@ from scitbx.matrix import sqr
 import libtbx.load_env  # possibly implicit
 from omptbx import omp_get_num_procs, omp_set_num_threads
 
-# %%% boilerplate specialize to packaged big data %%%
+# boilerplate specialize to packaged big data 
 
 from LS49.sim import step4_pad
 from LS49.spectra import generate_spectra
@@ -17,7 +17,7 @@ from LS49 import ls49_big_data, legacy_random_orientations
 step4_pad.big_data = ls49_big_data
 generate_spectra.big_data = ls49_big_data
 from simtbx import get_exascale
-# %%%%%%
+
 
 # Develop procedure for MPI control
 
