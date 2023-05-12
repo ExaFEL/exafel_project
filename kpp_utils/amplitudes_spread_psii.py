@@ -1,3 +1,4 @@
+from __future__ import division
 import os
 
 from dxtbx.model.experiment_list import ExperimentList
@@ -29,7 +30,7 @@ def get_p20231_r0135_detector():
   return ExperimentList.from_file(expt_path)[0].detector
 
 
-def psii_amplitudes_spread(comm):
+def amplitudes_spread_psii(comm):
   rank = comm.Get_rank()
   size = comm.Get_size()
 
