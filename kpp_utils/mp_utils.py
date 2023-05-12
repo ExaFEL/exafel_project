@@ -1,13 +1,4 @@
-from datetime import datetime
-from typing import Callable
 from libtbx.mpi4py import MPI
-
-
-def rlog_factory(rank: int = 0) -> Callable[[str], None]:
-  """A convenience function to avoid repeating `print(rank, time(), msg)`."""
-  def rlog_function(msg: str):
-    print(f'Rank{rank:4d}, Time {datetime.now()}: {msg}')
-  return rlog_function
 
 
 """
