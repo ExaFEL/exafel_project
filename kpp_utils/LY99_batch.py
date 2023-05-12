@@ -1,13 +1,12 @@
 from __future__ import division, print_function
 from datetime import datetime
-import io
 from time import time
 import os
 import sys
 start_elapse = time()
 
 from scitbx.matrix import sqr
-import libtbx.load_env  # possibly implicit
+import libtbx.load_env # possibly implicit
 from omptbx import omp_get_num_procs
 
 # %%% boilerplate specialize to packaged big data %%%
@@ -29,9 +28,8 @@ from simtbx import get_exascale
 
 from exafel_project.kpp_utils.phil import parse_input
 from exafel_project.kpp_utils.ferredoxin import basic_detector_rayonix
-from exafel_project.kpp_utils.amplitudes_spread_ferredoxin import ferredoxin
-from exafel_project.kpp_utils.psii_utils import psii_amplitudes_spread
-
+from exafel_project.kpp_utils.amplitudes_spread_ferredoxin import amplitudes_spread_ferredoxin
+from exafel_project.kpp_utils.amplitudes_spread_psii import amplitudes_spread_psii
 
 def tst_one(image,spectra,crystal,random_orientation,sfall_channels,gpu_channels_singleton,rank,params,**kwargs):
   iterator = spectra.generate_recast_renormalized_image(image=image%100000,energy=params.beam.mean_wavelength,
@@ -75,7 +73,7 @@ def run_LY99_batch(test_without_mpi=False):
   start_comp = time()
 
   # now inside the Python imports, begin energy channel calculation
-  sfall_channels_d = {'ferredoxin': ferredoxin, 'PSII': psii_amplitudes_spread}
+  sfall_channels_d = {'ferredoxin': amplitudes_spread_ferredoxin, 'PSII': amplitudes_spread_psii}
   sfall_channels = sfall_channels_d[params.crystal.structure](comm)
   print(rank, time(), "finished with the calculation of channels, now construct single broadcast")
 
