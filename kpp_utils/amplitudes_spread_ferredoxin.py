@@ -7,7 +7,7 @@ from exafel_project.kpp_utils.ferredoxin import data
 from scipy import constants
 ENERGY_CONV = 1e10*constants.c*constants.h / constants.electron_volt
 
-def ferredoxin(comm):
+def amplitudes_spread_ferredoxin(comm):
   rank = comm.Get_rank()
   size = comm.Get_size()
 
