@@ -114,6 +114,7 @@ def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,pa
     if gpu_channels_singleton.get_nchannels() == 0: # if uninitialized
         P = Profiler("Initialize the channels singleton rank %d"%(rank))
         for x in range(len(flux)):
+          import IPython; IPython.embed()
           gpu_channels_singleton.structure_factors_to_GPU_direct(
            x, sfall_channels[x].indices(), sfall_channels[x].data())
         del P
