@@ -22,7 +22,6 @@ def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,pa
                 quick=False,save_bragg=False,sfall_channels=None, **kwargs):
   DETECTOR = reference.detector
   PANEL = DETECTOR[0]
-  direct_algo_res_limit = 1.7
 
   wavlen, flux, wavelength_A = next(spectra) # list of lambdas, list of fluxes, average wavelength
   assert wavelength_A > 0

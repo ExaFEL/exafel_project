@@ -40,7 +40,7 @@ psf=False
 attenuation=True
 context=kokkos_gpu
 beam {
-  mean_wavelength=7120.
+  mean_energy=7120.
 }
 " > trial.phil
 

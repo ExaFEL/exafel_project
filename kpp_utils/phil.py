@@ -19,10 +19,10 @@ def parse_input():
     attenuation = True
       .type = bool
     beam {
-      mean_wavelength = None
+      mean_energy = None
         .type = float
         .optional = False
-        .help = spectra from big data are coerced to this mean wavelength
+        .help = spectra from big data are coerced to this mean energy given in units of eV
       total_flux = 1E12
         .type = float
         .help = spectra from big data are coerced to this total flux

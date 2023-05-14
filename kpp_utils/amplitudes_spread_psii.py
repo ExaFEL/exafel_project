@@ -6,10 +6,9 @@ from LS49 import ls49_big_data
 from LS49.sim.util_fmodel import gen_fmodel
 from scitbx.array_family import flex
 
-from scipy import constants
-
 from exafel_project.kpp_utils.mp_utils import collect_large_dict
 
+from scipy import constants
 ENERGY_CONV = 1e10 * constants.c * constants.h / constants.electron_volt
 
 
@@ -32,13 +31,13 @@ def get_p20231_r0135_detector():
   return ExperimentList.from_file(expt_path)[0].detector
 
 
-def amplitudes_spread_psii(comm):
+def amplitudes_spread_psii(comm, **kwargs):
   rank = comm.Get_rank()
   size = comm.Get_size()
 
   wavelength_A = 1.89  # general ballpark X-ray wavelength in Angstroms
   wavelengths = flex.double([ENERGY_CONV/(6500 + w) for w in range(101)])
-  direct_algo_res_limit = 1.85
+  direct_algo_res_limit = kwargs.get("direct_algo_res_limit", 1.85)
 
   local_data = data()  # later put this through broadcast
 

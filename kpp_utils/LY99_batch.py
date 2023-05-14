@@ -3,11 +3,15 @@ from datetime import datetime
 from time import time
 import os
 import sys
+import math
 start_elapse = time()
 
 from scitbx.matrix import sqr
 import libtbx.load_env # possibly implicit
 from omptbx import omp_get_num_procs
+
+from scipy import constants
+ENERGY_CONV = 1e10*constants.c*constants.h / constants.electron_volt
 
 # %%% boilerplate specialize to packaged big data %%%
 
@@ -34,7 +38,7 @@ from exafel_project.kpp_utils.mp_utils import bcast_large_dict
 
 
 def tst_one(image,spectra,crystal,random_orientation,sfall_channels,gpu_channels_singleton,rank,params,**kwargs):
-  iterator = spectra.generate_recast_renormalized_image(image=image%100000,energy=params.beam.mean_wavelength,
+  iterator = spectra.generate_recast_renormalized_image(image=image%100000,energy=params.beam.mean_energy,
   total_flux=params.beam.total_flux)
   quick = False
   prefix_root = "LY99_batch_%06d" if quick else "LY99_MPIbatch_%06d"
@@ -76,11 +80,7 @@ def run_LY99_batch(test_without_mpi=False):
   print("hello from rank %d of %d"%(rank,size),"with omp_threads=",omp_get_num_procs())
   start_comp = time()
 
-  # now inside the Python imports, begin energy channel calculation
-  sfall_channels_d = {'ferredoxin': amplitudes_spread_ferredoxin, 'PSII': amplitudes_spread_psii}
-  sfall_channels = sfall_channels_d[params.crystal.structure](comm)
-  print(rank, time(), "finished with the calculation of channels, now construct single broadcast")
-
+  # now inside the Python imports, begin large data broadcast
   if rank == 0:
     print("Rank 0 time", datetime.now())
     from LS49.spectra.generate_spectra import spectra_simulation
@@ -95,6 +95,32 @@ def run_LY99_batch(test_without_mpi=False):
   else:
     transmitted_info = None
   transmitted_info = comm.bcast(transmitted_info, root = 0)
+  comm.barrier()
+
+  kwargs = {}
+  if params.output.format == "h5":
+    from simtbx.nanoBragg import nexus_factory
+    fileout_name="image_rank_%05d.h5"%rank
+    kwargs["writer"] = nexus_factory(fileout_name) # break encapsulation, use kwargs to push writer to inner loop
+    if params.detector.tiles == "single":
+      DETECTOR = basic_detector_rayonix()
+    else:
+      from exafel_project.kpp_utils.multipanel import specific_expt, run_sim2h5
+      specific = specific_expt(params)
+      DETECTOR = specific.detector
+      # in this instance determine resolution limits from detector and beam
+      consistent_beam_dict = specific.beam.to_dict()
+      consistent_beam_dict["wavelength"] = ENERGY_CONV/params.beam.mean_energy
+      consistent_beam = type(specific.beam).from_dict(consistent_beam_dict)
+      nominal_resolution = DETECTOR.get_max_resolution(s0=consistent_beam.get_s0())
+      direct_algo_res_limit = math.pow(math.pow(nominal_resolution,-3)*1.005,-(1./3.)) # allow 1% bandpass
+      kwargs["direct_algo_res_limit"] = direct_algo_res_limit
+    kwargs["writer"].construct_detector(DETECTOR)
+
+  # now begin energy channel calculation
+  sfall_channels_d = {'ferredoxin': amplitudes_spread_ferredoxin, 'PSII': amplitudes_spread_psii}
+  sfall_channels = sfall_channels_d[params.crystal.structure](comm, **kwargs)
+  print(rank, time(), "finished with the calculation of channels, now construct single broadcast")
   sfall_channels = bcast_large_dict(comm, sfall_channels, root=0)
   transmitted_info['sfall_info'] = sfall_channels
   comm.barrier()
@@ -120,18 +146,6 @@ def run_LY99_batch(test_without_mpi=False):
     # singleton will instantiate, regardless of gpu, device count, or exascale API
 
   comm.barrier()
-  kwargs = {}
-  if params.output.format == "h5":
-    from simtbx.nanoBragg import nexus_factory
-    fileout_name="image_rank_%05d.h5"%rank
-    kwargs["writer"] = nexus_factory(fileout_name) # break encapsulation, use kwargs to push writer to inner loop
-    if params.detector.tiles == "single":
-      DETECTOR = basic_detector_rayonix()
-    else:
-      from exafel_project.kpp_utils.multipanel import specific_expt, run_sim2h5
-      specific = specific_expt(params)
-      DETECTOR = specific.detector
-    kwargs["writer"].construct_detector(DETECTOR)
 
   for idx in parcels:
     cache_time = time()
@@ -146,7 +160,7 @@ def run_LY99_batch(test_without_mpi=False):
       )
     else:
       iterator = transmitted_info["spectra"].generate_recast_renormalized_image(
-        image=idx%100000,energy=params.beam.mean_wavelength,total_flux=params.beam.total_flux)
+        image=idx%100000,energy=params.beam.mean_energy,total_flux=params.beam.total_flux)
       run_sim2h5(spectra = iterator,
         reference = specific,
         crystal = transmitted_info["crystal"],
