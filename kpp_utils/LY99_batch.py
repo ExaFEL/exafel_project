@@ -38,8 +38,7 @@ from exafel_project.kpp_utils.mp_utils import bcast_large_dict
 
 
 def tst_one(image,spectra,crystal,random_orientation,sfall_channels,gpu_channels_singleton,rank,params,**kwargs):
-  iterator = spectra.generate_recast_renormalized_image(image=image%100000,energy=params.beam.mean_energy,
-  total_flux=params.beam.total_flux)
+  iterator = spectra.generate_recast_renormalized_image_parameterized(image=image%100000,params=params)
   quick = False
   prefix_root = "LY99_batch_%06d" if quick else "LY99_MPIbatch_%06d"
   file_prefix = prefix_root%image
@@ -159,8 +158,8 @@ def run_LY99_batch(test_without_mpi=False):
         rank=rank,params=params,**kwargs
       )
     else:
-      iterator = transmitted_info["spectra"].generate_recast_renormalized_image(
-        image=idx%100000,energy=params.beam.mean_energy,total_flux=params.beam.total_flux)
+      iterator = transmitted_info["spectra"].generate_recast_renormalized_image_parameterized(
+        image=idx%100000, params=params)
       run_sim2h5(spectra = iterator,
         reference = specific,
         crystal = transmitted_info["crystal"],
