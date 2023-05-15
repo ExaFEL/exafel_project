@@ -37,7 +37,10 @@ def amplitudes_spread_psii(comm, params, **kwargs):
 
   wavelength_A = ENERGY_CONV / params.beam.mean_energy
   # general ballpark X-ray wavelength in Angstroms, does not vary shot-to-shot
-  wavelengths = flex.double([ENERGY_CONV/(6500 + w) for w in range(101)])
+  centerline = float(params.spectrum.nchannels-1)/2.0
+  channel_mean_eV = (flex.double(range(params.spectrum.nchannels)) - centerline
+                      ) * params.spectrum.channel_width + params.beam.mean_energy
+  wavelengths = ENERGY_CONV/channel_mean_eV
   direct_algo_res_limit = kwargs.get("direct_algo_res_limit", 1.85)
 
   local_data = data()  # later put this through broadcast
