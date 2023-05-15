@@ -7,11 +7,12 @@ from exafel_project.kpp_utils.ferredoxin import data
 from scipy import constants
 ENERGY_CONV = 1e10*constants.c*constants.h / constants.electron_volt
 
-def amplitudes_spread_ferredoxin(comm, **kwargs):
+def amplitudes_spread_ferredoxin(comm, params, **kwargs):
   rank = comm.Get_rank()
   size = comm.Get_size()
 
-  wavelength_A = 1.74 # general ballpark X-ray wavelength in Angstroms
+  wavelength_A = ENERGY_CONV / params.beam.mean_energy
+  # general ballpark X-ray wavelength in Angstroms, does not vary shot-to-shot
   wavlen = flex.double([ENERGY_CONV/(7070.5 + w) for w in range(100)])
   direct_algo_res_limit = kwargs.get("direct_algo_res_limit", 1.7)
 

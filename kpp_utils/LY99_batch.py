@@ -118,7 +118,7 @@ def run_LY99_batch(test_without_mpi=False):
 
   # now begin energy channel calculation
   sfall_channels_d = {'ferredoxin': amplitudes_spread_ferredoxin, 'PSII': amplitudes_spread_psii}
-  sfall_channels = sfall_channels_d[params.crystal.structure](comm, **kwargs)
+  sfall_channels = sfall_channels_d[params.crystal.structure](comm, params, **kwargs)
   print(rank, time(), "finished with the calculation of channels, now construct single broadcast")
   sfall_channels = bcast_large_dict(comm, sfall_channels, root=0)
   transmitted_info['sfall_info'] = sfall_channels

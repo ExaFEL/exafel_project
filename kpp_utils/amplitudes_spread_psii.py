@@ -31,11 +31,12 @@ def get_p20231_r0135_detector():
   return ExperimentList.from_file(expt_path)[0].detector
 
 
-def amplitudes_spread_psii(comm, **kwargs):
+def amplitudes_spread_psii(comm, params, **kwargs):
   rank = comm.Get_rank()
   size = comm.Get_size()
 
-  wavelength_A = 1.89  # general ballpark X-ray wavelength in Angstroms
+  wavelength_A = ENERGY_CONV / params.beam.mean_energy
+  # general ballpark X-ray wavelength in Angstroms, does not vary shot-to-shot
   wavelengths = flex.double([ENERGY_CONV/(6500 + w) for w in range(101)])
   direct_algo_res_limit = kwargs.get("direct_algo_res_limit", 1.85)
 

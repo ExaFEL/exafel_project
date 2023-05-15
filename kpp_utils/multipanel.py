@@ -23,15 +23,15 @@ def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,pa
   DETECTOR = reference.detector
   PANEL = DETECTOR[0]
 
-  wavlen, flux, wavelength_A = next(spectra) # list of lambdas, list of fluxes, average wavelength
-  assert wavelength_A > 0
+  wavlen, flux, shot_to_shot_wavelength_A = next(spectra) # list of lambdas, list of fluxes, average wavelength
+  assert shot_to_shot_wavelength_A > 0 # wavelength varies shot-to-shot
   # os.system("nvidia-smi") # printout might severely impact performance
 
   # use crystal structure to initialize Fhkl array
   N = crystal.number_of_cells(sfall_channels[0].unit_cell())
 
   consistent_beam = reference.beam
-  consistent_beam.set_wavelength(wavelength_A)
+  consistent_beam.set_wavelength(shot_to_shot_wavelength_A)
   SIM = nanoBragg(detector = DETECTOR, beam = consistent_beam)
   SIM.Ncells_abc=(N,N,N)
   print("beam, polar", SIM.beam_vector, SIM.polar_vector)
@@ -63,7 +63,7 @@ def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,pa
   # get same noise each time this test is run
   SIM.seed = 1
   SIM.oversample=1
-  SIM.wavelength_A = wavelength_A
+  SIM.wavelength_A = shot_to_shot_wavelength_A
   SIM.polarization=1
   # this will become F000, marking the beam center
   SIM.default_F=0
@@ -147,7 +147,7 @@ def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,pa
             x, gpu_channels_singleton, gpu_detector, positive_mask_iselection)
       del P
     gpu_detector.scale_in_place(crystal.domains_per_crystal) # apply scale directly on GPU
-    SIM.wavelength_A = wavelength_A # return to canonical energy for subsequent background
+    SIM.wavelength_A = shot_to_shot_wavelength_A # return to canonical energy for subsequent background
 
     QQ = Profiler("nanoBragg background rank %d"%(rank))
     SIM.Fbg_vs_stol = water_bg

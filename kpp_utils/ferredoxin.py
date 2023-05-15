@@ -77,8 +77,8 @@ def run_sim2smv(prefix,crystal,spectra,rotation,rank,gpu_channels_singleton,para
       print("File %s already exists, skipping in rank %d"%(reference_fileout,rank))
       return
 
-  wavlen, flux, wavelength_A = next(spectra) # list of lambdas, list of fluxes, average wavelength
-  assert wavelength_A > 0
+  wavlen, flux, shot_to_shot_wavelength_A = next(spectra) # list of lambdas, list of fluxes, average wavelength
+  assert shot_to_shot_wavelength_A > 0 # wavelength varies shot-to-shot
   # os.system("nvidia-smi") # printout might severely impact performance
 
   # use crystal structure to initialize Fhkl array
@@ -86,7 +86,7 @@ def run_sim2smv(prefix,crystal,spectra,rotation,rank,gpu_channels_singleton,para
 
   SIM = nanoBragg(detpixels_slowfast=PANEL.get_image_size(),pixel_size_mm=PANEL.get_pixel_size()[0],Ncells_abc=(N,N,N),
     # workaround for problem with wavelength array, specify it separately in constructor.
-    wavelength_A=wavelength_A,verbose=0)
+    wavelength_A=shot_to_shot_wavelength_A,verbose=0)
   SIM.adc_offset_adu = 0 # Do not offset by 40
   #SIM.adc_offset_adu = 10 # Do not offset by 40
   SIM.mosaic_spread_deg = 0.05 # interpreted by UMAT_nm as a half-width stddev
@@ -114,7 +114,7 @@ def run_sim2smv(prefix,crystal,spectra,rotation,rank,gpu_channels_singleton,para
   # get same noise each time this test is run
   SIM.seed = 1
   SIM.oversample=1
-  SIM.wavelength_A = wavelength_A
+  SIM.wavelength_A = shot_to_shot_wavelength_A
   SIM.polarization=1
   # this will become F000, marking the beam center
   SIM.default_F=0
@@ -191,7 +191,7 @@ def run_sim2smv(prefix,crystal,spectra,rotation,rank,gpu_channels_singleton,para
         x, gpu_channels_singleton, gpu_detector)
       del P
     gpu_detector.scale_in_place(crystal.domains_per_crystal) # apply scale directly on GPU
-    SIM.wavelength_A = wavelength_A # return to canonical energy for subsequent background
+    SIM.wavelength_A = shot_to_shot_wavelength_A # return to canonical energy for subsequent background
 
     assert add_background_algorithm == "cuda"
     if add_background_algorithm == "cuda":
