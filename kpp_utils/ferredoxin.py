@@ -136,7 +136,7 @@ def run_sim2smv(prefix,crystal,spectra,rotation,rank,gpu_channels_singleton,para
   SIM.progress_meter=False
   # prints out value of one pixel only.  will not render full image!
   # flux is always in photons/s
-  SIM.flux=1e12
+  SIM.flux=params.beam.total_flux
   SIM.exposure_s=1.0 # so total fluence is e12
   # assumes round beam
   SIM.beamsize_mm=0.003 #cannot make this 3 microns; spots are too intense
@@ -200,7 +200,7 @@ def run_sim2smv(prefix,crystal,spectra,rotation,rank,gpu_channels_singleton,para
       SIM.amorphous_sample_thick_mm = 0.1
       SIM.amorphous_density_gcm3 = 1
       SIM.amorphous_molecular_weight_Da = 18
-      SIM.flux=1e12
+      SIM.flux=params.beam.total_flux
       SIM.beamsize_mm=0.003 # square (not user specified)
       SIM.exposure_s=1.0 # multiplies flux x exposure
       gpu_simulation.add_background(gpu_detector)
