@@ -77,8 +77,6 @@ def run_sim2smv(prefix,crystal,spectra,rotation,rank,gpu_channels_singleton,para
       print("File %s already exists, skipping in rank %d"%(reference_fileout,rank))
       return
 
-  direct_algo_res_limit = 1.7
-
   wavlen, flux, wavelength_A = next(spectra) # list of lambdas, list of fluxes, average wavelength
   assert wavelength_A > 0
   # os.system("nvidia-smi") # printout might severely impact performance
