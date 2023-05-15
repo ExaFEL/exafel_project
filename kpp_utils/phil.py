@@ -27,6 +27,14 @@ def parse_input():
         .type = float
         .help = spectra from big data are coerced to this total flux
     }
+    spectrum {
+      nchannels = None
+        .type = int
+        .help = number of energy channels for spectrum simulation
+      channel_width = 1.0
+        .type = float
+        .help = width of one energy channel in eV.
+    }
     crystal {
       structure = *ferredoxin PSII
         .type = choice
