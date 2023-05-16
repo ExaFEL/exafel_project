@@ -40,7 +40,7 @@ attenuation=True
 context=kokkos_gpu
 absorption=high_remote
 beam {
-  mean_wavelength=9500.
+  mean_energy=9500.
 }
 spectrum {
   nchannels=100
