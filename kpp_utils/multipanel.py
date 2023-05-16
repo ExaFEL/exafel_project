@@ -112,7 +112,7 @@ def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,pa
     assert gpu_channels_singleton.get_deviceID()==SIM.device_Id
     if gpu_channels_singleton.get_nchannels() == 0: # if uninitialized
         P = Profiler("Initialize the channels singleton rank %d"%(rank))
-        for x in range(len(flux)):
+        for x in range(len(flux) if params.absorption=="spread" else 1):
           gpu_channels_singleton.structure_factors_to_GPU_direct(
            x, sfall_channels[x].indices(), sfall_channels[x].data())
         del P
@@ -142,9 +142,9 @@ def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,pa
       # from channel_pixels function
       SIM.wavelength_A = wavlen[x]
       SIM.flux = flux[x]
-
+      channel_selection = 0 if params.absorption=="high_remote" else x
       gpu_simulation.add_energy_channel_mask_allpanel(
-            x, gpu_channels_singleton, gpu_detector, positive_mask_iselection)
+            channel_selection, gpu_channels_singleton, gpu_detector, positive_mask_iselection)
       del P
     gpu_detector.scale_in_place(crystal.domains_per_crystal) # apply scale directly on GPU
     SIM.wavelength_A = shot_to_shot_wavelength_A # return to canonical energy for subsequent background
