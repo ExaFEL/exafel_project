@@ -18,6 +18,10 @@ def parse_input():
       .type = bool
     attenuation = True
       .type = bool
+    absorption = *spread high_remote
+      .type = choice
+      .help = either do a spread calculation, which calculates wavelength-dependent amplitudes, or
+      .help = a high_remote energy calculation, where amplitudes are only calculated at the mean energy
     beam {
       mean_energy = None
         .type = float
@@ -28,7 +32,7 @@ def parse_input():
         .help = spectra from big data are coerced to this total flux
     }
     spectrum {
-      nchannels = None
+      nchannels = 100
         .type = int
         .help = number of energy channels for spectrum simulation
       channel_width = 1.0

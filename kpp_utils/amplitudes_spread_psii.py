@@ -54,6 +54,12 @@ def amplitudes_spread_psii(comm, params, **kwargs):
 
   # Generating sf for my wavelengths
   sfall_channels = {}
+
+  if params.absorption == "high_remote":
+    if rank==0:
+      sfall_channels[0] = GF.get_amplitudes()
+    return sfall_channels
+
   for x in range(len(wavelengths)):
     if rank > len(wavelengths): break
     if x % size != rank: continue
