@@ -48,5 +48,5 @@ output {
 " > trial.phil
 
 echo "jobstart $(date)";pwd
-srun -n 1024 -c 2 -G 128 libtbx.python $MODULES/exafel_project/kpp_utils/LY99_batch.py trial.phil
+srun -n 1024 -c 4 -G 128 libtbx.python $MODULES/exafel_project/kpp_utils/LY99_batch.py trial.phil
 echo "jobend $(date)";pwd
