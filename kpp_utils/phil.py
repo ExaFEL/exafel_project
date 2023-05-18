@@ -18,14 +18,26 @@ def parse_input():
       .type = bool
     attenuation = True
       .type = bool
+    absorption = *spread high_remote
+      .type = choice
+      .help = either do a spread calculation, which calculates wavelength-dependent amplitudes, or
+      .help = a high_remote energy calculation, where amplitudes are only calculated at the mean energy
     beam {
-      mean_wavelength = None
+      mean_energy = None
         .type = float
         .optional = False
-        .help = spectra from big data are coerced to this mean wavelength
+        .help = spectra from big data are coerced to this mean energy given in units of eV
       total_flux = 1E12
         .type = float
         .help = spectra from big data are coerced to this total flux
+    }
+    spectrum {
+      nchannels = 100
+        .type = int
+        .help = number of energy channels for spectrum simulation
+      channel_width = 1.0
+        .type = float
+        .help = width of one energy channel in eV.
     }
     crystal {
       structure = *ferredoxin PSII

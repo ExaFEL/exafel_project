@@ -1,26 +1,25 @@
 #!/bin/bash -l
 #SBATCH -N 32             # Number of nodes
-#SBATCH -J cytochrome_sim
+#SBATCH -J high_remote_ferredoxin_sim
 #SBATCH -L SCRATCH       # job requires SCRATCH files
-#SBATCH -A lcls_g       # allocation
+#SBATCH -A m2859_g       # allocation
 #SBATCH -C gpu
 #SBATCH -q regular # regular or special queue
-#SBATCH -t 05:00:00      # wall clock time limit
+#SBATCH -t 01:30:00      # wall clock time limit
 #SBATCH --gpus-per-node 4
-#SBATCH --ntasks-per-gpu 8
 #SBATCH -o %j.out
 #SBATCH -e %j.err
 
-export SCRATCH_FOLDER=$SCRATCH/cytochrome_sim/$SLURM_JOB_ID
+export SCRATCH_FOLDER=$SCRATCH/ferredoxin_sim/$SLURM_JOB_ID
 mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER
 
 export CCTBX_DEVICE_PER_NODE=1
 export N_START=0
 export LOG_BY_RANK=1 # Use Aaron's rank logger
 export RANK_PROFILE=0 # 0 or 1 Use cProfiler, default 1
-export N_SIM=500000 # total number of images to simulate
+export N_SIM=100000 # total number of images to simulate
 export ADD_BACKGROUND_ALGORITHM=cuda
-export DEVICES_PER_NODE=1
+export DEVICES_PER_NODE=4
 export MOS_DOM=25
 
 export CCTBX_NO_UUID=1
@@ -39,11 +38,23 @@ noise=True
 psf=False
 attenuation=True
 context=kokkos_gpu
+absorption=high_remote
 beam {
-  mean_energy=7120.
+  mean_energy=9500.
+}
+spectrum {
+  nchannels=100
+  channel_width=1.0
+}
+detector {
+  tiles=multipanel
+  reference=$MODULES/exafel_project/kpp-sim/t000_rg002_chunk000_reintegrated_000000.expt
+}
+output {
+  format=h5
 }
 " > trial.phil
 
 echo "jobstart $(date)";pwd
-srun -n 1024 -c 2 -G 32 libtbx.python $MODULES/exafel_project/kpp_utils/LY99_batch.py trial.phil
+srun -n 1024 -c 2 libtbx.python $MODULES/exafel_project/kpp_utils/LY99_batch.py trial.phil
 echo "jobend $(date)";pwd

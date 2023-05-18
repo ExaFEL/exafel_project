@@ -22,17 +22,16 @@ def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,pa
                 quick=False,save_bragg=False,sfall_channels=None, **kwargs):
   DETECTOR = reference.detector
   PANEL = DETECTOR[0]
-  direct_algo_res_limit = float(os.environ.get('MN_RESOLUTION'))
 
-  wavlen, flux, wavelength_A = next(spectra) # list of lambdas, list of fluxes, average wavelength
-  assert wavelength_A > 0
+  wavlen, flux, shot_to_shot_wavelength_A = next(spectra) # list of lambdas, list of fluxes, average wavelength
+  assert shot_to_shot_wavelength_A > 0 # wavelength varies shot-to-shot
   # os.system("nvidia-smi") # printout might severely impact performance
 
   # use crystal structure to initialize Fhkl array
   N = crystal.number_of_cells(sfall_channels[0].unit_cell())
 
   consistent_beam = reference.beam
-  consistent_beam.set_wavelength(wavelength_A)
+  consistent_beam.set_wavelength(shot_to_shot_wavelength_A)
   SIM = nanoBragg(detector = DETECTOR, beam = consistent_beam)
   SIM.Ncells_abc=(N,N,N)
   print("beam, polar", SIM.beam_vector, SIM.polar_vector)
@@ -64,7 +63,7 @@ def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,pa
   # get same noise each time this test is run
   SIM.seed = 1
   SIM.oversample=1
-  SIM.wavelength_A = wavelength_A
+  SIM.wavelength_A = shot_to_shot_wavelength_A
   SIM.polarization=1
   # this will become F000, marking the beam center
   SIM.default_F=0
@@ -86,7 +85,7 @@ def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,pa
   SIM.progress_meter=False
   # prints out value of one pixel only.  will not render full image!
   # flux is always in photons/s
-  SIM.flux=1e12
+  SIM.flux=params.beam.total_flux
   SIM.exposure_s=1.0 # so total fluence is e12
   # assumes round beam
   SIM.beamsize_mm=0.003 #cannot make this 3 microns; spots are too intense
@@ -113,7 +112,7 @@ def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,pa
     assert gpu_channels_singleton.get_deviceID()==SIM.device_Id
     if gpu_channels_singleton.get_nchannels() == 0: # if uninitialized
         P = Profiler("Initialize the channels singleton rank %d"%(rank))
-        for x in range(len(flux)):
+        for x in range(len(flux) if params.absorption=="spread" else 1):
           gpu_channels_singleton.structure_factors_to_GPU_direct(
            x, sfall_channels[x].indices(), sfall_channels[x].data())
         del P
@@ -143,19 +142,19 @@ def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,pa
       # from channel_pixels function
       SIM.wavelength_A = wavlen[x]
       SIM.flux = flux[x]
-
+      channel_selection = 0 if params.absorption=="high_remote" else x
       gpu_simulation.add_energy_channel_mask_allpanel(
-            x, gpu_channels_singleton, gpu_detector, positive_mask_iselection)
+            channel_selection, gpu_channels_singleton, gpu_detector, positive_mask_iselection)
       del P
     gpu_detector.scale_in_place(crystal.domains_per_crystal) # apply scale directly on GPU
-    SIM.wavelength_A = wavelength_A # return to canonical energy for subsequent background
+    SIM.wavelength_A = shot_to_shot_wavelength_A # return to canonical energy for subsequent background
 
     QQ = Profiler("nanoBragg background rank %d"%(rank))
     SIM.Fbg_vs_stol = water_bg
     SIM.amorphous_sample_thick_mm = 0.1
     SIM.amorphous_density_gcm3 = 1
     SIM.amorphous_molecular_weight_Da = 18
-    SIM.flux=1e12
+    SIM.flux=params.beam.total_flux
     SIM.beamsize_mm=0.003 # square (not user specified)
     SIM.exposure_s=1.0 # multiplies flux x exposure
     gpu_simulation.add_background(gpu_detector)
@@ -169,9 +168,6 @@ def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,pa
 
     SIM.Amatrix_RUB = Amatrix_rot # return to canonical orientation
     del QQ
-
-  nominal_data = gpu_detector.get_raw_pixels()
-  gpu_detector.each_image_free() # deallocate GPU arrays
 
   if params.psf:
     SIM.detector_psf_kernel_radius_pixels=10;
@@ -202,10 +198,14 @@ def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,pa
     print("detector_psf_fwhm_mm=",SIM.detector_psf_fwhm_mm)
     print("detector_psf_kernel_radius_pixels=",SIM.detector_psf_kernel_radius_pixels)
     #estimate_gain(SIM.raw_pixels,offset=0)
-    #SIM.add_noise() #converts photons to ADU.            ###################################################################NKS
+    #SIM.add_noise() #converts photons to ADU.
+    nominal_data = gpu_simulation.add_noise(gpu_detector)
     #estimate_gain(SIM.raw_pixels,offset=SIM.adc_offset_adu,algorithm="slow")
     #estimate_gain(SIM.raw_pixels,offset=SIM.adc_offset_adu,algorithm="kabsch")
   del QQ
+
+  # nominal_data = gpu_detector.get_raw_pixels() # the normal way to gt the data, but shortcut due to noise call.
+  gpu_detector.each_image_free() # deallocate GPU arrays
 
   if params.output.format == "h5":
     from dxtbx.model import Spectrum
