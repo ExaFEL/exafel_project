@@ -71,7 +71,7 @@ def run_LY99_batch(test_without_mpi=False):
   comm = MPI.COMM_WORLD
   rank = comm.Get_rank()
   size = comm.Get_size()
-  rlog = rlog_factory(rank)
+  # rlog = rlog_factory(rank)
   workaround_nt = int(os.environ.get("OMP_NUM_THREADS", 1))
   omp_set_num_threads(workaround_nt)
   N_total = int(os.environ["N_SIM"]) # number of items to simulate
