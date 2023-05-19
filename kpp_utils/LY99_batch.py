@@ -21,7 +21,7 @@ from LS49 import ls49_big_data, legacy_random_orientations
 step4_pad.big_data = ls49_big_data
 generate_spectra.big_data = ls49_big_data
 from simtbx import get_exascale
-
+# %%%%%%
 
 # Develop procedure for MPI control
 
@@ -76,12 +76,12 @@ def run_LY99_batch(test_without_mpi=False):
   omptbx.omp_set_num_threads(workaround_nt)
   N_total = int(os.environ["N_SIM"]) # number of items to simulate
   N_stride = size # total number of worker tasks
-  rlog(f'Initiate log, comm {size=} with {omp_get_num_procs()=}')
+  print("hello from rank %d of %d"%(rank,size),"with omp_threads=",omp_get_num_procs())
   start_comp = time()
 
   # now inside the Python imports, begin large data broadcast
   if rank == 0:
-    rlog('Rank 0 starts constructing "transmitted_info" dictionary')
+    print("Rank 0 time", datetime.now())
     from LS49.spectra.generate_spectra import spectra_simulation
     from LS49.sim.step4_pad import microcrystal
     print("hello2 from rank %d of %d"%(rank,size))
@@ -93,11 +93,7 @@ def run_LY99_batch(test_without_mpi=False):
                             random_orientations = random_orientations)
   else:
     transmitted_info = None
-  transmitted_info = comm.bcast(transmitted_info, root=0)
-  sfall_channels = bcast_large_dict(comm, sfall_channels, root=0)
-  # print(sfall_channels.keys())
-
-  transmitted_info['sfall_info'] = sfall_channels
+  transmitted_info = comm.bcast(transmitted_info, root = 0)
   comm.barrier()
 
   kwargs = {}
@@ -130,28 +126,29 @@ def run_LY99_batch(test_without_mpi=False):
   parcels = list(range(rank,N_total,N_stride))
 
   print(rank, time(), "finished with single broadcast, now set up the rank logger")
+
   if log_by_rank:
     expand_dir = os.path.expandvars(params.logger.outdir)
     log_path = os.path.join(expand_dir,"rank_%d.log"%rank)
     error_path = os.path.join(expand_dir,"rank_%d.err"%rank)
     #print("Rank %d redirecting stdout/stderr to"%rank, log_path, error_path)
     sys.stdout = io.TextIOWrapper(open(log_path,'ab', 0), write_through=True)
-    sys.sntderr = io.TextIOWrapper(open(error_path,'ab', 0), write_through=True)
+    sys.stderr = io.TextIOWrapper(open(error_path,'ab', 0), write_through=True)
 
-  rlog('Finished with the rank logger, now construct the GPU cache container')
+  print(rank, time(), "finished with the rank logger, now construct the GPU cache container")
   gpu_instance = get_exascale("gpu_instance", params.context)
   gpu_energy_channels = get_exascale("gpu_energy_channels", params.context)
 
-  gpu_run = gpu_instance(deviceId=rank % int(os.environ.get("DEVICES_PER_NODE", 1)))
-  gpu_channels_singleton = gpu_energy_channels(deviceId=gpu_run.get_deviceID())
-  # singleton will instantiate, regardless of gpu, device count, or exascale API
+  gpu_run = gpu_instance( deviceId = rank % int(os.environ.get("DEVICES_PER_NODE",1)) )
+  gpu_channels_singleton = gpu_energy_channels (
+    deviceId = gpu_run.get_deviceID())
+    # singleton will instantiate, regardless of gpu, device count, or exascale API
 
   comm.barrier()
 
-
   for idx in parcels:
     cache_time = time()
-    rlog(f'idx------start--------> {idx}')
+    print("idx------start-------->",idx,"rank",rank,time())
     # if rank==0: os.system("nvidia-smi")
     if params.detector.tiles == "single":
       tst_one(image=idx,spectra=transmitted_info["spectra"],
@@ -172,12 +169,12 @@ def run_LY99_batch(test_without_mpi=False):
         sfall_channels=transmitted_info["sfall_info"],
         params=params,**kwargs
       )
-    rlog(f'idx------finis--------> {idx}, elapsed: {time()-cache_time}')
+    print("idx------finis-------->",idx,"rank",rank,time(),"elapsed",time()-cache_time)
   comm.barrier()
   del gpu_channels_singleton
   # avoid Kokkos allocation "device_Fhkl" being deallocated after Kokkos::finalize was called
-  rlog(f'Seconds elapsed after srun startup: {time()-start_elapse:.3f}')
-  rlog(f'Seconds elapsed after Python imports: {time()-start_comp:.3f}')
+  print("Overall rank",rank,"at",datetime.now(),"seconds elapsed after srun startup %.3f"%(time()-start_elapse))
+  print("Overall rank",rank,"at",datetime.now(),"seconds elapsed after Python imports %.3f"%(time()-start_comp))
   if rank_profile:
     pr.disable()
     pr.dump_stats("cpu_%d.prof"%rank)

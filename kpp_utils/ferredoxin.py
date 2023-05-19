@@ -3,7 +3,6 @@ from scitbx.array_family import flex
 from scitbx.matrix import sqr,col
 from simtbx.nanoBragg import shapetype
 from simtbx.nanoBragg import nanoBragg
-from simtbx.diffBragg import utils
 import libtbx.load_env # possibly implicit
 from cctbx import crystal
 import math
@@ -257,7 +256,6 @@ def run_sim2smv(prefix,crystal,spectra,rotation,rank,gpu_channels_singleton,para
   print(burst_buffer_fileout, smv_fileout)
 
   extra = "PREFIX=%s;\nRANK=%d;\n"%(prefix,rank)
-
   if params.output.format == "h5":
     intfile_scale=1.0
     """write a NeXus NXmx-format image file to disk from the raw pixel array
@@ -294,7 +292,6 @@ def run_sim2smv(prefix,crystal,spectra,rotation,rank,gpu_channels_singleton,para
   elif params.output.format == "h5_stage1":
     SIM.to_nexus_nxmx(h5_stage1_fileout, intfile_scale=1)
   elif params.output.format == "smv":
-    utils.save_spectra_file(burst_buffer_fileout + ".lam", wavlen, flux) # save per image spectrum
     SIM.to_smv_format_py(fileout=burst_buffer_fileout,intfile_scale=1,rotmat=True,extra=extra,gz=True)
 
   SIM.free_all()
