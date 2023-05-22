@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#SBATCH -N 32             # Number of nodes
+#SBATCH -N 1             # Number of nodes
 #SBATCH -J high_remote_ferredoxin_sim
 #SBATCH -L SCRATCH       # job requires SCRATCH files
 #SBATCH -A m2859_g       # allocation
@@ -56,5 +56,5 @@ output {
 " > trial.phil
 
 echo "jobstart $(date)";pwd
-srun -n 1024 -c 2 libtbx.python $MODULES/exafel_project/kpp_utils/LY99_batch.py trial.phil
+srun -n 32 -c 4 libtbx.python $MODULES/exafel_project/kpp_utils/LY99_batch.py trial.phil
 echo "jobend $(date)";pwd
