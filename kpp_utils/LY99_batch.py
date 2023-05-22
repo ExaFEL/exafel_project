@@ -112,7 +112,10 @@ def run_LY99_batch(test_without_mpi=False):
       consistent_beam_dict["wavelength"] = ENERGY_CONV/params.beam.mean_energy
       consistent_beam = type(specific.beam).from_dict(consistent_beam_dict)
       nominal_resolution = DETECTOR.get_max_resolution(s0=consistent_beam.get_s0())
-      direct_algo_res_limit = math.pow(math.pow(nominal_resolution,-3)*1.005,-(1./3.)) # allow 1% bandpass
+      if params.res_limit is None:
+        direct_algo_res_limit = math.pow(math.pow(nominal_resolution,-3)*1.005,-(1./3.)) # allow 1% bandpass
+      else:
+        direct_algo_res_limit = params.res_limit
       kwargs["direct_algo_res_limit"] = direct_algo_res_limit
     kwargs["writer"].construct_detector(DETECTOR)
 
@@ -122,6 +125,7 @@ def run_LY99_batch(test_without_mpi=False):
   print(rank, time(), "finished with the calculation of channels, now construct single broadcast")
   sfall_channels = bcast_large_dict(comm, sfall_channels, root=0)
   transmitted_info['sfall_info'] = sfall_channels
+
   comm.barrier()
   parcels = list(range(rank,N_total,N_stride))
 
