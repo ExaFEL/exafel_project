@@ -39,6 +39,7 @@ psf=False
 attenuation=True
 context=kokkos_gpu
 absorption=spread
+res_limit=3.4
 crystal {
       structure=PSII
 }
