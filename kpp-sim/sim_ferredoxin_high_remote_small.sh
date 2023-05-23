@@ -5,7 +5,7 @@
 #SBATCH -A m2859_g       # allocation
 #SBATCH -C gpu
 #SBATCH -q regular # regular or special queue
-#SBATCH -t 00:10:00      # wall clock time limit
+#SBATCH -t 00:40:00      # wall clock time limit
 #SBATCH --gpus-per-node 4
 #SBATCH -o %j.out
 #SBATCH -e %j.err
@@ -17,13 +17,13 @@ export CCTBX_DEVICE_PER_NODE=1
 export N_START=0
 export LOG_BY_RANK=1 # Use Aaron's rank logger
 export RANK_PROFILE=0 # 0 or 1 Use cProfiler, default 1
-export N_SIM=10 # total number of images to simulate
+export N_SIM=32 # total number of images to simulate
 export ADD_BACKGROUND_ALGORITHM=cuda
 export DEVICES_PER_NODE=4
 export MOS_DOM=25
 
 export CCTBX_NO_UUID=1
-export DIFFBRAGG_USE_CUDA=1
+export DIFFBRAGG_USE_KOKKOS=1
 export CUDA_LAUNCH_BLOCKING=1
 export NUMEXPR_MAX_THREADS=128
 export SLURM_CPU_BIND=cores # critical to force ranks onto different cores. verify with ps -o psr <pid>
