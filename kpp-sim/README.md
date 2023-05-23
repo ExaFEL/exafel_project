@@ -45,10 +45,14 @@ the integration results are different.  Thus data processing for the two data fo
 ferredoxin_index.sh and ferredoxin_merge.sh:  Slurm scripts for the H5 ferredoxin data processing. For SMV it
 would be necessary to change dispatch.pre_import to False.
 
+ferredoxin_index_8262276.sh and ferredoxin_merge_8275646.sh:  Better Slurm scripts for the H5 ferredoxin data processing, dispensing
+entirely with dispatch.pre_import and (for now) implemented on the dials branch dsp_image_mode.
+
 Updated [slurm script sim_6835899.sh](./sim_6835899.sh) writes out files in J16M detector format from SwissFEL.
 Beam and Detector objects are read in from the provided *.expt file.
 
-
+Updated [slurm script sim_ferredoxin_high_remote.sh](./sim_ferredoxin_high_remote.sh) simulates the same ferredoxin case except at the high-energy remote of 9500 eV.
+Resolution limits are automatically calculated for the J16M detector.
 
 
 
