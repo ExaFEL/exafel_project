@@ -5,11 +5,11 @@ import glob
 from typing import List
 import sys
 
-from iotbx import reflection_file_reader
+from cctbx import crystal, miller
+from iotbx import pdb, reflection_file_reader
 from kpp_eval.phil import parse_input
 from LS49.sim.util_fmodel import gen_fmodel
 
-from mpl_toolkits.mplot3d import Axes3D  # noqa: required to use 3D axes
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 import numpy as np
@@ -34,32 +34,75 @@ This is a work in progress.
 """.strip()
 
 
-class MTZFileEvaluator:
+class MillerEvaluator:
+  WAVELENGTH = 1.54
+
   def __init__(self, parameters):
     self.parameters = parameters
-    self.mtz: list = self.read_mtz()
-    self.ref = self.read_pdb()
+    self.pdb: pdb = self.initialize_pdb()
+    self.symmetry: crystal.symmetry = self.initialize_symmetry()
+    self.miller_arrays: List[miller.array] = self.initialize_arrays()
+    self.miller_reference: miller.array = self.initialize_reference()
+    self.initialize_binning()
 
-  def read_mtz(self):
-    mtz_objects = []
+  def initialize_arrays(self) -> List[miller]:
+    miller_arrays = []
     for mtz_path in self.parameters.input.mtz:
-      mtz = reflection_file_reader.any_reflection_file(file_name=mtz_path)
-      mtz_objects.append(mtz)
-    return mtz_objects
+      mtz = reflection_file_reader.any_reflection_file(file_name=mtz_path)\
+        .as_miller_arrays(crystal_symmetry=self.symmetry)
+      miller_arrays.append(mtz)
+    return miller_arrays
 
-  def read_pdb(self):
-    pdb_lines = open(self.parameters.input.pdb, "r").read()
-    model = gen_fmodel(resolution=2.5,
-                       pdb_text=pdb_lines,
-                       algorithm="fft", wavelength=1.54)
-    return model
+  def initialize_binning(self):
+    for ma in self.miller_arrays:
+      ma.use_binning_of(self.miller_reference)
+
+  def initialize_pdb(self) -> pdb:
+    return pdb.input(file_name=self.parameters.input.pdb)
+
+  def initialize_reference(self) -> miller:
+    pdb_text = open(self.parameters.input.pdb, "r").read()
+    f_model = gen_fmodel(resolution=self.d_min, pdb_text=pdb_text,
+                         algorithm="fft", wavelength=self.WAVELENGTH)
+    return NotImplemented  # TODO convert to miller array for operations?
+
+  def initialize_symmetry(self) -> crystal.symmetry:
+    return self.pdb.crystal_symmetry()
+
+  @property
+  def d_min(self) -> float:
+    return min(ma.d_min() for ma in self.miller_arrays)
+
+  # based on iotbx/command_line/reflection_statistics.py, lines 82-87
+  def _evaluate_completeness(self) -> None:
+    """Bin & evaluate completeness of each Miller array, plot them together"""
+    for ma in self.miller_arrays:
+      ma_without_absences = ma.eliminate_sys_absent()
+      ma_without_absences.completeness().show()
+
+  def _evaluate_i_over_sigma(self) -> None:
+    for ma in self.miller_arrays:
+      ma_without_absences = ma.eliminate_sys_absent()
+      ma_without_absences.i_over_sig_i().show()
+
+  def _evaluate_r_factor(self) -> None:
+    for ma in self.miller_arrays:
+      ma.r1_factor(other=self.miller_reference,
+                   use_binning=True)
+
+  def evaluate(self):
+    method_dispatcher = {'cplt': self._evaluate_completeness,
+                         'I/si': self._evaluate_i_over_sigma,
+                         'R': self._evaluate_r_factor}
+    for stat in self.parameters.statistics.kind:
+      method_dispatcher[stat]()
 
 
 def run(params_):
-  ev = MTZFileEvaluator(parameters=params_)
-  print(f'{type(ev.ref)=}')
-  for mtz in ev.mtz:
-    print(f'{type(mtz)=}')
+  ev = MillerEvaluator(parameters=params_)
+  print(f'{type(ev.miller_reference)=}')
+  for ma in ev.miller_arrays:
+    print(f'{type(ma)=}')
 
 
 params = []

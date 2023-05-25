@@ -17,6 +17,15 @@ input {
     .multiple = True
     .help = Path to the mtz file(s) to be evaluated against the pdb reference
 }
+statistics {
+  n_bins = 10
+    .type = int
+    .help = Number of resolution bins to be analysed
+  kind = cplt I/si R
+    .type = choice
+    .multiple = True
+    .help = Types of tests to be performed on the input files
+}
 output {
   prefix = kpp_eval
     .type = str
