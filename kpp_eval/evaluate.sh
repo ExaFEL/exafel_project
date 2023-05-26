@@ -22,6 +22,7 @@ output {
   prefix=kpp_eval
 }
 " > evaluate.phil
+cp ../evaluate.sh .
 
 echo "jobstart $(date)"; pwd
 libtbx.python $MODULES/exafel_project/kpp-eval/evaluate.py evaluate.phil
