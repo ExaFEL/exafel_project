@@ -50,9 +50,9 @@ class MillerEvaluator:
   def initialize_arrays(self) -> List[miller.array]:
     miller_arrays = []
     for mtz_path in self.parameters.input.mtz:
-      mtz = reflection_file_reader.any_reflection_file(file_name=mtz_path)\
-        .as_miller_arrays(crystal_symmetry=self.symmetry)
-      miller_arrays.append(mtz)
+      mtz = reflection_file_reader.any_reflection_file(file_name=mtz_path)
+      ma = mtz.as_miller_arrays(crystal_symmetry=self.symmetry)
+      miller_arrays.extend(ma)
     return miller_arrays
 
   def initialize_binning(self):
