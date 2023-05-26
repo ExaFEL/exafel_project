@@ -56,6 +56,8 @@ class MillerEvaluator:
     return miller_arrays
 
   def initialize_binning(self):
+    n_bins = self.parameters.statistics.n_bins
+    self.miller_reference.setup_binner(d_min=self.d_min, n_bins=n_bins)
     for ma in self.miller_arrays:
       ma.use_binning_of(self.miller_reference)
 
