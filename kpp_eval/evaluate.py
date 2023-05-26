@@ -93,15 +93,14 @@ class MillerEvaluator:
 
   def _evaluate_r_factor(self) -> None:
     for ma in self.miller_arrays:
-      ma.r1_factor(other=self.miller_reference,
-                   use_binning=True)
+      ma.r1_factor(other=self.miller_reference, use_binning=True)
 
   def evaluate(self):
-    method_dispatcher = {'cplt': self._evaluate_completeness,
-                         'I/si': self._evaluate_i_over_sigma,
-                         'R': self._evaluate_r_factor}
-    for stat in self.parameters.statistics.kind:
-      method_dispatcher[stat]()
+    statistic_method_map = {'cplt': self._evaluate_completeness,
+                            'I/si': self._evaluate_i_over_sigma,
+                            'R': self._evaluate_r_factor}
+    for statistic in self.parameters.statistics.kind:
+      statistic_method_map[statistic]()
 
 
 def run(params_):
@@ -109,6 +108,7 @@ def run(params_):
   print(f'{type(ev.miller_reference)=}')
   for ma in ev.miller_arrays:
     print(f'{type(ma)=}')
+  ev.evaluate()
 
 
 params = []
