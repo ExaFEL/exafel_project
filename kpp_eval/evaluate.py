@@ -7,8 +7,8 @@ import sys
 
 from cctbx import crystal, miller
 from cctbx.eltbx import henke
+from exafel_project.kpp_eval.phil import parse_input
 from iotbx import pdb, reflection_file_reader
-from kpp_eval.phil import parse_input
 from LS49.sim.util_fmodel import gen_fmodel
 import mmtbx.command_line.fmodel
 

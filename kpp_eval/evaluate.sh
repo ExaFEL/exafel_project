@@ -25,5 +25,5 @@ output {
 cp ../evaluate.sh .
 
 echo "jobstart $(date)"; pwd
-libtbx.python $MODULES/exafel_project/kpp-eval/evaluate.py evaluate.phil
+libtbx.python $MODULES/exafel_project/kpp_eval/evaluate.py evaluate.phil
 echo "jobend $(date)"; pwd
