@@ -16,6 +16,9 @@ input {
     .type = str
     .multiple = True
     .help = Path to the mtz file(s) to be evaluated against the pdb reference
+  wavelength = 1.85
+    .type = float
+    .help = Wavelength at which data was collected
 }
 statistics {
   n_bins = 10

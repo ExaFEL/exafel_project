@@ -6,9 +6,11 @@ from typing import List
 import sys
 
 from cctbx import crystal, miller
+from cctbx.eltbx import henke
 from iotbx import pdb, reflection_file_reader
 from kpp_eval.phil import parse_input
 from LS49.sim.util_fmodel import gen_fmodel
+import mmtbx.command_line.fmodel
 
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
@@ -35,7 +37,7 @@ This is a work in progress.
 
 
 class MillerEvaluator:
-  WAVELENGTH = 1.54
+  SIM_ALGORITHM = 'fft'
 
   def __init__(self, parameters):
     self.parameters = parameters
@@ -61,10 +63,12 @@ class MillerEvaluator:
     return pdb.input(file_name=self.parameters.input.pdb)
 
   def initialize_reference(self) -> miller:
+    """Create reference miller array using `LS49.sim.util_fmodel.gen_fmodel`"""
     pdb_text = open(self.parameters.input.pdb, "r").read()
-    f_model = gen_fmodel(resolution=self.d_min, pdb_text=pdb_text,
-                         algorithm="fft", wavelength=self.WAVELENGTH)
-    return NotImplemented  # TODO convert to miller array for operations?
+    f_model = gen_fmodel(
+      resolution=self.d_min, pdb_text=pdb_text, algorithm=self.SIM_ALGORITHM,
+      wavelength=self.parameters.input.wavelength)
+    return f_model.get_amplitudes()
 
   def initialize_symmetry(self) -> crystal.symmetry:
     return self.pdb.crystal_symmetry()
