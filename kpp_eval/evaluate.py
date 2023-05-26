@@ -97,7 +97,7 @@ class MillerEvaluator:
     print(f_calc.is_complex_array())
     print(f_calc.is_xray_amplitude_array())
     for ma in self.miller_arrays:
-      f_obs = ma.as_amplitude_array()
+      f_obs = ma.as_amplitude_array().use_binning_of(ma)
       print(f_obs.observation_type())
       print(f_obs.is_complex_array())
       print(f_obs.is_xray_amplitude_array())
