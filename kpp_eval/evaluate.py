@@ -84,15 +84,21 @@ class MillerEvaluator:
     """Bin & evaluate completeness of each Miller array, plot them together"""
     for ma in self.miller_arrays:
       ma_without_absences = ma.eliminate_sys_absent()
-      ma_without_absences.completeness().show()
+      ma_without_absences.completeness(use_binning=True).show()
 
   def _evaluate_i_over_sigma(self) -> None:
     for ma in self.miller_arrays:
       ma_without_absences = ma.eliminate_sys_absent()
-      ma_without_absences.i_over_sig_i().show()
+      ma_without_absences.i_over_sig_i(use_binning=True).show()
 
   def _evaluate_r_factor(self) -> None:
+    print(self.miller_reference.observation_type())
+    print(self.miller_reference.is_complex_array())
+    print(self.miller_reference.is_xray_amplitude_array())
     for ma in self.miller_arrays:
+      print(ma.observation_type())
+      print(ma.is_complex_array())
+      print(ma.is_xray_amplitude_array())
       ma.r1_factor(other=self.miller_reference, use_binning=True)
 
   def evaluate(self):
