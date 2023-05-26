@@ -47,7 +47,7 @@ class MillerEvaluator:
     self.miller_reference: miller.array = self.initialize_reference()
     self.initialize_binning()
 
-  def initialize_arrays(self) -> List[miller]:
+  def initialize_arrays(self) -> List[miller.array]:
     miller_arrays = []
     for mtz_path in self.parameters.input.mtz:
       mtz = reflection_file_reader.any_reflection_file(file_name=mtz_path)\
@@ -62,7 +62,7 @@ class MillerEvaluator:
   def initialize_pdb(self) -> pdb:
     return pdb.input(file_name=self.parameters.input.pdb)
 
-  def initialize_reference(self) -> miller:
+  def initialize_reference(self) -> miller.array:
     """Create reference miller array using `LS49.sim.util_fmodel.gen_fmodel`"""
     pdb_text = open(self.parameters.input.pdb, "r").read()
     f_model = gen_fmodel(
