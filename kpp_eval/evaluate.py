@@ -92,14 +92,16 @@ class MillerEvaluator:
       ma_without_absences.i_over_sig_i(use_binning=True).show()
 
   def _evaluate_r_factor(self) -> None:
-    print(self.miller_reference.observation_type())
-    print(self.miller_reference.is_complex_array())
-    print(self.miller_reference.is_xray_amplitude_array())
+    f_calc = self.miller_reference
+    print(f_calc.observation_type())
+    print(f_calc.is_complex_array())
+    print(f_calc.is_xray_amplitude_array())
     for ma in self.miller_arrays:
-      print(ma.observation_type())
-      print(ma.is_complex_array())
-      print(ma.is_xray_amplitude_array())
-      ma.r1_factor(other=self.miller_reference, use_binning=True)
+      f_obs = ma.as_amplitude_array()
+      print(f_obs.observation_type())
+      print(f_obs.is_complex_array())
+      print(f_obs.is_xray_amplitude_array())
+      f_obs.r1_factor(other=f_calc, use_binning=True)
 
   def evaluate(self):
     statistic_method_map = {'cplt': self._evaluate_completeness,
