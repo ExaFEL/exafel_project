@@ -101,7 +101,7 @@ class MillerEvaluator:
       print(f_obs.observation_type())
       print(f_obs.is_complex_array())
       print(f_obs.is_xray_amplitude_array())
-      f_obs.r1_factor(other=f_calc, use_binning=True)
+      f_obs.r1_factor(other=f_calc, use_binning=True).show()
 
   def evaluate(self):
     statistic_method_map = {'cplt': self._evaluate_completeness,
