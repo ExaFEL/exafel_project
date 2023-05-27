@@ -2,12 +2,13 @@ from __future__ import division
 
 from dataclasses import dataclass
 import glob
-from typing import List
+from typing import List, Tuple
 import sys
 
 from cctbx import crystal, miller
 from cctbx.eltbx import henke
 from exafel_project.kpp_eval.phil import parse_input
+from libtbx import Auto
 from iotbx import pdb, reflection_file_reader
 from LS49.sim.util_fmodel import gen_fmodel
 import mmtbx.command_line.fmodel
@@ -36,6 +37,51 @@ This is a work in progress.
 """.strip()
 
 
+class RIsoCalculator:
+  def __init__(self, anomalous_flag, d_min, d_max, n_bins):
+    self.ma1: miller.array = None
+    self.ma2: miller.array = None
+    self.anomalous_flag = anomalous_flag
+    self.d_min = d_min
+    self.d_max = d_max
+    self.n_bins = n_bins
+
+  @classmethod
+  def from_parameters(cls, parameters):
+    return NotImplemented
+
+  def _reindex(self) -> None:
+    """Make sure that reflections in both sets occupy same asymmetric unit"""
+    assert self.ma1.space_group_info().symbol_and_number() ==\
+           self.ma2.space_group_info().symbol_and_number()
+    self.ma1.change_basis("h,k,l").map_to_asu()
+    self.ma2.change_basis("h,k,l").map_to_asu()
+
+  @staticmethod
+  def _find_common_sets(ma1: miller.array, ma2: miller.array)\
+          -> Tuple[miller.array, miller.array]:
+    sym = crystal.symmetry(unit_cell=ma1.unit_cell(),
+                           space_group_info=ma1.space_group_info())
+    common_ma2 = ma2.customized_copy(crystal_symmetry=sym).map_to_asu()
+    common_ma1 = ma1.common_set(common_ma2)
+    common_ma2 = common_ma1.common_set(common_ma1)
+    assert len(common_ma1.indices()) == len(common_ma2.indices())
+    return common_ma1, common_ma2
+
+  def calculate(self, ma1: miller.array, ma2: miller.array):
+    """Calculate binned and total R-factor between two miller arrays"""
+    if self.anomalous_flag:
+      ma1 = ma1 if ma1.anomalous_flag() else ma1.generate_bijvoet_mates()
+      ma2 = ma2 if ma2.anomalous_flag() else ma2.generate_bijvoet_mates()
+    assert ma1.space_group_info().symbol_and_number() ==\
+           ma2.space_group_info().symbol_and_number()
+    ma1.change_basis("h,k,l").map_to_asu()
+    ma2.change_basis("h,k,l").map_to_asu()
+    ca1, ca2 = self._find_common_sets(ma1, ma2)
+    ca1.setup_binner(d_min=self.d_min, d_max=self.d_max, n_bins=self.n_bins)
+    return ca1.r1_factor(ca2, scale_factor=Auto, use_binning=True)
+
+
 class MillerEvaluator:
   SIM_ALGORITHM = 'fft'
 
@@ -46,6 +92,7 @@ class MillerEvaluator:
     self.miller_arrays: List[miller.array] = self.initialize_arrays()
     self.miller_reference: miller.array = self.initialize_reference()
     self.initialize_binning()
+    self.d_max = 1000.
 
   def initialize_arrays(self) -> List[miller.array]:
     miller_arrays = []
@@ -92,17 +139,15 @@ class MillerEvaluator:
       ma_without_absences.i_over_sig_i(use_binning=True).show()
 
   def _evaluate_r_factor(self) -> None:
+    """Based heavily on xfel/command_line/riso.py by Iris Young. TODO: unify"""
     f_calc = self.miller_reference
-    print(f_calc.observation_type())
-    print(f_calc.is_complex_array())
-    print(f_calc.is_xray_amplitude_array())
+    r_iso_calc = RIsoCalculator(
+      anomalous_flag=False, d_min=self.d_min,
+      d_max=self.d_max, n_bins=self.parameters.statistics.n_bins)
     for ma in self.miller_arrays:
       f_obs = ma.as_amplitude_array()
-      f_obs.use_binning_of(ma)
-      print(f_obs.observation_type())
-      print(f_obs.is_complex_array())
-      print(f_obs.is_xray_amplitude_array())
-      f_obs.r1_factor(other=f_calc, use_binning=True).show()
+      r_iso = r_iso_calc.calculate(f_calc, f_obs)
+      r_iso.show()
 
   def evaluate(self):
     statistic_method_map = {'cplt': self._evaluate_completeness,
