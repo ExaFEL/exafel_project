@@ -104,6 +104,7 @@ class MillerEvaluator:
       miller_arrays.extend(ma)
     for ma in miller_arrays:
       print(f"{type(ma)=}, {len(ma.indices())=}, {ma.anomalous_flag()=}")
+      print(ma.show_summary())
     return miller_arrays
 
   def initialize_binning(self):
