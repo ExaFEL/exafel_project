@@ -75,8 +75,8 @@ class RIsoCalculator:
       ma2 = ma2 if ma2.anomalous_flag() else ma2.generate_bijvoet_mates()
     assert ma1.space_group_info().symbol_and_number() ==\
            ma2.space_group_info().symbol_and_number()
-    # ma1 = ma1.change_basis("h,k,l").map_to_asu()
-    # ma2 = ma2.change_basis("h,k,l").map_to_asu()
+    ma1 = ma1.map_to_asu().merge_equivalents().array()
+    ma2 = ma2.map_to_asu().merge_equivalents().array()
     common_set1, common_set2 = self._find_common_sets(ma1, ma2)
     ma1 = ma1.select_indices(common_set1.indices())
     ma2 = ma2.select_indices(common_set2.indices())
