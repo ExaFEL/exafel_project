@@ -70,8 +70,6 @@ class RIsoCalculator:
 
   def calculate(self, ma1: miller.array, ma2: miller.array):
     """Calculate binned and total R-factor between two miller arrays"""
-    print(f"{type(ma1)}")
-    print(f"{type(ma2)}")
     if self.anomalous_flag:
       ma1 = ma1 if ma1.anomalous_flag() else ma1.generate_bijvoet_mates()
       ma2 = ma2 if ma2.anomalous_flag() else ma2.generate_bijvoet_mates()
@@ -80,12 +78,8 @@ class RIsoCalculator:
     ma1.change_basis("h,k,l").map_to_asu()
     ma2.change_basis("h,k,l").map_to_asu()
     common_set1, common_set2 = self._find_common_sets(ma1, ma2)
-    print(f"{type(ma1)}")
-    print(f"{type(ma2)}")
     ma1 = ma1.select_indices(common_set1.indices())
     ma2 = ma2.select_indices(common_set2.indices())
-    print(f"{type(ma1)}")
-    print(f"{type(ma2)}")
     ma1.setup_binner(d_min=self.d_min, d_max=self.d_max, n_bins=self.n_bins)
     return ma1.r1_factor(ma2, scale_factor=Auto, use_binning=True)
 
@@ -138,6 +132,7 @@ class MillerEvaluator:
   # based on iotbx/command_line/reflection_statistics.py, lines 82-87
   def _evaluate_completeness(self) -> None:
     """Bin & evaluate completeness of each Miller array, plot them together"""
+    print(len(self.miller_arrays))
     for ma in self.miller_arrays:
       ma_without_absences = ma.eliminate_sys_absent()
       ma_without_absences.completeness(use_binning=True).show()
