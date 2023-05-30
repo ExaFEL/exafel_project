@@ -102,6 +102,8 @@ class MillerEvaluator:
       mtz = reflection_file_reader.any_reflection_file(file_name=mtz_path)
       ma = mtz.as_miller_arrays(crystal_symmetry=self.symmetry)
       miller_arrays.extend(ma)
+    for ma in miller_arrays:
+      print(f"{type(ma)=}, {len(ma.indices())=}, {ma.anomalous_flag()=}")
     return miller_arrays
 
   def initialize_binning(self):
@@ -147,7 +149,6 @@ class MillerEvaluator:
     r_iso_calc = RIsoCalculator(
       anomalous_flag=False, d_min=self.d_min,
       d_max=self.d_max, n_bins=self.parameters.statistics.n_bins)
-    print(len(self.miller_arrays))
     for ma in self.miller_arrays:
       f_obs = ma.as_amplitude_array()
       r_iso = r_iso_calc.calculate(f_calc, f_obs)
