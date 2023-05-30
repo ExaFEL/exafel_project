@@ -132,7 +132,6 @@ class MillerEvaluator:
   # based on iotbx/command_line/reflection_statistics.py, lines 82-87
   def _evaluate_completeness(self) -> None:
     """Bin & evaluate completeness of each Miller array, plot them together"""
-    print(len(self.miller_arrays))
     for ma in self.miller_arrays:
       ma_without_absences = ma.eliminate_sys_absent()
       ma_without_absences.completeness(use_binning=True).show()
@@ -148,6 +147,7 @@ class MillerEvaluator:
     r_iso_calc = RIsoCalculator(
       anomalous_flag=False, d_min=self.d_min,
       d_max=self.d_max, n_bins=self.parameters.statistics.n_bins)
+    print(len(self.miller_arrays))
     for ma in self.miller_arrays:
       f_obs = ma.as_amplitude_array()
       r_iso = r_iso_calc.calculate(f_calc, f_obs)
