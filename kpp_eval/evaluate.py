@@ -77,9 +77,11 @@ class RIsoCalculator:
            ma2.space_group_info().symbol_and_number()
     ma1.change_basis("h,k,l").map_to_asu()
     ma2.change_basis("h,k,l").map_to_asu()
-    ca1, ca2 = self._find_common_sets(ma1, ma2)
-    ca1.setup_binner(d_min=self.d_min, d_max=self.d_max, n_bins=self.n_bins)
-    return ca1.r1_factor(ca2, scale_factor=Auto, use_binning=True)
+    common_set1, common_set2 = self._find_common_sets(ma1, ma2)
+    ma1 = ma1.select_indices(common_set1)
+    ma2 = ma2.select_indices(common_set2)
+    ma1.setup_binner(d_min=self.d_min, d_max=self.d_max, n_bins=self.n_bins)
+    return ma1.r1_factor(ma2, scale_factor=Auto, use_binning=True)
 
 
 class MillerEvaluator:
