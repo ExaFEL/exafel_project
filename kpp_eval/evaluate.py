@@ -117,9 +117,8 @@ class MillerEvaluator:
     f_model = gen_fmodel(
       resolution=self.d_min, pdb_text=pdb_text, algorithm=self.SIM_ALGORITHM,
       wavelength=self.parameters.input.wavelength)
-    if not self.parameters.input.anomalous_flag:
-      f_model = f_model.as_non_anomalous_set()
-    return f_model.get_amplitudes()
+    return f_model.get_amplitudes() if self.parameters.input.anomalous_flag \
+        else f_model.get_amplitudes().as_non_anomalous_set()
 
   def initialize_symmetry(self) -> crystal.symmetry:
     return self.pdb.crystal_symmetry()
