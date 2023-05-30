@@ -97,14 +97,13 @@ class MillerEvaluator:
     self.d_max = 1000.
 
   def initialize_arrays(self) -> List[miller.array]:
+    """Current implem. reads: 1) Iobs,SIGIobs, 2=1) IMEAN,SIGIMEAN, 3) Iobs(+),
+    SIGIobs(+),Iobs(-),SIGIobs(-), 4=2 for some data. See .show_summary"""
     miller_arrays = []
     for mtz_path in self.parameters.input.mtz:
       mtz = reflection_file_reader.any_reflection_file(file_name=mtz_path)
-      ma = mtz.as_miller_arrays(crystal_symmetry=self.symmetry)
-      miller_arrays.extend(ma)
-    for ma in miller_arrays:
-      print(f"{type(ma)=}, {len(ma.indices())=}, {ma.anomalous_flag()=}")
-      print(ma.show_summary())
+      mas = mtz.as_miller_arrays(crystal_symmetry=self.symmetry)
+      miller_arrays.append(mas[1])  # reads:
     return miller_arrays
 
   def initialize_binning(self):
