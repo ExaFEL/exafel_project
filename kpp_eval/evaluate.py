@@ -246,6 +246,7 @@ def run(params_):
     print(f'{type(ma)=}')
   ev.evaluate()
   print(ev.results)
+  ev.visualize()
 
 
 params = []
