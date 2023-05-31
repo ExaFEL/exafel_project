@@ -6,7 +6,7 @@ from dials.util.options import ArgumentParser
 from iotbx.phil import parse
 
 
-MASTER_PHIL = """
+phil_scope_str = """
 input {
   pdb = path/to/file.pdb
     .type = str
@@ -37,10 +37,10 @@ output {
     .help = String prefix of all output file names
 }
 """
+phil_scope = parse(phil_scope_str)
 
 
 def parse_input():
-  phil_scope = parse(MASTER_PHIL)
   import libtbx.load_env  # implicit import
   parser = ArgumentParser(
     usage=f"\n libtbx.python {sys.argv[0]}",

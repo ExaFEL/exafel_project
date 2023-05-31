@@ -38,6 +38,15 @@ This is a work in progress.
 """.strip()
 
 
+def one_over(x):
+  """Vectorized 1/x, treating x==0 manually."""
+  x = np.array(x, float)
+  near_zero = np.isclose(x, 0)
+  x[near_zero] = np.inf
+  x[~near_zero] = 1 / x[~near_zero]
+  return x
+
+
 class RIsoCalculator:
   def __init__(self, anomalous_flag, d_min, d_max, n_bins):
     self.ma1: miller.array = None
@@ -158,7 +167,6 @@ class MillerEvaluator:
     dataframe = pd.DataFrame(data).iloc[1:-1, :]
     dataframe['s_min'] = [0 if d < 0 else 1/d for d in dataframe['d_max']]
     dataframe['s_max'] = [1/d for d in dataframe['d_min']]
-    dataframe['s_avg'] = (dataframe['s_min'] + dataframe['s_max']) / 2
     return dataframe
 
   def initialize_pdb(self) -> pdb:
@@ -179,6 +187,14 @@ class MillerEvaluator:
   @property
   def d_min(self) -> float:
     return min(ma.d_min() for ma in self.miller_arrays)
+
+  @property
+  def n_bins(self) -> int:
+    return self.parameters.statistics.n_bins
+
+  @property
+  def n_miller(self) -> int:
+    return len(self.parameters.statistics.kind)
 
   # based on iotbx/command_line/reflection_statistics.py, lines 82-87
   @evaluator_of('cplt')
@@ -203,9 +219,8 @@ class MillerEvaluator:
   def _evaluate_r_factor(self) -> None:
     """Based heavily on xfel/command_line/riso.py by Iris Young. TODO: unify"""
     f_calc = self.miller_reference
-    r_iso_calc = RIsoCalculator(
-      anomalous_flag=False, d_min=self.d_min,
-      d_max=self.d_max, n_bins=self.parameters.statistics.n_bins)
+    r_iso_calc = RIsoCalculator( anomalous_flag=False, d_min=self.d_min,
+                                 d_max=self.d_max, n_bins=self.n_bins)
     binned_datas = []
     for ma in self.miller_arrays:
       f_obs = ma.as_amplitude_array()
@@ -216,11 +231,45 @@ class MillerEvaluator:
     for statistic in self.parameters.statistics.kind:
       getattr(self, miller_statistic_evaluator_map[statistic])()
 
+
+class MillerEvaluationArtist:
+  """Visualise the `results` of MillerEvaluator based on passed `parameters`"""
+  def __init__(self, me: MillerEvaluator) -> None:
+    self.me: MillerEvaluator = me
+    self.colormap = plt.get_cmap('tab10')
+    self.colormap_period = 10
+    self.figure, self.ax = plt.subplots()
+    self.ax2 = self.ax.secondary_axis('top', functions=(one_over, one_over))
+
+  @property
+  def color_list(self) -> List:
+    """List of colors, each corresponding to different MillerEvaluator array"""
+    return [self.colormap(i % self.colormap_period)
+            for i in range(self.me.n_miller)]
+
+  @property
+  def x(self) -> np.ndarray:
+    return (self.me.results['s_min'] + self.me.results['s_max']) / 2.
+
+  @property
+  def x_tics(self):
+      return [self.me.results['s_min'][0]] + list(self.me.results['s_max'])
+
+  @property
+  def x2_tics(self):
+    d_min = d0 if (d0 := self.me.results['d_min'][0]) else np.Infinity
+    return [d_min] + list(self.me.results['d_max'])
+
+  def setup_axes(self):
+    self.ax.set(xlabel='s [A^–1]', xticks=self.x_tics)
+    self.ax2.set(xlabel='d_min [A]', xticks=self.x2_tics)
+
   def _visualize_as_line(self, stat_name: str) -> None:
-    for i in range(len(self.miller_arrays)):
+    self.ax.set(title=stat_name)
+    for i in reversed(range(self.me.n_miller)):
       key = f'{stat_name}_{i}'
-      plt.plot(self.results['s_avg'], self.results[key], label=f'mtz{i}')
-      plt.savefig(f'{stat_name}.png')
+      y = self.me.results[key]
+      self.ax.plot(self.x, y, color=self.color_list[i], label=f'mtz{i}')
 
   @visualizer_of('cplt')
   def _visualize_completeness(self):
@@ -235,18 +284,19 @@ class MillerEvaluator:
     self._visualize_as_line('Riso')
 
   def visualize(self):
-    for statistic in self.parameters.statistics.kind:
-      getattr(self, miller_statistic_visualizer_map[statistic])()
+    for stat_name in self.me.parameters.statistics.kind:
+      self.setup_axes()
+      getattr(self, miller_statistic_visualizer_map[stat_name])()
+      self.figure.savefig(f'{stat_name}.png')
+      self.figure.clear()
 
 
 def run(params_):
-  ev = MillerEvaluator(parameters=params_)
-  print(f'{type(ev.miller_reference)=}')
-  for ma in ev.miller_arrays:
-    print(f'{type(ma)=}')
-  ev.evaluate()
-  print(ev.results)
-  ev.visualize()
+  me = MillerEvaluator(parameters=params_)
+  me.evaluate()
+  print(me.results)
+  mea = MillerEvaluationArtist(me=me)
+  mea.visualize()
 
 
 params = []
