@@ -141,7 +141,7 @@ class MillerEvaluator:
     n_rows = binner.n_bins_all()
     data = {'d_min': [binner.bin_d_min(i) for i in range(n_rows)],
             'd_max': [binner.bin_d_min(i+1) for i in range(n_rows)]}
-    return pd.dataframe(data)
+    return pd.DataFrame(data)
 
   def initialize_pdb(self) -> pdb:
     return pdb.input(file_name=self.parameters.input.pdb)
