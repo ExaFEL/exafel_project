@@ -228,11 +228,11 @@ class MillerEvaluator:
 
   @visualizer_of('I_over_si')
   def _visualize_completeness(self):
-    self._visualize_as_line('cplt')
+    self._visualize_as_line('I_over_si')
 
   @visualizer_of('Riso')
   def _visualize_completeness(self):
-    self._visualize_as_line('cplt')
+    self._visualize_as_line('Riso')
 
   def visualize(self):
     for statistic in self.parameters.statistics.kind:
