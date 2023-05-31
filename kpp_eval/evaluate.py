@@ -219,7 +219,7 @@ class MillerEvaluator:
   def _visualize_as_line(self, stat_name: str) -> None:
     for i in range(len(self.miller_arrays)):
       key = f'{stat_name}_{i}'
-      plt.plot(x=self.results['s_avg'], y=self.results[key], label=f'mtz{i}')
+      plt.plot(self.results['s_avg'], self.results[key], label=f'mtz{i}')
       plt.savefig(f'{stat_name}.png')
 
   @visualizer_of('cplt')
