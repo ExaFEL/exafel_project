@@ -137,7 +137,7 @@ class MillerEvaluator:
       ma.use_binning_of(self.miller_reference)
 
   def initialize_dataframe(self):
-    binner = self.miller_reference.binner
+    binner = self.miller_reference.binner()
     n_rows = binner.n_bins_all()
     data = {'d_min': [binner.bin_d_min(i) for i in range(n_rows)],
             'd_max': [binner.bin_d_min(i+1) for i in range(n_rows)]}
