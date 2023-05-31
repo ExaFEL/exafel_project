@@ -102,7 +102,7 @@ def evaluator_of(statistic_name: str) -> Callable:
       stat_name = miller_evaluator_statistic_map[_evaluate_method.__name__]
       binned_datas = _evaluate_method(self, *args, **kwargs)
       for i, binned_data in enumerate(binned_datas):
-        self.results[f'{stat_name}_{i}'] = binned_data.data
+        self.results[f'{stat_name}_{i}'] = binned_data.data[1:-1]
       return binned_datas
     return _evaluate_method_wrapper
   return evaluate_decorator
