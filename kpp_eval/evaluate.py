@@ -1,8 +1,9 @@
 from __future__ import division
 
+import functools
 from dataclasses import dataclass
 import glob
-from typing import List, Tuple
+from typing import Callable, List, Tuple
 import sys
 
 from cctbx import crystal, miller
@@ -84,6 +85,27 @@ class RIsoCalculator:
     return ma1.r1_factor(ma2, scale_factor=Auto, use_binning=True)
 
 
+miller_statistic_evaluator_map = dict()
+miller_evaluator_statistic_map = dict()
+
+
+def evaluator_of(statistic_name: str) -> Callable:
+  """Evaluate decorator factory which assigns eval methods to statistics"""
+  def evaluate_decorator(_evaluate_method: Callable) -> Callable:
+    """Decorator for MillerEvaluator which auto-registers evaluation results"""
+    miller_statistic_evaluator_map[statistic_name] = _evaluate_method.__name__
+    miller_evaluator_statistic_map[_evaluate_method.__name__] = statistic_name
+
+    @functools.wraps(_evaluate_method)
+    def _evaluate_method_wrapper(self: 'MillerEvaluator', *args, **kwargs):
+      stat_name = miller_evaluator_statistic_map[_evaluate_method.__name__]
+      binned_data = _evaluate_method(self, *args, **kwargs)
+      self.results[stat_name] = binned_data.data
+      return binned_data
+    return _evaluate_method_wrapper
+  return evaluate_decorator
+
+
 class MillerEvaluator:
   SIM_ALGORITHM = 'fft'
 
@@ -95,6 +117,8 @@ class MillerEvaluator:
     self.miller_reference: miller.array = self.initialize_reference()
     self.initialize_binning()
     self.d_max = 1000.
+    self.results = self.initialize_dataframe()
+    # self.fig = self.initialize_figure()
 
   def initialize_arrays(self) -> List[miller.array]:
     """Current implem. reads: 1) Iobs,SIGIobs, 2=1) IMEAN,SIGIMEAN, 3) Iobs(+),
@@ -111,6 +135,13 @@ class MillerEvaluator:
     self.miller_reference.setup_binner(d_min=self.d_min, n_bins=n_bins)
     for ma in self.miller_arrays:
       ma.use_binning_of(self.miller_reference)
+
+  def initialize_dataframe(self):
+    binner = self.miller_reference.binner
+    n_rows = binner.n_bins_all()
+    data = {'d_min': [binner.bin_d_min(i) for i in range(n_rows)],
+            'd_max': [binner.bin_d_min(i+1) for i in range(n_rows)]}
+    return pd.dataframe(data)
 
   def initialize_pdb(self) -> pdb:
     return pdb.input(file_name=self.parameters.input.pdb)
@@ -132,17 +163,21 @@ class MillerEvaluator:
     return min(ma.d_min() for ma in self.miller_arrays)
 
   # based on iotbx/command_line/reflection_statistics.py, lines 82-87
+  @evaluator_of('cplt')
   def _evaluate_completeness(self) -> None:
-    """Bin & evaluate completeness of each Miller array, plot them together"""
+    """Bin & evaluate completeness of each Miller array"""
     for ma in self.miller_arrays:
       ma_without_absences = ma.eliminate_sys_absent()
-      ma_without_absences.completeness(use_binning=True).show()
+      return ma_without_absences.completeness(use_binning=True)
 
+  @evaluator_of('I/si')
   def _evaluate_i_over_sigma(self) -> None:
+    """Bin & evaluate I/sigma in each Miller array"""
     for ma in self.miller_arrays:
       ma_without_absences = ma.eliminate_sys_absent()
-      ma_without_absences.i_over_sig_i(use_binning=True).show()
+      return ma_without_absences.i_over_sig_i(use_binning=True)
 
+  @evaluator_of('R')
   def _evaluate_r_factor(self) -> None:
     """Based heavily on xfel/command_line/riso.py by Iris Young. TODO: unify"""
     f_calc = self.miller_reference
@@ -151,15 +186,11 @@ class MillerEvaluator:
       d_max=self.d_max, n_bins=self.parameters.statistics.n_bins)
     for ma in self.miller_arrays:
       f_obs = ma.as_amplitude_array()
-      r_iso = r_iso_calc.calculate(f_calc, f_obs)
-      r_iso.show()
+      return r_iso_calc.calculate(f_calc, f_obs)
 
   def evaluate(self):
-    statistic_method_map = {'cplt': self._evaluate_completeness,
-                            'I/si': self._evaluate_i_over_sigma,
-                            'R': self._evaluate_r_factor}
     for statistic in self.parameters.statistics.kind:
-      statistic_method_map[statistic]()
+      getattr(self, miller_statistic_evaluator_map[statistic])()
 
 
 def run(params_):
@@ -168,6 +199,7 @@ def run(params_):
   for ma in ev.miller_arrays:
     print(f'{type(ma)=}')
   ev.evaluate()
+  print(ev.results)
 
 
 params = []
