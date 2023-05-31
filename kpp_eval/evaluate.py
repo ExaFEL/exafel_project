@@ -87,6 +87,7 @@ class RIsoCalculator:
 
 miller_statistic_evaluator_map = dict()
 miller_evaluator_statistic_map = dict()
+miller_statistic_visualizer_map = dict()
 
 
 def evaluator_of(statistic_name: str) -> Callable:
@@ -107,6 +108,19 @@ def evaluator_of(statistic_name: str) -> Callable:
   return evaluate_decorator
 
 
+def visualizer_of(statistic_name: str) -> Callable:
+  """Evaluate decorator factory which assigns eval methods to statistics"""
+  def visualize_decorator(_visualize_method: Callable) -> Callable:
+    """Decorator for MillerEvaluator which auto-registers visualize methods"""
+    miller_statistic_visualizer_map[statistic_name] = _visualize_method.__name__
+
+    @functools.wraps(_visualize_method)
+    def _visualize_method_wrapper(self: 'MillerEvaluator', *args, **kwargs):
+      return _visualize_method(self, *args, **kwargs)
+    return _visualize_method_wrapper
+  return visualize_decorator
+
+
 class MillerEvaluator:
   SIM_ALGORITHM = 'fft'
 
@@ -119,7 +133,6 @@ class MillerEvaluator:
     self.initialize_binning()
     self.d_max = 1000.
     self.results = self.initialize_dataframe()
-    # self.fig = self.initialize_figure()
 
   def initialize_arrays(self) -> List[miller.array]:
     """Current implem. reads: 1) Iobs,SIGIobs, 2=1) IMEAN,SIGIMEAN, 3) Iobs(+),
@@ -140,8 +153,12 @@ class MillerEvaluator:
   def initialize_dataframe(self):
     binner = self.miller_reference.binner()
     n_rows = binner.n_bins_all()
-    data = {'d_min': [binner.bin_d_min(i) for i in range(n_rows)],
-            'd_max': [binner.bin_d_min(i+1) for i in range(n_rows)]}
+    data = {'d_max': [binner.bin_d_min(i) for i in range(n_rows)],
+            'd_min': [binner.bin_d_min(i+1) for i in range(n_rows)]}
+    dataframe = pd.DataFrame(data).iloc[1:-1, :]
+    data['s_min'] = [0 if d < 0 else 1/d for d in dataframe['d_max']]
+    data['s_max'] = [1/d for d in dataframe['d_min']]
+    data['s_avg'] = (data['s_min'] + data['s_max']) / 2
     return pd.DataFrame(data)
 
   def initialize_pdb(self) -> pdb:
@@ -173,7 +190,7 @@ class MillerEvaluator:
       binned_datas.append(ma_without_absences.completeness(use_binning=True))
     return binned_datas
 
-  @evaluator_of('I/si')
+  @evaluator_of('I_over_si')
   def _evaluate_i_over_sigma(self) -> None:
     """Bin & evaluate I/sigma in each Miller array"""
     binned_datas = []
@@ -182,7 +199,7 @@ class MillerEvaluator:
       binned_datas.append(ma_without_absences.i_over_sig_i(use_binning=True))
     return binned_datas
 
-  @evaluator_of('R')
+  @evaluator_of('Riso')
   def _evaluate_r_factor(self) -> None:
     """Based heavily on xfel/command_line/riso.py by Iris Young. TODO: unify"""
     f_calc = self.miller_reference
@@ -198,6 +215,28 @@ class MillerEvaluator:
   def evaluate(self):
     for statistic in self.parameters.statistics.kind:
       getattr(self, miller_statistic_evaluator_map[statistic])()
+
+  def _visualize_as_line(self, stat_name: str) -> None:
+    for i in range(len(self.miller_arrays)):
+      key = f'{stat_name}_{i}'
+      plt.plot(x=self.results['s_avg'], y=self.results[key], label=f'mtz{i}')
+      plt.savefig(f'{stat_name}.png')
+
+  @visualizer_of('cplt')
+  def _visualize_completeness(self):
+    self._visualize_as_line('cplt')
+
+  @visualizer_of('I_over_si')
+  def _visualize_completeness(self):
+    self._visualize_as_line('cplt')
+
+  @visualizer_of('Riso')
+  def _visualize_completeness(self):
+    self._visualize_as_line('cplt')
+
+  def visualize(self):
+    for statistic in self.parameters.statistics.kind:
+      getattr(self, miller_statistic_visualizer_map[statistic])()
 
 
 def run(params_):
