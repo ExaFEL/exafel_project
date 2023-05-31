@@ -1,24 +1,17 @@
 from __future__ import division
 
 import functools
-from dataclasses import dataclass
-import glob
 from typing import Callable, List, Tuple
-import sys
 
 from cctbx import crystal, miller
-from cctbx.eltbx import henke
 from exafel_project.kpp_eval.phil import parse_input
 from libtbx import Auto
 from iotbx import pdb, reflection_file_reader
 from LS49.sim.util_fmodel import gen_fmodel
-import mmtbx.command_line.fmodel
 
 import matplotlib.pyplot as plt
-from matplotlib.gridspec import GridSpec
 import numpy as np
 import pandas as pd
-import scipy as sp
 
 
 message = """
