@@ -99,9 +99,10 @@ def evaluator_of(statistic_name: str) -> Callable:
     @functools.wraps(_evaluate_method)
     def _evaluate_method_wrapper(self: 'MillerEvaluator', *args, **kwargs):
       stat_name = miller_evaluator_statistic_map[_evaluate_method.__name__]
-      binned_data = _evaluate_method(self, *args, **kwargs)
-      self.results[stat_name] = binned_data.data
-      return binned_data
+      binned_datas = _evaluate_method(self, *args, **kwargs)
+      for i, binned_data in enumerate(binned_datas):
+        self.results[f'{stat_name}_{i}'] = binned_data.data
+      return binned_datas
     return _evaluate_method_wrapper
   return evaluate_decorator
 
@@ -166,16 +167,20 @@ class MillerEvaluator:
   @evaluator_of('cplt')
   def _evaluate_completeness(self) -> None:
     """Bin & evaluate completeness of each Miller array"""
+    binned_datas = []
     for ma in self.miller_arrays:
       ma_without_absences = ma.eliminate_sys_absent()
-      return ma_without_absences.completeness(use_binning=True)
+      binned_datas.append(ma_without_absences.completeness(use_binning=True))
+    return binned_datas
 
   @evaluator_of('I/si')
   def _evaluate_i_over_sigma(self) -> None:
     """Bin & evaluate I/sigma in each Miller array"""
+    binned_datas = []
     for ma in self.miller_arrays:
       ma_without_absences = ma.eliminate_sys_absent()
-      return ma_without_absences.i_over_sig_i(use_binning=True)
+      binned_datas.append(ma_without_absences.i_over_sig_i(use_binning=True))
+    return binned_datas
 
   @evaluator_of('R')
   def _evaluate_r_factor(self) -> None:
@@ -184,9 +189,11 @@ class MillerEvaluator:
     r_iso_calc = RIsoCalculator(
       anomalous_flag=False, d_min=self.d_min,
       d_max=self.d_max, n_bins=self.parameters.statistics.n_bins)
+    binned_datas = []
     for ma in self.miller_arrays:
       f_obs = ma.as_amplitude_array()
-      return r_iso_calc.calculate(f_calc, f_obs)
+      binned_datas.append(r_iso_calc.calculate(f_calc, f_obs))
+    return binned_datas
 
   def evaluate(self):
     for statistic in self.parameters.statistics.kind:
