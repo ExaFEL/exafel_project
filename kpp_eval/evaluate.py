@@ -251,7 +251,8 @@ def run(params_):
 
 params = []
 if __name__ == '__main__':
-  params, options = parse_input()  # test how to use this reader correctly
+  params, options = parse_input()
+  print(params.statistics.kind)
   if '-h' in options or '--help' in options:
     print(message)
     exit()

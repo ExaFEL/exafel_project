@@ -29,6 +29,7 @@ statistics {
     .help = Number of resolution bins to be analysed
   kind = *cplt *I_over_si *Riso
     .type = choice(multi=True)
+    .multiple = True
     .help = Types of tests to be performed on the input files
 }
 output {
