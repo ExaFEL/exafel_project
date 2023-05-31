@@ -27,9 +27,8 @@ statistics {
   n_bins = 10
     .type = int
     .help = Number of resolution bins to be analysed
-  kind = cplt I_over_si Riso
-    .type = choice
-    .multiple = True
+  kind = *cplt *I_over_si *Riso
+    .type = choice(multi=True)
     .help = Types of tests to be performed on the input files
 }
 output {
