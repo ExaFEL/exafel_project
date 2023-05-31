@@ -227,11 +227,11 @@ class MillerEvaluator:
     self._visualize_as_line('cplt')
 
   @visualizer_of('I_over_si')
-  def _visualize_completeness(self):
+  def _visualize_i_over_sigma(self):
     self._visualize_as_line('I_over_si')
 
   @visualizer_of('Riso')
-  def _visualize_completeness(self):
+  def _visualize_r_factor(self):
     self._visualize_as_line('Riso')
 
   def visualize(self):
