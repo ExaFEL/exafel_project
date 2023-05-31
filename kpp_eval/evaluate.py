@@ -156,10 +156,10 @@ class MillerEvaluator:
     data = {'d_max': [binner.bin_d_min(i) for i in range(n_rows)],
             'd_min': [binner.bin_d_min(i+1) for i in range(n_rows)]}
     dataframe = pd.DataFrame(data).iloc[1:-1, :]
-    data['s_min'] = [0 if d < 0 else 1/d for d in dataframe['d_max']]
-    data['s_max'] = [1/d for d in dataframe['d_min']]
-    data['s_avg'] = (data['s_min'] + data['s_max']) / 2
-    return pd.DataFrame(data)
+    dataframe['s_min'] = [0 if d < 0 else 1/d for d in dataframe['d_max']]
+    dataframe['s_max'] = [1/d for d in dataframe['d_min']]
+    dataframe['s_avg'] = (dataframe['s_min'] + dataframe['s_max']) / 2
+    return dataframe
 
   def initialize_pdb(self) -> pdb:
     return pdb.input(file_name=self.parameters.input.pdb)
