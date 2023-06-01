@@ -5,7 +5,12 @@ refiner.refine_spot_scale = [1]
 refiner.max_calls = [501]
 refiner.tradeps = 1e-20
 refiner.verbose = 0
-refiner.stage_two.min_multiplicity = 1
+refiner.stage_two.min_multiplicity = 2
+
+refiner.ncells_mask = 000
+refiner.force_symbol=C121
+simulator.crystal.has_isotropic_ncells = False
+
 
 
 method = "L-BFGS-B"
