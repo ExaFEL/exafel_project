@@ -233,6 +233,7 @@ class MillerEvaluationArtist:
     self.colormap = plt.get_cmap('tab10')
     self.colormap_period = 10
     self.figure, self.ax = plt.subplots()
+    self.figure.set_size_inches(8., 6.)
     self.ax2 = self.ax.secondary_xaxis('top', functions=(one_over, one_over))
 
   @property
@@ -257,6 +258,8 @@ class MillerEvaluationArtist:
   def setup_axes(self):
     self.ax.set(xlabel='s [A^–1]', xticks=self.x_tics)
     self.ax2.set(xlabel='d_min [A]', xticks=self.x2_tics)
+    self.ax.set_xticklabels(self.ax.get_xticks(), rotation=90)
+    self.ax2.set_xticklabels(self.ax2.get_xticks(), rotation=90)
 
   def _visualize_as_line(self, stat_name: str) -> None:
     self.ax.set(title=stat_name)
@@ -282,7 +285,8 @@ class MillerEvaluationArtist:
       self.setup_axes()
       getattr(self, miller_statistic_visualizer_map[stat_name])()
       self.figure.savefig(f'{stat_name}.png')
-      self.figure.clear()
+      self.ax.clear()
+      self.ax2.clear()
 
 
 def run(params_):
