@@ -158,7 +158,7 @@ class MillerEvaluator:
     data = {'d_max': [binner.bin_d_min(i) for i in range(n_rows)],
             'd_min': [binner.bin_d_min(i+1) for i in range(n_rows)]}
     dataframe = pd.DataFrame(data).iloc[1:-1, :]
-    dataframe.reset_index()
+    dataframe.reset_index(inplace=True)
     dataframe['s_min'] = [0 if d < 0 else 1/d for d in dataframe['d_max']]
     dataframe['s_max'] = [1/d for d in dataframe['d_min']]
     return dataframe
@@ -251,7 +251,7 @@ class MillerEvaluationArtist:
 
   @property
   def x2_tics(self):
-    d_min = d0 if (d0 := self.me.results['d_min'][0]) else np.Infinity
+    d_min = d0 if (d0 := self.me.results['d_min'].iloc[0]) else np.Infinity
     return [d_min] + list(self.me.results['d_max'])
 
   def setup_axes(self):
