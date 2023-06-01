@@ -1,5 +1,6 @@
 from __future__ import division
 
+from math import log10, floor
 from typing import Dict, List, Tuple
 
 from cctbx import crystal, miller
@@ -28,6 +29,11 @@ via the `evaluate.sh` script, available in this repository.
 
 This is a work in progress.
 """.strip()
+
+
+def round_to_sf(x: float, sf: int) -> float:
+  """Round `x` to `sf` significant figures, e.g. f(123.4, 2) = 120.0"""
+  return round(x, -int(floor(log10(abs(x)))) + sf - 1)
 
 
 class RegistryHolder(type):
@@ -190,7 +196,7 @@ class MillerEvaluator:
   def overview(self) -> str:
     lines_binned = str(self.results)
     len_lines_binned = max(len(line) for line in lines_binned.splitlines())
-    overall_df = pd.DataFrame(self.overall, index=' ')
+    overall_df = pd.DataFrame(self.overall, index=[' '])
     line_overall = str(overall_df).splitlines()[-1].rjust(len_lines_binned)
     return lines_binned + '\n' + '-' * len_lines_binned + '\n' + line_overall
 
@@ -277,7 +283,7 @@ class MillerEvaluationArtist:
     for i in reversed(range(self.me.n_miller)):
       key = f'{stat_name}_{i}'
       y = self.me.results[key]
-      label = f'mtz{i}: {self.me.overall[key]}'
+      label = f'mtz{i}: {round_to_sf(self.me.overall[key], 4)}'
       self.ax.plot(self.x, y, color=self.color_list[i], label=label)
     self.ax.legend(loc='upper right')
 
