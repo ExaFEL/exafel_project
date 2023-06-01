@@ -149,6 +149,7 @@ class MillerEvaluator:
     data = {'d_max': [binner.bin_d_min(i) for i in range(n_rows)],
             'd_min': [binner.bin_d_min(i+1) for i in range(n_rows)]}
     dataframe = pd.DataFrame(data).iloc[1:-1, :]
+    dataframe.loc[dataframe['d_min'] < 0, 'd_min'] = np.Infinity
     return dataframe.reset_index()
 
   def initialize_pdb(self) -> pdb:
@@ -239,7 +240,6 @@ class MillerEvaluationArtist:
 
   @property
   def x_ticklabels(self) -> list:
-    d_min = d0 if (d0 := self.me.results['d_min'].iloc[0]) else np.Infinity
     return [d_min] + list(self.me.results['d_max'])
 
   def setup_axes(self):
