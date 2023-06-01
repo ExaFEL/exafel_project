@@ -6,7 +6,7 @@
 #SBATCH -A m2859_g       # allocation
 #SBATCH -C gpu
 #SBATCH -q regular
-#SBATCH -t 02:00:00
+#SBATCH -t 08:00:00
 #SBATCH --gpus-per-node=4
 #SBATCH --ntasks-per-gpu=2
 #SBATCH --gpus 128
