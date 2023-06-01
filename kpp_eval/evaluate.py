@@ -235,16 +235,21 @@ class MillerEvaluationArtist:
     return [1 + n_bin for n_bin in range(self.me.n_bins)]
 
   @property
+  def x_lim(self):
+    return min(self.x_ticks) - 0.1, max(self.x_ticks) + 0.1
+
+  @property
   def x_ticks(self):
       return [0.5 + n_bin for n_bin in range(self.me.n_bins + 1)]
 
   @property
   def x_ticklabels(self) -> list:
-    return [self.me.results['d_max'].iloc[0]] + list(self.me.results['d_min'])
+    d_vals = [self.me.results['d_max'].iloc[0]] + list(self.me.results['d_min'])
+    return [str(round(d_val, 2)) for d_val in d_vals]
 
   def _visualize_as_line(self, stat_name: str) -> None:
-    self.ax.set(title=stat_name, xlabel='d_min [A]', xticks=self.x_ticks,
-                xticklabels=self.x_ticklabels)
+    self.ax.set(title=stat_name, xlabel='d_min [A]', xlim=self.x_lim,
+                xticks=self.x_ticks, xticklabels=self.x_ticklabels)
     for i in reversed(range(self.me.n_miller)):
       key = f'{stat_name}_{i}'
       y = self.me.results[key]
