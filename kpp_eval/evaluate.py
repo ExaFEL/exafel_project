@@ -188,10 +188,10 @@ class MillerEvaluator:
 
   @property
   def overview(self) -> str:
-    lines1 = str(self.results)
-    divisor = '-' * max(len(line) for line in lines1.splitlines())
-    lines2 = '\n'.join(str(pd.DataFrame(self.overall)).splitlines()[1:])
-    return lines1 + '\n' + divisor + '\n' + lines2
+    l1 = str(self.results)
+    divisor = '-' * max(len(line) for line in l1.splitlines())
+    l2 = '\n'.join(str(pd.DataFrame(self.overall, index=' ')).splitlines()[1:])
+    return l1 + '\n' + divisor + '\n' + l2
 
   # based on iotbx/command_line/reflection_statistics.py, lines 82-87
   def _evaluate_completeness(self) -> None:
