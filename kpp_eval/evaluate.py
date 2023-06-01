@@ -149,7 +149,7 @@ class MillerEvaluator:
     data = {'d_max': [binner.bin_d_min(i) for i in range(n_rows)],
             'd_min': [binner.bin_d_min(i+1) for i in range(n_rows)]}
     dataframe = pd.DataFrame(data).iloc[1:-1, :]
-    dataframe.loc[dataframe['d_min'] < 0, 'd_min'] = np.Infinity
+    dataframe.loc[dataframe['d_max'] < 0, 'd_max'] = np.Infinity
     return dataframe.reset_index()
 
   def initialize_pdb(self) -> pdb:
