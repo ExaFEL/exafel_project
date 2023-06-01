@@ -265,7 +265,6 @@ class MillerEvaluationArtist:
 
   def visualize(self):
     for stat_name in self.me.parameters.statistics.kind:
-      self.setup_axes()
       getattr(self, miller_statistic_visualizer_map[stat_name])()
       self.figure.savefig(f'{stat_name}.png')
       self.ax.clear()
