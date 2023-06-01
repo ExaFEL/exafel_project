@@ -232,7 +232,7 @@ class MillerEvaluationArtist:
     self.colormap = plt.get_cmap('tab10')
     self.colormap_period = 10
     self.figure, self.ax = plt.subplots()
-    self.ax2 = self.ax.secondary_axis('top', functions=(one_over, one_over))
+    self.ax2 = self.ax.secondary_xaxis('top', functions=(one_over, one_over))
 
   @property
   def color_list(self) -> List:
@@ -295,7 +295,6 @@ def run(params_):
 params = []
 if __name__ == '__main__':
   params, options = parse_input()
-  print(params.statistics.kind)
   if '-h' in options or '--help' in options:
     print(message)
     exit()
