@@ -1,0 +1,22 @@
+roi.shoebox_size = 13
+roi.fit_tilt = True
+roi.reject_edge_reflections = False
+roi.pad_shoebox_for_background_estimation=10
+relative_tilt = False
+refiner.force_symbol=C121
+refiner.check_expt_format = False
+refiner.refine_Fcell = [1]
+refiner.refine_spot_scale = [1]
+refiner.max_calls = [501]
+refiner.ncells_mask = 000
+refiner.tradeps = 1e-20
+refiner.verbose = 0
+refiner.sigma_r = 1.5
+refiner.adu_per_photon = 9.481
+refiner.stage_two.min_multiplicity = 2
+simulator.crystal.has_isotropic_ncells = False
+simulator.beam.size_mm = 0.001
+spectrum_from_imageset=True
+downsamp_spec {
+  delta_en = 1
+}

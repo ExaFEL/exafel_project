@@ -14,7 +14,7 @@
 #SBATCH -e %j.err
 
 export PERL_NDEV=1  # number GPU per node
-export PANDA=$MODULES/diffbragg_benchmarks/AD_SE_13_222/data_222/8_stage2_7_gathered_trimmed.pkl
+export PANDA=$SCRATCH/ferredoxin_sim/9713113/out/preds_for_hopper.pkl
 export GEOM=$MODULES/exafel_project/kpp-sim/t000_rg002_chunk000_reintegrated_000000.expt
 export IBV_FORK_SAFE=1
 export RDMAV_HUGEPAGES_SAFE=1
@@ -24,7 +24,7 @@ echo "jobstart $(date)";pwd
 
 srun -n 256 -G 128 -c 16 \
 simtbx.diffBragg.stage_two \
-$MODULES/diffbragg_benchmarks/AD_SE_13_222/data_222.phil \
+$MODULES/exafel_project/kpp-sim/diffBragg_stage2.phil \
 io.output_dir=$SLURM_JOB_ID \
 pandas_table=$PANDA \
 num_devices=$PERL_NDEV \
