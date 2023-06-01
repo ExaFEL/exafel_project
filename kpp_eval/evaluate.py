@@ -235,22 +235,21 @@ class MillerEvaluationArtist:
     return [1 + n_bin for n_bin in range(self.me.n_bins)]
 
   @property
-  def x_tics(self):
+  def x_ticks(self):
       return [0.5 + n_bin for n_bin in range(self.me.n_bins + 1)]
 
   @property
   def x_ticklabels(self) -> list:
     return [self.me.results['d_max'].iloc[0]] + list(self.me.results['d_min'])
 
-  def setup_axes(self):
-    self.ax.set(xlabel='d_min [A]', xticks=self.x_tics)
-
   def _visualize_as_line(self, stat_name: str) -> None:
-    self.ax.set(title=stat_name)
+    self.ax.set(title=stat_name, xlabel='d_min [A]', xticks=self.x_ticks,
+                xticklabels=self.x_ticklabels)
     for i in reversed(range(self.me.n_miller)):
       key = f'{stat_name}_{i}'
       y = self.me.results[key]
       self.ax.plot(self.x, y, color=self.color_list[i], label=f'mtz{i}')
+    self.ax.legend(loc='upper right')
 
   @visualizer_of('cplt')
   def _visualize_completeness(self):
