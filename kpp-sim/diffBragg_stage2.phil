@@ -1,6 +1,5 @@
 roi.shoebox_size = 13
 relative_tilt = False
-refiner.force_symbol=C121
 refiner.check_expt_format = False
 refiner.refine_Fcell = [1]
 refiner.refine_spot_scale = [1]
