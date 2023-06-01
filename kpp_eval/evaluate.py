@@ -31,15 +31,6 @@ This is a work in progress.
 """.strip()
 
 
-def one_over(x):
-  """Vectorized 1/x, treating x==0 manually."""
-  x = np.array(x, float)
-  near_zero = np.isclose(x, 0)
-  x[near_zero] = np.inf
-  x[~near_zero] = 1 / x[~near_zero]
-  return x
-
-
 class RIsoCalculator:
   def __init__(self, anomalous_flag, d_min, d_max, n_bins):
     self.ma1: miller.array = None
@@ -158,10 +149,7 @@ class MillerEvaluator:
     data = {'d_max': [binner.bin_d_min(i) for i in range(n_rows)],
             'd_min': [binner.bin_d_min(i+1) for i in range(n_rows)]}
     dataframe = pd.DataFrame(data).iloc[1:-1, :]
-    dataframe.reset_index(inplace=True)
-    dataframe['s_min'] = [0 if d < 0 else 1/d for d in dataframe['d_max']]
-    dataframe['s_max'] = [1/d for d in dataframe['d_min']]
-    return dataframe
+    return dataframe.reset_index()
 
   def initialize_pdb(self) -> pdb:
     return pdb.input(file_name=self.parameters.input.pdb)
@@ -234,7 +222,6 @@ class MillerEvaluationArtist:
     self.colormap_period = 10
     self.figure, self.ax = plt.subplots()
     self.figure.set_size_inches(8., 6.)
-    self.ax2 = self.ax.secondary_xaxis('top', functions=(one_over, one_over))
 
   @property
   def color_list(self) -> List:
@@ -243,23 +230,20 @@ class MillerEvaluationArtist:
             for i in range(self.me.n_miller)]
 
   @property
-  def x(self) -> np.ndarray:
-    return (self.me.results['s_min'] + self.me.results['s_max']) / 2.
+  def x(self) -> list:
+    return [1 + n_bin for n_bin in range(self.me.n_bins)]
 
   @property
   def x_tics(self):
-      return [self.me.results['s_min'].iloc[0]] + list(self.me.results['s_max'])
+      return [0.5 + n_bin for n_bin in range(self.me.n_bins + 1)]
 
   @property
-  def x2_tics(self):
+  def x_ticklabels(self) -> list:
     d_min = d0 if (d0 := self.me.results['d_min'].iloc[0]) else np.Infinity
     return [d_min] + list(self.me.results['d_max'])
 
   def setup_axes(self):
-    self.ax.set(xlabel='s [A^–1]', xticks=self.x_tics)
-    self.ax2.set(xlabel='d_min [A]', xticks=self.x2_tics)
-    self.ax.set_xticklabels(self.ax.get_xticks(), rotation=90)
-    self.ax2.set_xticklabels(self.ax2.get_xticks(), rotation=90)
+    self.ax.set(xlabel='d_min [A]', xticks=self.x_tics)
 
   def _visualize_as_line(self, stat_name: str) -> None:
     self.ax.set(title=stat_name)
@@ -286,7 +270,6 @@ class MillerEvaluationArtist:
       getattr(self, miller_statistic_visualizer_map[stat_name])()
       self.figure.savefig(f'{stat_name}.png')
       self.ax.clear()
-      self.ax2.clear()
 
 
 def run(params_):
