@@ -1,7 +1,6 @@
 from __future__ import division
 
-import functools
-from typing import Callable, List, Tuple
+from typing import Dict, List, Tuple
 
 from cctbx import crystal, miller
 from exafel_project.kpp_eval.phil import parse_input
@@ -29,6 +28,46 @@ via the `evaluate.sh` script, available in this repository.
 
 This is a work in progress.
 """.strip()
+
+
+class RegistryHolder(type):
+  """Metaclass which auto-registers every `EvaluatedStatistic` in `REGISTRY`"""
+  REGISTRY: Dict[str, 'RegistryHolder'] = {}
+  phil_name: str  # Name as used in phil file, used as dict key and file name
+  full_name: str  # Full name to be used as plot label
+  evaluate_method_name: str  # Used by `MillerEvaluator` to get this statistic
+  visualize_method_name: str  # Used by `MillerEvaluationArtist` to visualize
+
+  def __new__(mcs, name, bases, attrs):
+    new_cls = type.__new__(mcs, name, bases, attrs)
+    if hasattr(new_cls, name) and new_cls.phil_name:
+      mcs.REGISTRY[new_cls.phil_name] = new_cls
+    return new_cls
+
+
+class EvaluatedStatistic(metaclass=RegistryHolder):
+  """Base class which auto-registers all named children in the `REGISTRY`"""
+
+
+class CompletenessStatistic(EvaluatedStatistic):
+  phil_name = 'cplt'
+  full_name = 'completeness'
+  evaluate_method_name = '_evaluate_completeness'
+  visualize_method_name = '_visualize_completeness'
+
+
+class IntensityOverSigmaStatistic(EvaluatedStatistic):
+  phil_name = 'I_over_si'
+  full_name = 'Intensity over sigma'
+  evaluate_method_name = '_visualize_i_over_sigma'
+  visualize_method_name = '_visualize_i_over_sigma'
+
+
+class RIsoStatistic(EvaluatedStatistic):
+  phil_name = 'Riso'
+  full_name = 'R1-factor'
+  evaluate_method_name = '_evaluate_r_factor'
+  visualize_method_name = '_visualize_r_factor'
 
 
 class RIsoCalculator:
@@ -76,42 +115,6 @@ class RIsoCalculator:
     ma2 = ma2.select_indices(common_set2.indices())
     ma1.setup_binner(d_min=self.d_min, d_max=self.d_max, n_bins=self.n_bins)
     return ma1.r1_factor(ma2, scale_factor=Auto, use_binning=True)
-
-
-miller_statistic_evaluator_map = dict()
-miller_evaluator_statistic_map = dict()
-miller_statistic_visualizer_map = dict()
-
-
-def evaluator_of(statistic_name: str) -> Callable:
-  """Evaluate decorator factory which assigns eval methods to statistics"""
-  def evaluate_decorator(_evaluate_method: Callable) -> Callable:
-    """Decorator for MillerEvaluator which auto-registers evaluation results"""
-    miller_statistic_evaluator_map[statistic_name] = _evaluate_method.__name__
-    miller_evaluator_statistic_map[_evaluate_method.__name__] = statistic_name
-
-    @functools.wraps(_evaluate_method)
-    def _evaluate_method_wrapper(self: 'MillerEvaluator', *args, **kwargs):
-      stat_name = miller_evaluator_statistic_map[_evaluate_method.__name__]
-      binned_datas = _evaluate_method(self, *args, **kwargs)
-      for i, binned_data in enumerate(binned_datas):
-        self.results[f'{stat_name}_{i}'] = binned_data.data[1:-1]
-      return binned_datas
-    return _evaluate_method_wrapper
-  return evaluate_decorator
-
-
-def visualizer_of(statistic_name: str) -> Callable:
-  """Evaluate decorator factory which assigns eval methods to statistics"""
-  def visualize_decorator(_visualize_method: Callable) -> Callable:
-    """Decorator for MillerEvaluator which auto-registers visualize methods"""
-    miller_statistic_visualizer_map[statistic_name] = _visualize_method.__name__
-
-    @functools.wraps(_visualize_method)
-    def _visualize_method_wrapper(self: 'MillerEvaluator', *args, **kwargs):
-      return _visualize_method(self, *args, **kwargs)
-    return _visualize_method_wrapper
-  return visualize_decorator
 
 
 class MillerEvaluator:
@@ -180,7 +183,6 @@ class MillerEvaluator:
     return len(self.miller_arrays)
 
   # based on iotbx/command_line/reflection_statistics.py, lines 82-87
-  @evaluator_of('cplt')
   def _evaluate_completeness(self) -> None:
     """Bin & evaluate completeness of each Miller array"""
     binned_datas = []
@@ -189,7 +191,6 @@ class MillerEvaluator:
       binned_datas.append(ma_without_absences.completeness(use_binning=True))
     return binned_datas
 
-  @evaluator_of('I_over_si')
   def _evaluate_i_over_sigma(self) -> None:
     """Bin & evaluate I/sigma in each Miller array"""
     binned_datas = []
@@ -198,7 +199,6 @@ class MillerEvaluator:
       binned_datas.append(ma_without_absences.i_over_sig_i(use_binning=True))
     return binned_datas
 
-  @evaluator_of('Riso')
   def _evaluate_r_factor(self) -> None:
     """Based heavily on xfel/command_line/riso.py by Iris Young. TODO: unify"""
     f_calc = self.miller_reference
@@ -211,8 +211,9 @@ class MillerEvaluator:
     return binned_datas
 
   def evaluate(self):
-    for statistic in self.parameters.statistics.kind:
-      getattr(self, miller_statistic_evaluator_map[statistic])()
+    for stat in self.parameters.statistics.kind:
+      method_name = EvaluatedStatistic.REGISTRY[stat].evaluate_method_name
+      getattr(self, method_name)()
 
 
 class MillerEvaluationArtist:
@@ -245,33 +246,32 @@ class MillerEvaluationArtist:
   @property
   def x_ticklabels(self) -> list:
     d_vals = [self.me.results['d_max'].iloc[0]] + list(self.me.results['d_min'])
-    return [str(round(d_val, 2)) for d_val in d_vals]
+    return ['{:.2f}'.format(round(d_val, 2)) for d_val in d_vals]
 
   def _visualize_as_line(self, stat_name: str) -> None:
-    self.ax.set(title=stat_name, xlabel='d_min [A]', xlim=self.x_lim,
-                xticks=self.x_ticks, xticklabels=self.x_ticklabels)
+    y_label = EvaluatedStatistic.REGISTRY[stat_name].full_name
+    self.ax.set(xlabel='d_min [A]', xlim=self.x_lim, xticks=self.x_ticks,
+                xticklabels=self.x_ticklabels, ylabel=y_label)
     for i in reversed(range(self.me.n_miller)):
       key = f'{stat_name}_{i}'
       y = self.me.results[key]
       self.ax.plot(self.x, y, color=self.color_list[i], label=f'mtz{i}')
     self.ax.legend(loc='upper right')
 
-  @visualizer_of('cplt')
   def _visualize_completeness(self):
     self._visualize_as_line('cplt')
 
-  @visualizer_of('I_over_si')
   def _visualize_i_over_sigma(self):
     self._visualize_as_line('I_over_si')
 
-  @visualizer_of('Riso')
   def _visualize_r_factor(self):
     self._visualize_as_line('Riso')
 
   def visualize(self):
-    for stat_name in self.me.parameters.statistics.kind:
-      getattr(self, miller_statistic_visualizer_map[stat_name])()
-      self.figure.savefig(f'{stat_name}.png')
+    for stat in self.me.parameters.statistics.kind:
+      method_name = EvaluatedStatistic.REGISTRY[stat].visualize_method_name
+      getattr(self, method_name)()
+      self.figure.savefig(f'{stat}.png')
       self.ax.clear()
 
 
