@@ -1,7 +1,6 @@
 roi.shoebox_size = 13
 relative_tilt = False
 refiner.check_expt_format = False
-refiner.refine_Fcell = [1]
 refiner.refine_spot_scale = [1]
 refiner.max_calls = [501]
 refiner.tradeps = 1e-20
