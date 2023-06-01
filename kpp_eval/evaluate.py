@@ -33,7 +33,7 @@ This is a work in progress.
 
 def round_to_sf(x: float, sf: int) -> float:
   """Round `x` to `sf` significant figures, e.g. f(123.4, 2) = 120.0"""
-  return round(x, -int(floor(log10(abs(x)))) + sf - 1)
+  return x if x == 0 else round(x, -int(floor(log10(abs(x)))) + sf - 1)
 
 
 class RegistryHolder(type):
