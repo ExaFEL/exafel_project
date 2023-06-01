@@ -188,7 +188,7 @@ class MillerEvaluator:
 
   @property
   def n_miller(self) -> int:
-    return len(self.parameters.statistics.kind)
+    return len(self.miller_arrays)
 
   # based on iotbx/command_line/reflection_statistics.py, lines 82-87
   @evaluator_of('cplt')
