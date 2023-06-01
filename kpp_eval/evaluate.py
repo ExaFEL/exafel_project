@@ -280,7 +280,7 @@ class MillerEvaluationArtist:
     y_label = EvaluatedStatistic.REGISTRY[stat_name].full_name
     self.ax.set(xlabel='d_min [A]', xlim=self.x_lim, xticks=self.x_ticks,
                 xticklabels=self.x_ticklabels, ylabel=y_label)
-    for i in reversed(range(self.me.n_miller)):
+    for i in range(self.me.n_miller):
       key = f'{stat_name}_{i}'
       y = self.me.results[key]
       label = f'mtz{i}: {round_to_sf(self.me.overall[key], 4)}'
