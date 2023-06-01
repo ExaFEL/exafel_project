@@ -114,7 +114,9 @@ class RIsoCalculator:
     ma1 = ma1.select_indices(common_set1.indices())
     ma2 = ma2.select_indices(common_set2.indices())
     ma1.setup_binner(d_min=self.d_min, d_max=self.d_max, n_bins=self.n_bins)
-    return ma1.r1_factor(ma2, scale_factor=Auto, use_binning=True)
+    binned_data = ma1.r1_factor(ma2, scale_factor=Auto, use_binning=True)
+    overall_data = ma1.r1_factor(ma2, scale_factor=Auto, use_binning=False)
+    return binned_data, overall_data
 
 
 class MillerEvaluator:
@@ -128,7 +130,9 @@ class MillerEvaluator:
     self.miller_reference: miller.array = self.initialize_reference()
     self.initialize_binning()
     self.d_max = 1000.
-    self.results = self.initialize_dataframe()
+    self.results = self.initialize_results_dataframe()
+    self.overall = {'d_max': max(self.results['d_max']),
+                    'd_min': min(self.results['d_min'])}
 
   def initialize_arrays(self) -> List[miller.array]:
     """Current implem. reads: 1) Iobs,SIGIobs, 2=1) IMEAN,SIGIMEAN, 3) Iobs(+),
@@ -146,14 +150,14 @@ class MillerEvaluator:
     for ma in self.miller_arrays:
       ma.use_binning_of(self.miller_reference)
 
-  def initialize_dataframe(self):
+  def initialize_results_dataframe(self):
     binner = self.miller_reference.binner()
     n_rows = binner.n_bins_all()
     data = {'d_max': [binner.bin_d_min(i) for i in range(n_rows)],
             'd_min': [binner.bin_d_min(i+1) for i in range(n_rows)]}
     dataframe = pd.DataFrame(data).iloc[1:-1, :]
     dataframe.loc[dataframe['d_max'] < 0, 'd_max'] = np.Infinity
-    return dataframe.reset_index()
+    return dataframe.reset_index(drop=True)
 
   def initialize_pdb(self) -> pdb:
     return pdb.input(file_name=self.parameters.input.pdb)
@@ -182,22 +186,33 @@ class MillerEvaluator:
   def n_miller(self) -> int:
     return len(self.miller_arrays)
 
+  @property
+  def overview(self) -> str:
+    lines1 = str(self.results)
+    divisor = '-' * max(len(line) for line in lines1.splitlines())
+    lines2 = '\n'.join(str(pd.DataFrame(self.overall)).splitlines()[1:])
+    return lines1 + '\n' + divisor + '\n' + lines2
+
   # based on iotbx/command_line/reflection_statistics.py, lines 82-87
   def _evaluate_completeness(self) -> None:
     """Bin & evaluate completeness of each Miller array"""
     binned_datas = []
+    overall_datas = []
     for ma in self.miller_arrays:
       ma_without_absences = ma.eliminate_sys_absent()
       binned_datas.append(ma_without_absences.completeness(use_binning=True))
-    return binned_datas
+      overall_datas.append(ma_without_absences.completeness(use_binning=False))
+    return binned_datas, overall_datas
 
   def _evaluate_i_over_sigma(self) -> None:
     """Bin & evaluate I/sigma in each Miller array"""
     binned_datas = []
+    overall_datas = []
     for ma in self.miller_arrays:
       ma_without_absences = ma.eliminate_sys_absent()
       binned_datas.append(ma_without_absences.i_over_sig_i(use_binning=True))
-    return binned_datas
+      overall_datas.append(ma_without_absences.i_over_sig_i(use_binning=False))
+    return binned_datas, overall_datas
 
   def _evaluate_r_factor(self) -> None:
     """Based heavily on xfel/command_line/riso.py by Iris Young. TODO: unify"""
@@ -205,17 +220,21 @@ class MillerEvaluator:
     r_iso_calc = RIsoCalculator(anomalous_flag=False, d_min=self.d_min,
                                 d_max=self.d_max, n_bins=self.n_bins)
     binned_datas = []
+    overall_datas = []
     for ma in self.miller_arrays:
       f_obs = ma.as_amplitude_array()
-      binned_datas.append(r_iso_calc.calculate(f_calc, f_obs))
-    return binned_datas
+      binned_data, overall_data = r_iso_calc.calculate(f_calc, f_obs)
+      binned_datas.append(binned_data)
+      overall_datas.append(overall_data)
+    return binned_datas, overall_datas
 
   def evaluate(self):
     for stat in self.parameters.statistics.kind:
       method_name = EvaluatedStatistic.REGISTRY[stat].evaluate_method_name
-      binned_datas = getattr(self, method_name)()
-      for i, binned_data in enumerate(binned_datas):
-        self.results[f'{stat}_{i}'] = binned_data.data[1:-1]
+      binned_datas, overall_datas = getattr(self, method_name)()
+      for i, (b_data, o_data) in enumerate(zip(binned_datas, overall_datas)):
+        self.results[f'{stat}_{i}'] = b_data.data[1:-1]
+        self.overall[f'{stat}_{i}'] = o_data
 
 
 class MillerEvaluationArtist:
@@ -257,7 +276,8 @@ class MillerEvaluationArtist:
     for i in reversed(range(self.me.n_miller)):
       key = f'{stat_name}_{i}'
       y = self.me.results[key]
-      self.ax.plot(self.x, y, color=self.color_list[i], label=f'mtz{i}')
+      label = f'mtz{i}: {self.me.overall[key]}'
+      self.ax.plot(self.x, y, color=self.color_list[i], label=label)
     self.ax.legend(loc='upper right')
 
   def _visualize_completeness(self):
@@ -280,7 +300,7 @@ class MillerEvaluationArtist:
 def run(params_):
   me = MillerEvaluator(parameters=params_)
   me.evaluate()
-  print(me.results)
+  print(me.overview)
   mea = MillerEvaluationArtist(me=me)
   mea.visualize()
 
