@@ -240,7 +240,7 @@ class MillerEvaluationArtist:
 
   @property
   def x_ticklabels(self) -> list:
-    return [d_min] + list(self.me.results['d_max'])
+    return [self.me.results['d_max'].iloc[0]] + list(self.me.results['d_min'])
 
   def setup_axes(self):
     self.ax.set(xlabel='d_min [A]', xticks=self.x_tics)
