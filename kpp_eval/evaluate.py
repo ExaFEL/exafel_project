@@ -202,8 +202,8 @@ class MillerEvaluator:
   def _evaluate_r_factor(self) -> None:
     """Based heavily on xfel/command_line/riso.py by Iris Young. TODO: unify"""
     f_calc = self.miller_reference
-    r_iso_calc = RIsoCalculator( anomalous_flag=False, d_min=self.d_min,
-                                 d_max=self.d_max, n_bins=self.n_bins)
+    r_iso_calc = RIsoCalculator(anomalous_flag=False, d_min=self.d_min,
+                                d_max=self.d_max, n_bins=self.n_bins)
     binned_datas = []
     for ma in self.miller_arrays:
       f_obs = ma.as_amplitude_array()
@@ -213,7 +213,9 @@ class MillerEvaluator:
   def evaluate(self):
     for stat in self.parameters.statistics.kind:
       method_name = EvaluatedStatistic.REGISTRY[stat].evaluate_method_name
-      getattr(self, method_name)()
+      binned_datas = getattr(self, method_name)()
+      for i, binned_data in enumerate(binned_datas):
+        self.results[f'{stat}_{i}'] = binned_data.data[1:-1]
 
 
 class MillerEvaluationArtist:
