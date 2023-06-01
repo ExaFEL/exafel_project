@@ -40,7 +40,7 @@ class RegistryHolder(type):
 
   def __new__(mcs, name, bases, attrs):
     new_cls = type.__new__(mcs, name, bases, attrs)
-    if hasattr(new_cls, name) and new_cls.phil_name:
+    if hasattr(new_cls, 'phil_name') and new_cls.phil_name:
       mcs.REGISTRY[new_cls.phil_name] = new_cls
     return new_cls
 
