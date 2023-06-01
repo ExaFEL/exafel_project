@@ -59,7 +59,7 @@ class CompletenessStatistic(EvaluatedStatistic):
 class IntensityOverSigmaStatistic(EvaluatedStatistic):
   phil_name = 'I_over_si'
   full_name = 'Intensity over sigma'
-  evaluate_method_name = '_visualize_i_over_sigma'
+  evaluate_method_name = '_evaluate_i_over_sigma'
   visualize_method_name = '_visualize_i_over_sigma'
 
 
