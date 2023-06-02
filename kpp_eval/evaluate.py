@@ -15,17 +15,54 @@ import pandas as pd
 
 
 message = """
-This script aims to compare the quality of two or more MTZ files using a set
-of various statistics over a set resolution bins. In the context of the ExaFEL
-project, it is designed to validate an improvement of the diffBragg-refined
-reflection file compared to the standard DIALS processing. To this aim,
-it requires at least three distinct files to be provided as an input:
-- MTZ file from a classical DIALS processing pipeline,
-- MTZ file from the new diffBragg refinement pipeline,
-- PDB file with reference structure used to simulate data.
+This script aims to compare the quality of two or more approaches to processing
+crystallographic SFX data using DIALS and diffBragg for ExaFEL project.
+Investigated statistics follow ExaFEL Writeup and include:
+- Geometrical fit between model and experiment: model vs derived spot positions
+- Internal self-consistency of the intensity profile: Z-score should be N(1, 0)
+- Precision of modeling the Bragg spot intensities: CC1/2 between semi-datasets
+- Physical accuracy of the measurements: R-factor between model and data
+- Accuracy of the anomalous signal: peak-height at anomalous atom position.
+
+Geometrical fit between model and experiment - this includes:
+- Overall RMSD between model (calc) and diffBragg-derived (obs) spot positions
+- Radial RMSD [...]
+- Transverse RMSD [...]
+These three values can be derived from diffBragg stage 1 output refl files.
+
+Internal self-consistency of the intensity profile - average (model intensity -
+experimental intensity) / experimental uncertainty over all refined pixels.
+One should be able to calculate that from diffBragg stage 2 output refl files.
+
+Precision of modeling the Bragg spot intensities, CC1/2, should be calculated
+automatically after every merging job. In DIALS, this will be available in
+the *main* output, alongside even and odd reflection MTZs.
+
+Physical accuracy of the measurements expressed in terms of R-factor.
+- For experimental data, this role will be filled by R-free/work from phenix;
+- For theoretical, it can be calculated as Riso b/w model F-calc and mtz F-obs
+
+Peak-height at anomalous atom position can be also looked up in phenix,
+however (especially for the purpose of analysing theoretical data where
+refinement is not necessary) we might be able to extract the number directly
+in CLI using David Moreau's script.
+
+In the final evaluation, we would like to compare the following sets of files:
+- PDB file with ref. structure used to simulate data / baseline for refinement
+From DIALS processing, we would need the following files:
+- Indexing refl files to get DIALS-observed reflection positions
+- Integrated refl files to provide shoebox per-pixel Z-scores
+- Even / odd / all MTZ files from classical merging (or *main* output)
+
+From diffBragg processing, we need the following files:
+- Stage 1 refl files to get diffBragg-observed and theoretical refl positions
+- Stage 2 refl files to provide shoebox per-pixel Z-scores
+- Even / odd / all MTZ files from classical merging (or *main* output)
 
 At the current stage, this script should be run on a single node
 via the `evaluate.sh` script, available in this repository.
+In the future, it should be converted or split into a number of evaluation
+workers.
 
 This is a work in progress.
 """.strip()
