@@ -1,0 +1,68 @@
+# prep_time = 60
+use_restraints = False
+spectrum_from_imageset = False
+downsamp_spec {
+  skip = True
+}
+method = "L-BFGS-B"
+sigmas {
+  Nabc = 10 10 10
+  RotXYZ = 0.001 0.001 0.001
+}
+init {
+  Nabc = 35 35 10
+  G = 105111.0392
+}
+mins {
+  detz_shift = -1.5
+  RotXYZ = -15 -15 -15
+}
+maxs {
+  detz_shift = 1.5
+  Nabc =  1600 1600 1600
+  RotXYZ = 15 15 15
+}
+fix {
+  detz_shift = True
+}
+ucell_edge_perc = 15
+ucell_ang_abs = 1
+space_group = "C121"
+logging {
+  rank0_level = low normal *high
+  disable = False
+}
+simulator {
+  oversample = 1
+  structure_factors {
+    mtz_name = "/pscratch/sd/v/vidyagan/ferredoxin_sim/9521300/out/ly99sim_all.mtz"
+    mtz_column = "Iobs(+),SIGIobs(+),Iobs(-),SIGIobs(-)"
+  }
+  beam {
+    size_mm = 0.001
+  }
+  detector {
+    force_zero_thickness = True
+  }
+}
+refiner {
+  num_devices = 1
+  # num_devices = 4
+  load_data_from_refl = True
+  sigma_r = 10
+  adu_per_photon = 1
+  reference_geom = "$MODULES/exafel_project/kpp-sim/t000_rg002_chunk000_reintegrated_000000.expt"
+  
+  stage_two {
+    save_model_freq = 250
+    min_multiplicity = 1
+  }
+}
+roi {
+  mask_outside_trusted_range = True
+  fit_tilt = True
+  pad_shoebox_for_background_estimation = 10
+  reject_edge_reflections = False
+  reject_roi_with_hotpix = False
+  fit_tilt_using_weights = False
+}
