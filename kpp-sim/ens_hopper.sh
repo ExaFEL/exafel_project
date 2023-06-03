@@ -24,10 +24,10 @@ echo "jobstart $(date)";pwd
 
 srun -n 256 -c 16 \
 ens.hopper $PANDA $MODULES/exafel_project/kpp-sim/ens_hopper.phil \
---outdir preimport --maxSigma 3 --saveFreq 10  --preImport --refl predictions
+--outdir $SCRATCH/ferredoxin_sim/preimport --maxSigma 3 --saveFreq 10  --preImport --refl predictions
 
 srun -n 256 -c 16 \
-ens.hopper preimport/preImport_for_ensemble.pkl $MODULES/exafel_project/kpp-sim/ens_hopper.phil \
+ens.hopper $SCRATCH/ferredoxin_sim/preimport/preImport_for_ensemble.pkl $MODULES/exafel_project/kpp-sim/ens_hopper.phil \
 --outdir global --maxSigma 3 --saveFreq 10 --refl ens.hopper.imported \
 --cmdlinePhil fix.Nabc=True fix.ucell=True fix.RotXYZ=True fix.Fhkl=False fix.G=False sigmas.G=1e-2
 
