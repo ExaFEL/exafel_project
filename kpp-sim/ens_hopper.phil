@@ -61,7 +61,7 @@ refiner {
 roi {
   mask_outside_trusted_range = True
   fit_tilt = True
-  pad_shoebox_for_background_estimation = 10
+  pad_shoebox_for_background_estimation = 1
   reject_edge_reflections = False
   reject_roi_with_hotpix = False
   fit_tilt_using_weights = False

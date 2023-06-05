@@ -18,7 +18,8 @@ export PANDA=$SCRATCH/ferredoxin_sim/9713113/out/preds_for_hopper.pkl
 export GEOM=$MODULES/exafel_project/kpp-sim/t000_rg002_chunk000_reintegrated_000000.expt
 export IBV_FORK_SAFE=1
 export RDMAV_HUGEPAGES_SAFE=1
-export DIFFBRAGG_USE_CUDA=1
+# export DIFFBRAGG_USE_CUDA=1
+export DIFFBRAGG_USE_KOKKOS=1
 
 echo "jobstart $(date)";pwd
 
