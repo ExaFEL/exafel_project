@@ -1,6 +1,6 @@
 #!/bin/bash -l
 #SBATCH -N 1             # Number of nodes
-#SBATCH -J ExaFEL_eA7    # Job title
+#SBATCH -J ExaFEL_eA8    # Job title
 #SBATCH -A m2859         # allocation
 #SBATCH -C cpu           # cpu / gpu
 #SBATCH -q regular       # regular queue
@@ -8,7 +8,7 @@
 #SBATCH -o %j.out        # SLURM job stdout
 #SBATCH -e %j.err        # SLURM job err
 
-if [ -z "$SLURM_JOB_ID" ]; then export SLURM_JOB_ID="ExaFEL_eA7"; fi
+if [ -z "$SLURM_JOB_ID" ]; then export SLURM_JOB_ID="ExaFEL_eA8"; fi
 export RESULTS_DIRECTORY=./$SLURM_JOB_ID
 mkdir -p $RESULTS_DIRECTORY; cd $RESULTS_DIRECTORY || exit
 
@@ -29,11 +29,11 @@ for EXAFEL_D_BIN in $(seq 1 "$EXAFEL_D_BIN_COUNT"); do
   residuals.exclude_outliers_from_refinement=False
   tag=combined
   residuals.mcd_filter.enable=True
-  " > A7_bin"$EXAFEL_D_BIN".phil
+  " > step_A8_bin"$EXAFEL_D_BIN".phil
   cctbx.xfel.detector_residuals \
-    "$ExaFEL_eA5"/combined_stage1_bin"$EXAFEL_D_BIN".expt \
-    "$ExaFEL_eA5"/combined_stage1_bin"$EXAFEL_D_BIN".refl \
-    A7_bin"$EXAFEL_D_BIN".phil \
+    "$ExaFEL_eA8"/combined_stage1_bin"$EXAFEL_D_BIN".expt \
+    "$ExaFEL_eA8"/combined_stage1_bin"$EXAFEL_D_BIN".refl \
+    step_A8_bin"$EXAFEL_D_BIN".phil \
     > residuals_DIALS_bin"$EXAFEL_D_BIN".log
 done
 echo "job end $(date)"; pwd

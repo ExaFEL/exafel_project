@@ -1,6 +1,6 @@
 #!/bin/bash -l
 #SBATCH -N 2             # Number of nodes
-#SBATCH -J ExaFEL_eA3    # Job title
+#SBATCH -J ExaFEL_eA4    # Job title
 #SBATCH -A m2859         # allocation
 #SBATCH -C cpu           # cpu / gpu
 #SBATCH -q regular       # regular queue
@@ -8,7 +8,7 @@
 #SBATCH -o %j.out        # SLURM job stdout
 #SBATCH -e %j.err        # SLURM job err
 
-if [ -z "$SLURM_JOB_ID" ]; then export SLURM_JOB_ID="ExaFEL_eA3"; fi
+if [ -z "$SLURM_JOB_ID" ]; then export SLURM_JOB_ID="ExaFEL_eA4"; fi
 export RESULTS_DIRECTORY=./$SLURM_JOB_ID
 mkdir -p $RESULTS_DIRECTORY; cd $RESULTS_DIRECTORY || exit
 
@@ -23,7 +23,7 @@ for EXAFEL_D_BIN in $(seq 1 "$EXAFEL_D_BIN_COUNT"); do
   echo -p "
   dispatch.step_list = input balance statistics_unitcell model_statistics annulus
   input {
-    path=$ExaFEL_eA1/out/
+    path=$ExaFEL_eA2/out/
     experiments_suffix=.expt
     reflections_suffix=.refl
     parallel_file_load.method=uniform
@@ -55,11 +55,11 @@ for EXAFEL_D_BIN in $(seq 1 "$EXAFEL_D_BIN_COUNT"); do
   exafel.trusted_mask=None
   exafel.scenario=1
   output {
-    prefix=strong_DIALS
+    prefix=strong_stage1
     output_dir=out_bin${EXAFEL_D_BIN}/
     save_experiments_and_reflections=True
   }
-  " > A3_bin"$EXAFEL_D_BIN".phil
-  srun -n 128 -c 4 cctbx.xfel.merge A3_bin"$EXAFEL_D_BIN".phil
+  " > step_A4_bin"$EXAFEL_D_BIN".phil
+  srun -n 128 -c 4 cctbx.xfel.merge step_A4_bin"$EXAFEL_D_BIN".phil
 done
 echo "job end $(date)"; pwd

@@ -38,8 +38,8 @@ output {
   output_dir = out/
   save_experiments_and_reflections = True
 }
-" > A1.phil
+" > step_A1.phil
 
 echo "job start $(date)"; pwd
-srun -n 128 -c 16 cctbx.xfel.merge A1.phil
+srun -n 128 -c 16 cctbx.xfel.merge step_A1.phil
 echo "job end $(date)"; pwd
