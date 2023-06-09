@@ -5,6 +5,7 @@ import re
 from typing import List
 
 from exafel_project.kpp_eval.phil import parse_input, phil_scope_a
+from libtbx.phil import scope_extract
 
 import numpy as np
 import pandas as pd
@@ -70,10 +71,10 @@ class DetectorResiduals:
     )
 
 
-def collect_offset_dataframe(processing_parameters) -> pd.DataFrame:
+def collect_offset_dataframe(processing: scope_extract) -> pd.DataFrame:
   """For each input bin get DetectorResiduals, merge them all into DataFrame"""
   drs: List[DetectorResiduals] = []
-  for bin_ in processing_parameters.bin:
+  for bin_ in processing.bin:
     dr = DetectorResiduals.from_log(bin_.path)
     dr.d_max = d if (d := bin_.d_max) and d >= 0 else np.inf
     dr.d_min = d if (d := bin_.d_min) and d >= 0 else 0.0
@@ -83,10 +84,10 @@ def collect_offset_dataframe(processing_parameters) -> pd.DataFrame:
   return df
 
 
-def run(params_) -> None:
-  for processing_parameters in params_.processing:
-    print(processing_parameters.name)
-    df = collect_offset_dataframe(processing_parameters)
+def run(params_: scope_extract) -> None:
+  for processing in params_.processing:
+    print(processing.name)
+    df = collect_offset_dataframe(processing)
     print(df)
 
 
