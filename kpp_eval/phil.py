@@ -6,7 +6,25 @@ from dials.util.options import ArgumentParser
 from iotbx.phil import parse
 
 
-phil_scope_str = """
+phil_scope_a_str = """
+bin
+  .multiple = True
+{
+  path = None
+    .type = str
+    .help = Path to the detector residuals output log file
+  d_max = None
+    .type = float
+    .help = Maximum value of d-spacing in this data bin, default=infinity
+  d_min = 0.0
+    .type = float
+    .help = Minimum value of d-spacing in this data bin, default=0
+}
+""".strip()
+phil_scope_a = parse(phil_scope_a_str)
+
+
+phil_scope_d_str = """
 input {
   pdb = path/to/file.pdb
     .type = str
@@ -36,11 +54,11 @@ output {
     .type = str
     .help = String prefix of all output file names
 }
-"""
-phil_scope = parse(phil_scope_str)
+""".strip()
+phil_scope_d = parse(phil_scope_d_str)
 
 
-def parse_input():
+def parse_input(phil_scope):
   import libtbx.load_env  # implicit import
   parser = ArgumentParser(
     usage=f"\n libtbx.python {sys.argv[0]}",
