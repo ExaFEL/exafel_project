@@ -11,7 +11,6 @@ refiner.force_symbol=C121
 simulator.crystal.has_isotropic_ncells = False
 
 
-
 method = "L-BFGS-B"
 outdir = "stage_two"
 sigmas {
@@ -63,7 +62,7 @@ refiner {
 roi {
   mask_outside_trusted_range = True
   fit_tilt = True
-  pad_shoebox_for_background_estimation = 1
+  pad_shoebox_for_background_estimation = 10
   reject_edge_reflections = False
   reject_roi_with_hotpix = False
   fit_tilt_using_weights = False
