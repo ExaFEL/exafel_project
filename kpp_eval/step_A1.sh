@@ -12,7 +12,7 @@ if [ -z "$SLURM_JOB_ID" ]; then export SLURM_JOB_ID="ExaFEL_eA1"; fi
 export RESULTS_DIRECTORY=./$SLURM_JOB_ID
 mkdir -p $RESULTS_DIRECTORY; cd $RESULTS_DIRECTORY || exit
 
-echo -p "
+echo "
 dispatch.step_list = input balance substitute
 input {
   path = $DIALS_JOB_BATH/out

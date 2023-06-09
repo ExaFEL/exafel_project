@@ -20,7 +20,7 @@ EXAFEL_D_BIN_COUNT=${#EXAFEL_D_MAX_ARRAY[@]}
 
 echo "job start $(date)"; pwd
 for EXAFEL_D_BIN in $(seq 1 "$EXAFEL_D_BIN_COUNT"); do
-  echo -p "
+  echo "
   dispatch.step_list = input balance statistics_unitcell model_statistics annulus
   input {
     path=$ExaFEL_eA2/out/
