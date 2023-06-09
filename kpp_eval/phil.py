@@ -7,18 +7,25 @@ from iotbx.phil import parse
 
 
 phil_scope_a_str = """
-bin
+processing
   .multiple = True
 {
-  path = None
+  name = None
     .type = str
-    .help = Path to the detector residuals output log file
-  d_max = None
-    .type = float
-    .help = Maximum value of d-spacing in this data bin, default=infinity
-  d_min = 0.0
-    .type = float
-    .help = Minimum value of d-spacing in this data bin, default=0
+    .help = Name of the processing with its resolution bins listed
+  bin
+    .multiple = True
+  {
+    path = None
+      .type = str
+      .help = Path to the detector residuals output log file
+    d_max = None
+      .type = float
+      .help = Maximum value of d-spacing in this data bin, default=infinity
+    d_min = 0.0
+      .type = float
+      .help = Minimum value of d-spacing in this data bin, default=0
+  }
 }
 """.strip()
 phil_scope_a = parse(phil_scope_a_str)

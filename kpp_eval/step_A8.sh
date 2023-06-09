@@ -34,6 +34,6 @@ for EXAFEL_D_BIN in $(seq 1 "$EXAFEL_D_BIN_COUNT"); do
     "$ExaFEL_eA8"/combined_stage1_bin"$EXAFEL_D_BIN".expt \
     "$ExaFEL_eA8"/combined_stage1_bin"$EXAFEL_D_BIN".refl \
     step_A8_bin"$EXAFEL_D_BIN".phil \
-    > residuals_DIALS_bin"$EXAFEL_D_BIN".log
+    > residuals_stage1_bin"$EXAFEL_D_BIN".log
 done
 echo "job end $(date)"; pwd

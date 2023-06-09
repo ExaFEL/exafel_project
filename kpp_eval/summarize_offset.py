@@ -70,10 +70,10 @@ class DetectorResiduals:
     )
 
 
-def collect_offset_dataframe(parameters) -> pd.DataFrame:
+def collect_offset_dataframe(processing_parameters) -> pd.DataFrame:
   """For each input bin get DetectorResiduals, merge them all into DataFrame"""
   drs: List[DetectorResiduals] = []
-  for bin_ in parameters.bin:
+  for bin_ in processing_parameters.bin:
     dr = DetectorResiduals.from_log(bin_.path)
     dr.d_max = d if (d := bin_.d_max) and d >= 0 else np.inf
     dr.d_min = d if (d := bin_.d_min) and d >= 0 else 0.0
@@ -84,8 +84,10 @@ def collect_offset_dataframe(parameters) -> pd.DataFrame:
 
 
 def run(params_) -> None:
-  df = collect_offset_dataframe(parameters=params_)
-  print(df)
+  for processing_parameters in params_.processing:
+    print(processing_parameters.name)
+    df = collect_offset_dataframe(processing_parameters)
+    print(df)
 
 
 params = []
