@@ -17,7 +17,7 @@ export XFEL_CUSTOM_WORKER_PATH=$MODULES/psii_spread/merging/application
 DIALS_JOB_OUT=/define/this/variable
 STAGE1_JOB_OUT=/define/this/variable
 
-echo "
+echo -e "
 dispatch.step_list = input balance substitute
 input {
   path = $DIALS_JOB_OUT

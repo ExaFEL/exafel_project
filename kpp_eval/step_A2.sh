@@ -25,7 +25,7 @@ for REFL_PATH in "$STAGE1_JOB_OUT"/hopper_stage_one/refls/rank*/ ; do
   INPUT_PATHS="${INPUT_PATHS}\n  path=$(realpath "$REFL_PATH")"
 done
 
-echo "
+echo -e "
 dispatch.step_list = input balance substitute
 input {$INPUT_PATHS
   reflections_suffix = .refl

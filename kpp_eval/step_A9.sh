@@ -38,7 +38,7 @@ for EXAFEL_D_BIN in $(seq 1 "$EXAFEL_D_BIN_COUNT"); do
   }"
 done
 EXAFEL_PHIL_A9_TEXT="${EXAFEL_PHIL_A9_TEXT}\n}"
-echo EXAFEL_PHIL_A9_TEXT > step_A9.phil
+echo -e EXAFEL_PHIL_A9_TEXT > step_A9.phil
 
 echo "job start $(date)"; pwd
 libtbx.python "$MODULES"/exafel_project/kpp_eval/summarise_offsets.py step_A9.phil
