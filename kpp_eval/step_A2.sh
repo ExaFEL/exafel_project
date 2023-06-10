@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#SBATCH -N 8             # Number of nodes
+#SBATCH -N 1             # Number of nodes
 #SBATCH -J ExaFEL_eA2    # Job title
 #SBATCH -A m2859         # allocation
 #SBATCH -C cpu           # cpu / gpu
@@ -53,5 +53,5 @@ output {
 " > step_A2.phil
 
 echo "job start $(date)"; pwd
-srun -n 128 -c 16 cctbx.xfel.merge step_A2.phil
+srun -n 64 -c 4 cctbx.xfel.merge step_A2.phil
 echo "job end $(date)"; pwd

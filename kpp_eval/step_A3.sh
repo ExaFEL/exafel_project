@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#SBATCH -N 2             # Number of nodes
+#SBATCH -N 1             # Number of nodes
 #SBATCH -J ExaFEL_eA3    # Job title
 #SBATCH -A m2859         # allocation
 #SBATCH -C cpu           # cpu / gpu
@@ -63,6 +63,6 @@ for EXAFEL_D_BIN in $(seq 1 "$EXAFEL_D_BIN_COUNT"); do
     save_experiments_and_reflections=True
   }
   " > step_A3_bin"$EXAFEL_D_BIN".phil
-  srun -n 128 -c 4 cctbx.xfel.merge step_A3_bin"$EXAFEL_D_BIN".phil
+  srun -n 64 -c 4 cctbx.xfel.merge step_A3_bin"$EXAFEL_D_BIN".phil
 done
 echo "job end $(date)"; pwd
