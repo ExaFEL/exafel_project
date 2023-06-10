@@ -14,6 +14,9 @@ mkdir -p $RESULTS_DIRECTORY; cd $RESULTS_DIRECTORY || exit
 
 export XFEL_CUSTOM_WORKER_PATH=$MODULES/psii_spread/merging/application
 
+DIALS_JOB_OUT=/define/this/variable
+STAGE1_JOB_OUT=/define/this/variable
+
 echo "
 dispatch.step_list = input balance substitute
 input {

@@ -12,6 +12,9 @@ if [ -z "$SLURM_JOB_ID" ]; then export SLURM_JOB_ID="ExaFEL_eA9"; fi
 export RESULTS_DIRECTORY=./$SLURM_JOB_ID
 mkdir -p $RESULTS_DIRECTORY; cd $RESULTS_DIRECTORY || exit
 
+ExaFEL_eA7=/define/this/variable
+ExaFEL_eA8=/define/this/variable
+
 EXAFEL_D_MAX_VALUES="None 5.00 4.00 3.00 2.00"
 EXAFEL_D_MIN_VALUES="5.00 4.00 3.00 2.00 1.50"
 EXAFEL_D_MAX_ARRAY=("$EXAFEL_D_MAX_VALUES")

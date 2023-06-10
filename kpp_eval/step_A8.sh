@@ -13,6 +13,7 @@ export RESULTS_DIRECTORY=./$SLURM_JOB_ID
 mkdir -p $RESULTS_DIRECTORY; cd $RESULTS_DIRECTORY || exit
 
 EXAFEL_D_BIN_COUNT=10
+ExaFEL_eA6=/define/this/variable
 
 echo "job start $(date)"; pwd
 for EXAFEL_D_BIN in $(seq 1 "$EXAFEL_D_BIN_COUNT"); do
@@ -31,8 +32,8 @@ for EXAFEL_D_BIN in $(seq 1 "$EXAFEL_D_BIN_COUNT"); do
   residuals.mcd_filter.enable=True
   " > step_A8_bin"$EXAFEL_D_BIN".phil
   cctbx.xfel.detector_residuals \
-    "$ExaFEL_eA8"/combined_stage1_bin"$EXAFEL_D_BIN".expt \
-    "$ExaFEL_eA8"/combined_stage1_bin"$EXAFEL_D_BIN".refl \
+    "$ExaFEL_eA6"/combined_stage1_bin"$EXAFEL_D_BIN".expt \
+    "$ExaFEL_eA6"/combined_stage1_bin"$EXAFEL_D_BIN".refl \
     step_A8_bin"$EXAFEL_D_BIN".phil \
     > residuals_stage1_bin"$EXAFEL_D_BIN".log
 done

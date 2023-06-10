@@ -13,6 +13,7 @@ export RESULTS_DIRECTORY=./$SLURM_JOB_ID
 mkdir -p $RESULTS_DIRECTORY; cd $RESULTS_DIRECTORY || exit
 
 EXAFEL_D_BIN_COUNT=10
+ExaFEL_eA3=/define/this/variable
 
 echo "job end $(date)"; pwd
 for EXAFEL_D_BIN in $(seq 1 "$EXAFEL_D_BIN_COUNT"); do

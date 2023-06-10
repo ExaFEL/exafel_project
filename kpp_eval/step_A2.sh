@@ -14,11 +14,14 @@ mkdir -p $RESULTS_DIRECTORY; cd $RESULTS_DIRECTORY || exit
 
 export XFEL_CUSTOM_WORKER_PATH=$MODULES/psii_spread/merging/application
 
+DIALS_JOB_OUT=/define/this/variable
+STAGE1_JOB_OUT=/define/this/variable
+
 INPUT_PATHS=''
-for EXPT_PATH in "$STAGE1_JOB_PATH"/expers/rank*/ ; do
+for EXPT_PATH in "$STAGE1_JOB_OUT"/hopper_stage_one/expers/rank*/ ; do
   INPUT_PATHS="${INPUT_PATHS}\n  path=$(realpath "$EXPT_PATH")"
 done
-for REFL_PATH in "$STAGE1_JOB_PATH"/refls/rank*/ ; do
+for REFL_PATH in "$STAGE1_JOB_OUT"/hopper_stage_one/refls/rank*/ ; do
   INPUT_PATHS="${INPUT_PATHS}\n  path=$(realpath "$REFL_PATH")"
 done
 
