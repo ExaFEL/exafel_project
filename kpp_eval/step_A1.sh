@@ -18,7 +18,7 @@ echo "
 dispatch.step_list = input balance substitute
 input {
   path = $DIALS_JOB_OUT
-  reflections_suffix = refined.refl
+  reflections_suffix = indexed.refl
   experiments_suffix = refined.expt
   persistent_refl_cols = shoebox
   persistent_refl_cols = bbox
