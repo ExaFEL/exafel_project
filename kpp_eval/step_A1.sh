@@ -32,7 +32,7 @@ input {
   parallel_file_load.balance = global1 *global2 per_node
 }
 substitute {
-  input = $STAGE1_JOB_OUT/hopper_stage_one/refls/rank*/*_refined_0.refl
+  input = $STAGE1_JOB_OUT/hopper_stage_one/refls/rank*/*_refined_*.refl
   apply = False
 }
 output {

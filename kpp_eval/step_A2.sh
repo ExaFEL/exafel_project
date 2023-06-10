@@ -25,8 +25,8 @@ done
 echo "
 dispatch.step_list = input balance substitute
 input {$INPUT_PATHS
-  reflections_suffix = refined_0.refl
-  experiments_suffix = refined_0.expt
+  reflections_suffix = .refl
+  experiments_suffix = .expt
   persistent_refl_cols = shoebox
   persistent_refl_cols = bbox
   persistent_refl_cols = xyzcal.px
