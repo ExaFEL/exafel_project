@@ -37,7 +37,7 @@ input {$INPUT_PATHS
   parallel_file_load.balance = global1 *global2 per_node
 }
 substitute {
-  input = $DIALS_JOB_BATH/out/*refined.refl
+  input = $DIALS_JOB_OUT/*refined.refl
   apply = False
 }
 output {

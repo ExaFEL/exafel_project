@@ -15,7 +15,7 @@ mkdir -p $RESULTS_DIRECTORY; cd $RESULTS_DIRECTORY || exit
 echo "
 dispatch.step_list = input balance substitute
 input {
-  path = $DIALS_JOB_BATH/out
+  path = $DIALS_JOB_OUT
   reflections_suffix = refined.refl
   experiments_suffix = refined.expt
   persistent_refl_cols = shoebox
@@ -30,7 +30,7 @@ input {
   parallel_file_load.balance = global1 *global2 per_node
 }
 substitute {
-  input = $STAGE1_JOB_PATH/hopper_stage_one/refls/rank*/*_refined_0.refl
+  input = $STAGE1_JOB_OUT/hopper_stage_one/refls/rank*/*_refined_0.refl
   apply = False
 }
 output {
