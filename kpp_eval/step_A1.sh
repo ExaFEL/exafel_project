@@ -12,6 +12,8 @@ if [ -z "$SLURM_JOB_ID" ]; then export SLURM_JOB_ID="ExaFEL_eA1"; fi
 export RESULTS_DIRECTORY=./$SLURM_JOB_ID
 mkdir -p $RESULTS_DIRECTORY; cd $RESULTS_DIRECTORY || exit
 
+export XFEL_CUSTOM_WORKER_PATH=$MODULES/psii_spread/merging/application
+
 echo "
 dispatch.step_list = input balance substitute
 input {

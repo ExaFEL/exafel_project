@@ -12,6 +12,8 @@ if [ -z "$SLURM_JOB_ID" ]; then export SLURM_JOB_ID="ExaFEL_eA2"; fi
 export RESULTS_DIRECTORY=./$SLURM_JOB_ID
 mkdir -p $RESULTS_DIRECTORY; cd $RESULTS_DIRECTORY || exit
 
+export XFEL_CUSTOM_WORKER_PATH=$MODULES/psii_spread/merging/application
+
 INPUT_PATHS=''
 for EXPT_PATH in "$STAGE1_JOB_PATH"/expers/rank*/ ; do
   INPUT_PATHS="${INPUT_PATHS}\n  path=$(realpath "$EXPT_PATH")"
