@@ -1,3 +1,5 @@
+relative_tilt = False
+
 # prep_time = 60
 use_restraints = False
 spectrum_from_imageset = False
@@ -5,6 +7,7 @@ downsamp_spec {
   skip = True
 }
 method = "L-BFGS-B"
+outdir = "ens_hopper"
 sigmas {
   Nabc = 10 10 10
   RotXYZ = 0.001 0.001 0.001
@@ -44,15 +47,25 @@ simulator {
   detector {
     force_zero_thickness = True
   }
+  crystal {
+    has_isotropic_ncells = False
+  }
 }
 refiner {
   num_devices = 1
-  # num_devices = 4
-  load_data_from_refl = True
+  check_expt_format = True
+  load_data_from_refl = False
   sigma_r = 10
   adu_per_photon = 1
   reference_geom = "$MODULES/exafel_project/kpp-sim/t000_rg002_chunk000_reintegrated_000000.expt"
-  
+  refine_spot_scale = [1]
+  max_calls = [501]
+  tradeps = 1e-20
+  verbose = 0
+  refine_Fcell = [1]
+  ncells_mask = 000
+  force_symbol=C121
+
   stage_two {
     save_model_freq = 250
     min_multiplicity = 1
@@ -61,8 +74,13 @@ refiner {
 roi {
   mask_outside_trusted_range = True
   fit_tilt = True
-  pad_shoebox_for_background_estimation = 1
+  pad_shoebox_for_background_estimation = 10
   reject_edge_reflections = False
   reject_roi_with_hotpix = False
   fit_tilt_using_weights = False
+  allow_overlapping_spots=True
+  shoebox_size = 13
+}
+downsamp_spec {
+  skip = True
 }

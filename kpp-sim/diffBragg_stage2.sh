@@ -6,7 +6,7 @@
 #SBATCH -A m2859_g       # allocation
 #SBATCH -C gpu
 #SBATCH -q regular
-#SBATCH -t 06:00:00
+#SBATCH -t 01:30:00
 #SBATCH --gpus-per-node=4
 #SBATCH --ntasks-per-gpu=2
 #SBATCH --gpus 128
@@ -34,7 +34,7 @@ profile=True \
 prep_time=90 \
 logging.disable=False \
 max_calls=[501] \
-save_model_freq=50 \
+save_model_freq=10 \
 refiner.load_data_from_refl=False \
 refiner.reference_geom=$GEOM \
 structure_factors.mtz_name=$SCRATCH/ferredoxin_sim/9521300/out/ly99sim_all.mtz \
