@@ -1,0 +1,1 @@
+echo $SCRATCH/ferredoxin_sim/9713113/out/$1.pkl
