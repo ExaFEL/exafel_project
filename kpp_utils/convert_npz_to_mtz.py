@@ -39,13 +39,11 @@ def npz_to_mtz(npz_path,
 
 
 def evaluate_iter(ma,
-                  ma_calc_map, # ground truth structure factors
-
-
-                  ):
-    
-
+                  ma_calc, # ground truth structure factors
+                  show_fig=False,
+                 ):
     ma_map={h:v for h,v in zip(ma.indices(),ma.data())}
+    ma_calc_map={h:v for h,v in zip(ma_calc.indices(),ma_calc.data())}
 
     hm_comm = set(ma_calc_map).intersection(set(ma_map))
 
@@ -55,13 +53,14 @@ def evaluate_iter(ma,
     pearson_coeff = pearsonr(val_0,ground_truth)
     print('Pearson correlation coefficient: ', pearson_coeff[0])
 
-    plt.figure()
-    plt.scatter(val_0, ground_truth)
-    plt.show()
+    if show_fig:
+        plt.figure()
+        plt.scatter(val_0, ground_truth)
+        plt.show()
 
-    plt.figure()
-    plt.loglog(val_0, ground_truth)  # to make logarithmic axes
-    plt.show()
+        plt.figure()
+        plt.scatter(np.log(val_0), np.log(ground_truth))  # to make logarithmic axes
+        plt.show()
 
     return pearson_coeff, val_0, ground_truth
 
@@ -74,27 +73,31 @@ if __name__=='__main__':
     input_path = os.environ["WORK"] + 'diffbragg_stage2/10211797'
 
     # Ground truth structure factors
-    ma_calc_map = get_complex_fcalc_from_pdb(full_path("1m2a.pdb"),wavelength=1.3,dmin=1.6,dmax=60).as_amplitude_array()
+    ma_calc = get_complex_fcalc_from_pdb(full_path("1m2a.pdb"),wavelength=1.3,dmin=1.9,dmax=1000).as_amplitude_array()
 
     # Miller index map
     f_asu_map=np.load(input_path + '/f_asu_map.npy',allow_pickle=True)[()]
 
-
     mtz_path = os.environ["SCRATCH"] + "/ferredoxin_sim/9521300/out/ly99sim_all.mtz" # output of conventional merging
     ma = iotbx.mtz.object(mtz_path).as_miller_arrays()[0]
-    pearson_coeff, val_0, ground_truth = evaluate_iter(ma,
-                                                       ma_calc_map,
-                                                      )
+    pearson_coeff, val_0, ground_truth = evaluate_iter(ma, ma_calc)
     
-    all_iter_npz = np.sort(glob.glob(input_path + '/_fcell_trial0_iter*.npz'))
+    all_iter_npz = len(glob.glob(input_path + '/_fcell_trial0_iter*.npz'))
 
-    for npz_file in all_iter_npz:
-            ma = npz_to_mtz(npz_path,                
-               f_asu_map,
-               unit_cell,
-               space_group,
-               save_mtz=False,
-               )
-        pearson_coeff, val_0, ground_truth = evaluate_iter(ma,
-                                                           ma_calc_map,
-                                                          )
+    pearson_coeff_vec = [pearson_coeff.statistic]
+    for num_iter in range(all_iter_npz):
+        npz_file = input_path + '/_fcell_trial0_iter' + str(num_iter)
+        print(npz_file)
+        ma = npz_to_mtz(npz_file,                
+                        f_asu_map,
+                        unit_cell,
+                        space_group,
+                        save_mtz=False,
+                        )
+        pearson_coeff, val_0, ground_truth = evaluate_iter(ma, ma_calc)
+        pearson_coeff_vec.append(pearson_coeff.statistic)
+
+    # Plot pearson_coeff as a function of iteration
+    plt.figure()
+    plt.plot(pearson_coeff_vec)
+    plt.show()
