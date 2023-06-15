@@ -6,6 +6,8 @@ import numpy as np
 import os
 from matplotlib import pyplot as plt
 from scipy.stats import pearsonr
+import glob
+import iotbx.mtz
 from dials.array_family import flex
 from cctbx import miller, crystal
 from simtbx.diffBragg.utils import get_complex_fcalc_from_pdb
@@ -14,13 +16,12 @@ big_data = ls49_big_data
 def full_path(filename):
   return os.path.join(big_data,filename)
 
-def evaluate_iter(npz_path,
-                  ma_calc_map,
-                  f_asu_map,
-                  unit_cell,
-                  space_group,
-                  save_mtz=False,
-                  ):
+def npz_to_mtz(npz_path, 
+               f_asu_map,
+               unit_cell,
+               space_group,
+               save_mtz=False,
+               ):
     d=np.load(npz_path + '.npz')
     f=d['fvals']
 
@@ -34,6 +35,16 @@ def evaluate_iter(npz_path,
     ma = ma.set_observation_type_xray_amplitude()
     if save_mtz:
         ma.as_mtz_dataset(column_root_label='F').mtz_object().write(npz_path + '.mtz')
+    return ma
+
+
+def evaluate_iter(ma,
+                  ma_calc_map, # ground truth structure factors
+
+
+                  ):
+    
+
     ma_map={h:v for h,v in zip(ma.indices(),ma.data())}
 
     hm_comm = set(ma_calc_map).intersection(set(ma_map))
@@ -69,20 +80,21 @@ if __name__=='__main__':
     f_asu_map=np.load(input_path + '/f_asu_map.npy',allow_pickle=True)[()]
 
 
-    npz_path = os.environ["SCRATCH"] + "/ferredoxin_sim/9521300/out/ly99sim_all.mtz" # output of conventional merging
-    pearson_coeff, val_0, ground_truth = evaluate_iter(npz_path,
+    mtz_path = os.environ["SCRATCH"] + "/ferredoxin_sim/9521300/out/ly99sim_all.mtz" # output of conventional merging
+    ma = iotbx.mtz.object(mtz_path).as_miller_arrays()[0]
+    pearson_coeff, val_0, ground_truth = evaluate_iter(ma,
                                                        ma_calc_map,
-                                                       f_asu_map,
-                                                       unit_cell,
-                                                       space_group,
                                                       )
     
     all_iter_npz = np.sort(glob.glob(input_path + '/_fcell_trial0_iter*.npz'))
+
     for npz_file in all_iter_npz:
-        pearson_coeff, val_0, ground_truth = evaluate_iter(npz_file,
+            ma = npz_to_mtz(npz_path,                
+               f_asu_map,
+               unit_cell,
+               space_group,
+               save_mtz=False,
+               )
+        pearson_coeff, val_0, ground_truth = evaluate_iter(ma,
                                                            ma_calc_map,
-                                                           f_asu_map,
-                                                           unit_cell,
-                                                           space_group,
-                                                           save_mtz=True,
                                                           )
