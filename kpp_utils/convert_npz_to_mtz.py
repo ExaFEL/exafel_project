@@ -70,7 +70,7 @@ if __name__=='__main__':
     space_group = 'C121'
 
     # get environment variable WORK
-    input_path = os.environ["WORK"] + 'diffbragg_stage2/10211797'
+    input_path = os.environ["WORK"] + 'diffbragg_stage2/10217122'
 
     # Ground truth structure factors
     ma_calc = get_complex_fcalc_from_pdb(full_path("1m2a.pdb"),wavelength=1.3,dmin=1.9,dmax=1000).as_amplitude_array()
@@ -92,7 +92,7 @@ if __name__=='__main__':
                         f_asu_map,
                         unit_cell,
                         space_group,
-                        save_mtz=False,
+                        save_mtz=True,
                         )
         pearson_coeff, val_0, ground_truth = evaluate_iter(ma, ma_calc)
         pearson_coeff_vec.append(pearson_coeff.statistic)
