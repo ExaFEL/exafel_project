@@ -56,12 +56,11 @@ def evaluate_iter(npz_path,
 
 
 if __name__=='__main__':
-    breakpoint()
     unit_cell = (67.2, 59.8, 47.2, 90, 110.3, 90)
     space_group = 'C121'
 
     # get environment variable WORK
-    input_path = os.environ["WORK"] + '/diffBragg_stage2/10211797'
+    input_path = os.environ["WORK"] + 'diffbragg_stage2/10211797'
 
     # Ground truth structure factors
     ma_calc_map = get_complex_fcalc_from_pdb(full_path("1m2a.pdb"),wavelength=1.3,dmin=1.6,dmax=60).as_amplitude_array()
