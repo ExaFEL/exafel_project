@@ -22,7 +22,7 @@ EXAFEL_D_MIN_ARRAY=($EXAFEL_D_MIN_VALUES)
 EXAFEL_D_BIN_COUNT=${#EXAFEL_D_MAX_ARRAY[@]}
 
 echo "job start $(date)"; pwd
-for EXAFEL_D_BIN in $(seq 1 "$EXAFEL_D_BIN_COUNT"); do
+for EXAFEL_D_BIN in $(seq 1 $EXAFEL_D_BIN_COUNT); do
   echo -e "
   dispatch.step_list = input balance statistics_unitcell model_statistics annulus
   input {
@@ -48,10 +48,10 @@ for EXAFEL_D_BIN in $(seq 1 "$EXAFEL_D_BIN_COUNT"); do
   scaling.unit_cell=67.2  59.8  47.2  90.00  110.3  90.00
   scaling.space_group=C121
   scaling.resolution_scalar=0.96
-  merging.d_max=${EXAFEL_D_MAX_ARRAY[$EXAFEL_D_BIN]}
-  merging.d_min=${EXAFEL_D_MIN_ARRAY[$EXAFEL_D_BIN]}
-  statistics.annulus.d_max=${EXAFEL_D_MAX_ARRAY[$EXAFEL_D_BIN]}
-  statistics.annulus.d_min=${EXAFEL_D_MIN_ARRAY[$EXAFEL_D_BIN]}
+  merging.d_max=${EXAFEL_D_MAX_ARRAY[$EXAFEL_D_BIN-1]}
+  merging.d_min=${EXAFEL_D_MIN_ARRAY[$EXAFEL_D_BIN-1]}
+  statistics.annulus.d_max=${EXAFEL_D_MAX_ARRAY[$EXAFEL_D_BIN-1]}
+  statistics.annulus.d_min=${EXAFEL_D_MIN_ARRAY[$EXAFEL_D_BIN-1]}
   spread_roi.enable=True
   spread_roi.strong=1.0
   output.log_level=0

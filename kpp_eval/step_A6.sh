@@ -16,7 +16,7 @@ EXAFEL_D_BIN_COUNT=10
 ExaFEL_eA4=/define/this/variable
 
 echo "job end $(date)"; pwd
-for EXAFEL_D_BIN in $(seq 1 "$EXAFEL_D_BIN_COUNT"); do
+for EXAFEL_D_BIN in $(seq 1 $EXAFEL_D_BIN_COUNT); do
   dials.combine_experiments \
     "$ExaFEL_eA4"/out_bin"$EXAFEL_D_BIN"/strong_stage1*.expt \
     "$ExaFEL_eA4"/out_bin"$EXAFEL_D_BIN"/strong_stage1*.refl \

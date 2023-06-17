@@ -16,7 +16,7 @@ EXAFEL_D_BIN_COUNT=10
 ExaFEL_eA5=/define/this/variable
 
 echo "job start $(date)"; pwd
-for EXAFEL_D_BIN in $(seq 1 "$EXAFEL_D_BIN_COUNT"); do
+for EXAFEL_D_BIN in $(seq 1 $EXAFEL_D_BIN_COUNT); do
   echo "
   hierarchy=2
   plot_max=0.3
