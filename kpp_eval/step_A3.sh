@@ -12,10 +12,11 @@ if [ -z "$SLURM_JOB_ID" ]; then export SLURM_JOB_ID="ExaFEL_eA3"; fi
 export RESULTS_DIRECTORY=./$SLURM_JOB_ID
 mkdir -p $RESULTS_DIRECTORY; cd $RESULTS_DIRECTORY || exit
 
-ExaFEL_eA1=/define/this/variable
-PDB_REFERENCE_DIRECTORY=/define/this/variable
+export XFEL_CUSTOM_WORKER_PATH=$MODULES/psii_spread/merging/application
 
-EXAFEL_D_MAX_VALUES="None 5.00 4.00 3.00 2.00"
+ExaFEL_eA1=/define/this/variable
+
+EXAFEL_D_MAX_VALUES="9999 5.00 4.00 3.00 2.00"
 EXAFEL_D_MIN_VALUES="5.00 4.00 3.00 2.00 1.50"
 EXAFEL_D_MAX_ARRAY=($EXAFEL_D_MAX_VALUES)
 EXAFEL_D_MIN_ARRAY=($EXAFEL_D_MIN_VALUES)
@@ -44,19 +45,13 @@ for EXAFEL_D_BIN in $(seq 1 $EXAFEL_D_BIN_COUNT); do
     persistent_refl_cols=panel
     parallel_file_load.method=uniform
   }
-  scaling.model=$PDB_REFERENCE_DIRECTORY/reference.pdb
   scaling.unit_cell=67.2  59.8  47.2  90.00  110.3  90.00
   scaling.space_group=C121
-  scaling.resolution_scalar=0.96
   merging.d_max=${EXAFEL_D_MAX_ARRAY[$EXAFEL_D_BIN-1]}
   merging.d_min=${EXAFEL_D_MIN_ARRAY[$EXAFEL_D_BIN-1]}
   statistics.annulus.d_max=${EXAFEL_D_MAX_ARRAY[$EXAFEL_D_BIN-1]}
   statistics.annulus.d_min=${EXAFEL_D_MIN_ARRAY[$EXAFEL_D_BIN-1]}
-  spread_roi.enable=True
-  spread_roi.strong=1.0
   output.log_level=0
-  exafel.trusted_mask=None
-  exafel.scenario=1
   output {
     prefix=strong_DIALS
     output_dir=out_bin${EXAFEL_D_BIN}/
