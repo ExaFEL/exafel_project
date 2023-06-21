@@ -15,11 +15,13 @@ mkdir -p $RESULTS_DIRECTORY; cd $RESULTS_DIRECTORY || exit
 EXAFEL_D_BIN_COUNT=5
 ExaFEL_eA4=/define/this/variable
 
+# WARNING: sub-sample input based on path – otherwise output too much (~50GB)
+
 echo "job end $(date)"; pwd
 for EXAFEL_D_BIN in $(seq 1 $EXAFEL_D_BIN_COUNT); do
   dials.combine_experiments \
-    "$ExaFEL_eA4"/out_bin"$EXAFEL_D_BIN"/strong_stage1*.expt \
-    "$ExaFEL_eA4"/out_bin"$EXAFEL_D_BIN"/strong_stage1*.refl \
+    "$ExaFEL_eA4"/out_bin"$EXAFEL_D_BIN"/strong_stage1*0.expt \
+    "$ExaFEL_eA4"/out_bin"$EXAFEL_D_BIN"/strong_stage1*0.refl \
     output.experiments_filename=combined_stage1_bin"$EXAFEL_D_BIN".expt \
     output.reflections_filename=combined_stage1_bin"$EXAFEL_D_BIN".refl \
     > combined_stage1_bin"$EXAFEL_D_BIN".log
