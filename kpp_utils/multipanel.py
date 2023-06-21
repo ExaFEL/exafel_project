@@ -16,7 +16,13 @@ def specific_expt(params):
   from dxtbx.model.experiment_list import ExperimentList
   expt_path = params.detector.reference
   print("Opening the reference model experiment",params.detector.reference)
-  return ExperimentList.from_file(expt_path, check_format=False)[0]
+  expt_return = ExperimentList.from_file(expt_path, check_format=False)[0]
+  mutate_root = expt_return.detector.hierarchy()
+  x,y,z = mutate_root.get_origin()
+  if z < 0: z -= params.detector.offset_mm
+  else: z += params.detector.offset_mm
+  mutate_root.set_frame(mutate_root.get_fast_axis(), mutate_root.get_slow_axis(), (x,y,z))
+  return expt_return
 
 def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,params,
                 quick=False,save_bragg=False,sfall_channels=None, **kwargs):
@@ -43,6 +49,7 @@ def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,pa
   SIM.mosaic_domains = int(os.environ.get("MOS_DOM","25"))
   print ("MOSAIC",SIM.mosaic_domains)
   SIM.distance_mm = PANEL.get_distance()
+  print ("DISTANCE_mm",SIM.distance_mm)
 
   UMAT_nm = flex.mat3_double()
   mersenne_twister = flex.mersenne_twister(seed=0)

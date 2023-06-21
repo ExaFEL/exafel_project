@@ -54,6 +54,12 @@ def parse_input():
       reference = None
         .type = path
         .help = give the *.expt file to serve as reference for both beam and detector
+      offset_mm = 0.0
+        .type = float
+        .help = detector distance offset applied to the input reference model.  Note that this is a signed
+        .help = quantity defined in common sense terms.  A positive quantity moves the detector further
+        .help = from the crystal, even if the z-coordinate of the detector is negative, and a negative
+        .help = quantity moves closer to the crystal.  This is an offset from the reference, not an absolute.
     }
     output {
       format = *smv cbf h5 h5_stage1
