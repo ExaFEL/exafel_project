@@ -40,9 +40,14 @@ def parse_input():
         .help = width of one energy channel in eV.
     }
     crystal {
-      structure = *ferredoxin PSII
+      structure = *ferredoxin PSII pdb
         .type = choice
         .help = type of crystal structure to be simulated
+      pdb {
+        code = None
+          .type = str
+          .help = PDB code of the structure to be simulated
+      }
       length_um = 4.0
         .type = float
         .help = beam path length through the crystal in microns

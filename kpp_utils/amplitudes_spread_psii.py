@@ -76,3 +76,33 @@ def amplitudes_spread_psii(comm, params, **kwargs):
   comm.barrier()
   return sfall_channels
 
+def amplitudes_pdb(comm, params, **kwargs):
+  rank = comm.Get_rank()
+  if params.absorption != "high_remote":
+    raise ValueError("crystal.structure=pdb is only implemented for absorption=high_remote")
+  assert len(params.crystal.pdb.code)==4 # for the moment codes are always 4 characters
+
+  from iotbx.pdb.fetch import fetch
+  pdb_lines = fetch(params.crystal.pdb.code).read().decode() # bytes to str
+
+  wavelength_A = ENERGY_CONV / params.beam.mean_energy
+  # general ballpark X-ray wavelength in Angstroms, does not vary shot-to-shot
+  centerline = float(params.spectrum.nchannels-1)/2.0
+  channel_mean_eV = (flex.double(range(params.spectrum.nchannels)) - centerline
+                      ) * params.spectrum.channel_width + params.beam.mean_energy
+  wavelengths = ENERGY_CONV/channel_mean_eV
+  direct_algo_res_limit = kwargs.get("direct_algo_res_limit", 1.85)
+
+  GF = gen_fmodel(resolution=direct_algo_res_limit,
+                  pdb_text=pdb_lines,
+                  algorithm="fft", wavelength=wavelength_A)
+  GF.set_k_sol(0.435)
+  GF.make_P1_primitive()
+
+  # Generating sf for my wavelengths
+  sfall_channels = {}
+
+  if rank==0:
+      sfall_channels[0] = GF.get_amplitudes()
+  return sfall_channels
+

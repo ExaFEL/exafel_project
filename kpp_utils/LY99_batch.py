@@ -33,7 +33,7 @@ from simtbx import get_exascale
 from exafel_project.kpp_utils.phil import parse_input
 from exafel_project.kpp_utils.ferredoxin import basic_detector_rayonix
 from exafel_project.kpp_utils.amplitudes_spread_ferredoxin import amplitudes_spread_ferredoxin
-from exafel_project.kpp_utils.amplitudes_spread_psii import amplitudes_spread_psii
+from exafel_project.kpp_utils.amplitudes_spread_psii import amplitudes_spread_psii, amplitudes_pdb
 from exafel_project.kpp_utils.mp_utils import bcast_large_dict
 
 
@@ -117,7 +117,7 @@ def run_LY99_batch(test_without_mpi=False):
     kwargs["writer"].construct_detector(DETECTOR)
 
   # now begin energy channel calculation
-  sfall_channels_d = {'ferredoxin': amplitudes_spread_ferredoxin, 'PSII': amplitudes_spread_psii}
+  sfall_channels_d = {'ferredoxin': amplitudes_spread_ferredoxin, 'PSII': amplitudes_spread_psii, 'pdb': amplitudes_pdb}
   sfall_channels = sfall_channels_d[params.crystal.structure](comm, params, **kwargs)
   print(rank, time(), "finished with the calculation of channels, now construct single broadcast")
   sfall_channels = bcast_large_dict(comm, sfall_channels, root=0)
