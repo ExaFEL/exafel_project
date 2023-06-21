@@ -4,7 +4,7 @@
 #SBATCH -A m2859         # allocation
 #SBATCH -C cpu           # cpu / gpu
 #SBATCH -q regular       # regular queue
-#SBATCH -t 00:30:00      # wall clock time limit
+#SBATCH -t 00:60:00      # wall clock time limit
 #SBATCH -o %j.out        # SLURM job stdout
 #SBATCH -e %j.err        # SLURM job err
 
@@ -12,7 +12,7 @@ if [ -z "$SLURM_JOB_ID" ]; then export SLURM_JOB_ID="ExaFEL_eA6"; fi
 export RESULTS_DIRECTORY=./$SLURM_JOB_ID
 mkdir -p $RESULTS_DIRECTORY; cd $RESULTS_DIRECTORY || exit
 
-EXAFEL_D_BIN_COUNT=10
+EXAFEL_D_BIN_COUNT=5
 ExaFEL_eA4=/define/this/variable
 
 echo "job end $(date)"; pwd

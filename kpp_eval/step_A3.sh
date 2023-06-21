@@ -4,7 +4,7 @@
 #SBATCH -A m2859         # allocation
 #SBATCH -C cpu           # cpu / gpu
 #SBATCH -q regular       # regular queue
-#SBATCH -t 00:30:00      # wall clock time limit
+#SBATCH -t 00:60:00      # wall clock time limit
 #SBATCH -o %j.out        # SLURM job stdout
 #SBATCH -e %j.err        # SLURM job err
 
