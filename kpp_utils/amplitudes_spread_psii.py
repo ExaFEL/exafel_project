@@ -1,7 +1,6 @@
 from __future__ import division
 import os
 
-from dxtbx.model.experiment_list import ExperimentList
 from LS49 import ls49_big_data
 from LS49.sim.util_fmodel import gen_fmodel
 from scitbx.array_family import flex
@@ -24,12 +23,6 @@ def data():
     Mn_reduced_model=george_sherrell(full_path("data_sherrell/Mn2O3_spliced.dat")),
     Mn_metallic_model=george_sherrell(full_path("data_sherrell/Mn.dat"))
   )
-
-
-def get_p20231_r0135_detector():
-  expt_path = 't000_rg002_chunk000_reintegrated_000000.expt'
-  return ExperimentList.from_file(expt_path)[0].detector
-
 
 def amplitudes_spread_psii(comm, params, **kwargs):
   rank = comm.Get_rank()
