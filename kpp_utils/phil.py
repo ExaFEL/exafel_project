@@ -43,6 +43,9 @@ def parse_input():
       structure = *ferredoxin PSII
         .type = choice
         .help = type of crystal structure to be simulated
+      length_um = 4.0
+        .type = float
+        .help = beam path length through the crystal in microns
     }
     detector {
       tiles = *single multipanel

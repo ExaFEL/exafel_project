@@ -86,7 +86,7 @@ def run_LY99_batch(test_without_mpi=False):
     from LS49.sim.step4_pad import microcrystal
     print("hello2 from rank %d of %d"%(rank,size))
     SS = spectra_simulation()
-    C = microcrystal(Deff_A = 4000, length_um = 4., beam_diameter_um = 1.0) # assume smaller than 10 um crystals
+    C = microcrystal(Deff_A = 4000, length_um = params.crystal.length_um, beam_diameter_um = 1.0) # assume smaller than 10 um crystals
     random_orientations = legacy_random_orientations(N_total)
     transmitted_info = dict(spectra = SS,
                             crystal = C,
