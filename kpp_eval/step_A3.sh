@@ -46,7 +46,11 @@ for EXAFEL_D_BIN in $(seq 1 $EXAFEL_D_BIN_COUNT); do
     parallel_file_load.method=uniform
   }
   scaling.unit_cell=67.2  59.8  47.2  90.00  110.3  90.00
-  scaling.space_group=C121
+  scaling.space_group=C 1 2/m 1
+  spread_roi.enable=False
+  spread_roi.strong=None
+  spread_roi.min_spots=0
+  exafel.scenario=1
   merging.d_max=${EXAFEL_D_MAX_ARRAY[$EXAFEL_D_BIN-1]}
   merging.d_min=${EXAFEL_D_MIN_ARRAY[$EXAFEL_D_BIN-1]}
   statistics.annulus.d_max=${EXAFEL_D_MAX_ARRAY[$EXAFEL_D_BIN-1]}
