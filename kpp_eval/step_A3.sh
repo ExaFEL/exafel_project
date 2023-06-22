@@ -47,7 +47,7 @@ for EXAFEL_D_BIN in $(seq 1 $EXAFEL_D_BIN_COUNT); do
   }
   scaling.unit_cell=67.2  59.8  47.2  90.00  110.3  90.00
   scaling.space_group=C 1 2/m 1
-  spread_roi.enable=False
+  spread_roi.enable=True
   spread_roi.strong=None
   spread_roi.min_spots=5
   exafel.scenario=1

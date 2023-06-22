@@ -21,7 +21,7 @@ for EXAFEL_D_BIN in $(seq 1 $EXAFEL_D_BIN_COUNT); do
   hierarchy_level=2
   dot_size=2
   repredict_input_reflections=False
-  unit_cell_histograms=False
+  plots.unit_cell_histograms=False
   plots.positional_displacements=False
   plots.per_image_RMSDs_histogram=False
   residuals.exclude_outliers_from_refinement=False

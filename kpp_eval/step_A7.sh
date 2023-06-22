@@ -21,17 +21,17 @@ for EXAFEL_D_BIN in $(seq 1 $EXAFEL_D_BIN_COUNT); do
   hierarchy_level=2
   dot_size=2
   repredict_input_reflections=False
-  unit_cell_histograms=False
+  plots.unit_cell_histograms=False
   plots.positional_displacements=False
   plots.per_image_RMSDs_histogram=False
   residuals.exclude_outliers_from_refinement=False
-  tag=combined_dials_bin$EXAFEL_D_BIN
+  tag=combined_DIALS_bin$EXAFEL_D_BIN
   residuals.mcd_filter.enable=True
   save_png=True
   " > step_A7_bin"$EXAFEL_D_BIN".phil
   cctbx.xfel.detector_residuals \
-    "$ExaFEL_eA5"/combined_stage1_bin"$EXAFEL_D_BIN".expt \
-    "$ExaFEL_eA5"/combined_stage1_bin"$EXAFEL_D_BIN".refl \
+    "$ExaFEL_eA5"/combined_DIALS_bin"$EXAFEL_D_BIN".expt \
+    "$ExaFEL_eA5"/combined_DIALS_bin"$EXAFEL_D_BIN".refl \
     step_A7_bin"$EXAFEL_D_BIN".phil \
     > residuals_DIALS_bin"$EXAFEL_D_BIN".log
 done
