@@ -18,18 +18,16 @@ ExaFEL_eA5=/define/this/variable
 echo "job start $(date)"; pwd
 for EXAFEL_D_BIN in $(seq 1 $EXAFEL_D_BIN_COUNT); do
   echo "
-  hierarchy=2
-  plot_max=0.3
-  include_offset_dots=True
+  hierarchy_level=2
   dot_size=2
-  include_scale_bar_in_pixels=1
   repredict_input_reflections=False
   unit_cell_histograms=False
-  positional_displacements=False
-  per_image_RMSDs_histogram=False
+  plots.positional_displacements=False
+  plots.per_image_RMSDs_histogram=False
   residuals.exclude_outliers_from_refinement=False
-  tag=combined
+  tag=combined_dials_bin$EXAFEL_D_BIN
   residuals.mcd_filter.enable=True
+  save_png=True
   " > step_A7_bin"$EXAFEL_D_BIN".phil
   cctbx.xfel.detector_residuals \
     "$ExaFEL_eA5"/combined_stage1_bin"$EXAFEL_D_BIN".expt \
