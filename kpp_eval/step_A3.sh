@@ -49,7 +49,7 @@ for EXAFEL_D_BIN in $(seq 1 $EXAFEL_D_BIN_COUNT); do
   scaling.space_group=C 1 2/m 1
   spread_roi.enable=False
   spread_roi.strong=None
-  spread_roi.min_spots=0
+  spread_roi.min_spots=5
   exafel.scenario=1
   merging.d_max=${EXAFEL_D_MAX_ARRAY[$EXAFEL_D_BIN-1]}
   merging.d_min=${EXAFEL_D_MIN_ARRAY[$EXAFEL_D_BIN-1]}
