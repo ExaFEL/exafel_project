@@ -26,7 +26,7 @@ for REFL_PATH in "$STAGE1_JOB_OUT"/hopper_stage_one/refls/rank*/ ; do
 done
 
 echo -e "
-dispatch.step_list = input balance substitute
+dispatch.step_list = input balance substitute statistics_unitcell model_statistics annulus
 input {$INPUT_PATHS
   reflections_suffix = .refl
   experiments_suffix = .expt
@@ -41,12 +41,20 @@ input {$INPUT_PATHS
   persistent_refl_cols = panel
   parallel_file_load.balance = global1 *global2 per_node
 }
-substitute {
-  input = $DIALS_JOB_OUT/*indexed.refl
-  apply = False
-}
+substitute.input = $DIALS_JOB_OUT/*indexed.refl
+substitute.apply = False
+scaling.unit_cell=67.2  59.8  47.2  90.00  110.3  90.00
+scaling.space_group=C 1 2/m 1
+spread_roi.enable=True
+spread_roi.strong=None
+spread_roi.min_spots=5
+exafel.scenario=1
+merging.d_max=9999
+merging.d_min=1.80
+statistics.annulus.d_max=9999
+statistics.annulus.d_min=1.80
 output {
-  prefix = strong_stage1
+  prefix = matching_stage1
   output_dir = out/
   save_experiments_and_reflections = True
 }
