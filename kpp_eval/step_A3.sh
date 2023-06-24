@@ -30,12 +30,12 @@ save_png=True
 " > step_A3.phil
 
 echo "job end $(date)"; pwd
-  dials.combine_experiments \
-    "$ExaFEL_eA1"/out/matching_DIALS*0.expt \
-    "$ExaFEL_eA1"/out/matching_DIALS*0.refl \
-    output.experiments_filename=combined_DIALS.expt \
-    output.reflections_filename=combined_DIALS.refl \
-    > combined_DIALS.log
-  cctbx.xfel.detector_residuals combined_DIALS.expt combined_DIALS.refl \
-    step_A3.phil > residuals_DIALS.log
+dials.combine_experiments \
+  "$ExaFEL_eA1"/out/matching_DIALS*0.expt \
+  "$ExaFEL_eA1"/out/matching_DIALS*0.refl \
+  output.experiments_filename=combined_DIALS.expt \
+  output.reflections_filename=combined_DIALS.refl \
+  > combined_DIALS.log
+cctbx.xfel.detector_residuals combined_DIALS.expt combined_DIALS.refl \
+  step_A3.phil > residuals_DIALS.log
 echo "job end $(date)"; pwd
