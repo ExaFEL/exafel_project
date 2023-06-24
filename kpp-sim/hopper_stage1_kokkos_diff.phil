@@ -1,20 +1,20 @@
-relative_tilt = False
-refiner.check_expt_format = False
-refiner.max_calls = [501]
-refiner.tradeps = 1e-20
-refiner.verbose = 0
-refiner.stage_two.min_multiplicity = 1
 refiner.refine_spot_scale = [1]
 refiner.refine_Fcell = [1]
 refiner.stage_two.use_nominal_hkl = False
-
-refiner.ncells_mask = 000
+refiner.stage_two.min_multiplicity = 1
+min_multi = 1
+roi.allow_overlapping_spots=True
 refiner.force_symbol=C121
-simulator.crystal.has_isotropic_ncells = False
+use_restraints = False
 
 
+spectrum_from_imageset = True
+downsamp_spec {
+  skip = True
+}
+exp_ref_spec_file = "/global/cfs/cdirs/m3562/users/vidyagan/p20231/diffbragg_stage1/high_remote/exp_ref_spec"
 method = "L-BFGS-B"
-outdir = "stage_two"
+outdir = "hopper_stage_one"
 sigmas {
   Nabc = 10 10 10
   RotXYZ = 0.001 0.001 0.001
@@ -38,7 +38,6 @@ fix {
 ucell_edge_perc = 15
 ucell_ang_abs = 1
 space_group = "C121"
-use_restraints = False
 logging {
   rank0_level = low normal *high
 }
@@ -56,11 +55,8 @@ simulator {
   }
 }
 refiner {
-  num_devices = 1
   sigma_r = 10
-  adu_per_photon = 1
-  reference_geom = "$MODULES/exafel_project/kpp-sim/t000_rg002_chunk000_reintegrated_000000.expt"
-  check_expt_format = True
+  reference_geom = "/global/cfs/cdirs/m3562/users/vidyagan/p20231/alcc-recipes2/cctbx/modules/exafel_project/kpp-sim/t000_rg002_chunk000_reintegrated_000000.expt"
 }
 roi {
   mask_outside_trusted_range = True
@@ -69,9 +65,4 @@ roi {
   reject_edge_reflections = False
   reject_roi_with_hotpix = False
   fit_tilt_using_weights = False
-  allow_overlapping_spots=True
-  shoebox_size = 10
-}
-downsamp_spec {
-  skip = True
 }

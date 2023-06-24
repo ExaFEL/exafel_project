@@ -74,7 +74,8 @@ if __name__=='__main__':
     space_group = 'C121'
 
     # path to output of diffBragg stage 2
-    input_path = os.environ["WORK"] + 'diffbragg_stage2/10217122'
+    JOB_ID = '10508234'
+    input_path = os.environ["WORK"] + 'diffbragg_stage2/' + JOB_ID
     # output of conventional merging mtz file
     mtz_path = os.environ["SCRATCH"] + "/ferredoxin_sim/9521300/out/ly99sim_all.mtz" # output of conventional merging
     # Ground truth structure factors
