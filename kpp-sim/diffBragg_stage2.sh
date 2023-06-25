@@ -3,7 +3,6 @@
 #SBATCH -N 32            # Number of nodes
 #SBATCH -J stage_2_32       # job name
 #SBATCH -L SCRATCH       # job requires SCRATCH files
-#SBATCH -A m2859_g       # allocation
 #SBATCH -C gpu
 #SBATCH -q regular
 #SBATCH -t 01:30:00
@@ -24,21 +23,11 @@ export DIFFBRAGG_USE_KOKKOS=1
 echo "jobstart $(date)";pwd
 
 srun -n 256 -G 128 -c 16 \
-simtbx.diffBragg.stage_two \
-$MODULES/exafel_project/kpp-sim/diffBragg_stage2.phil \
+simtbx.diffBragg.stage_two $MODULES/exafel_project/kpp-sim/hopper_stage1_kokkos_diff.phil \
 io.output_dir=$SLURM_JOB_ID \
-pandas_table=$PANDA \
-num_devices=$PERL_NDEV \
-logfiles=True \
-profile=True \
-prep_time=90 \
-logging.disable=False \
-max_calls=[501] \
-save_model_freq=10 \
-refiner.load_data_from_refl=False \
+pandas_table=$PANDA num_devices=$PERL_NDEV \
+exp_ref_spec_file = $WORK/exafel_output/exp_ref_spec \
+structure_factors.mtz_name = $SCRATCH/ferredoxin_sim/$3/out/ly99sim_all.mtz \
 refiner.reference_geom=$GEOM \
-structure_factors.mtz_name=$SCRATCH/ferredoxin_sim/9521300/out/ly99sim_all.mtz \
-structure_factors.mtz_column="Iobs(+),SIGIobs(+),Iobs(-),SIGIobs(-)" \
-min_multiplicity=1
 
 echo "jobend $(date)";pwd

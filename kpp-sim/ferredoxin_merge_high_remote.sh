@@ -2,7 +2,6 @@
 #SBATCH -N 8               # Number of nodes
 #SBATCH -J merge
 #SBATCH -L SCRATCH          # job requires SCRATCH files
-#SBATCH -A m2859          # allocation
 #SBATCH -C cpu
 #SBATCH -q regular    # regular queue
 #SBATCH -o %j.out

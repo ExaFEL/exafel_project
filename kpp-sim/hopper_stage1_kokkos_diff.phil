@@ -7,12 +7,10 @@ roi.allow_overlapping_spots=True
 refiner.force_symbol=C121
 use_restraints = False
 
-
 spectrum_from_imageset = True
 downsamp_spec {
   skip = True
 }
-exp_ref_spec_file = "/global/cfs/cdirs/m3562/users/vidyagan/p20231/diffbragg_stage1/high_remote/exp_ref_spec"
 method = "L-BFGS-B"
 outdir = "hopper_stage_one"
 sigmas {
@@ -44,7 +42,6 @@ logging {
 simulator {
   oversample = 1
   structure_factors {
-    mtz_name = "/pscratch/sd/v/vidyagan/ferredoxin_sim/9521300/out/ly99sim_all.mtz"
     mtz_column = "Iobs(+),SIGIobs(+),Iobs(-),SIGIobs(-)"
   }
   beam {
@@ -56,7 +53,6 @@ simulator {
 }
 refiner {
   sigma_r = 10
-  reference_geom = "/global/cfs/cdirs/m3562/users/vidyagan/p20231/alcc-recipes2/cctbx/modules/exafel_project/kpp-sim/t000_rg002_chunk000_reintegrated_000000.expt"
 }
 roi {
   mask_outside_trusted_range = True

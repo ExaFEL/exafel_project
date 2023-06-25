@@ -3,7 +3,6 @@
 #SBATCH -N 32            # Number of nodes
 #SBATCH -J stage_1_32       # job name
 #SBATCH -L SCRATCH       # job requires SCRATCH files
-#SBATCH -A m2859_g       # allocation
 #SBATCH -C gpu
 #SBATCH -q regular
 #SBATCH --gpus-per-node=4

@@ -2,7 +2,6 @@
 #SBATCH -N 32             # Number of nodes
 #SBATCH -J high_remote_ferredoxin_sim
 #SBATCH -L SCRATCH       # job requires SCRATCH files
-#SBATCH -A m2859_g       # allocation
 #SBATCH -C gpu
 #SBATCH -q regular # regular or special queue
 #SBATCH --gpus-per-node 4

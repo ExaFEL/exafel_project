@@ -1,6 +1,7 @@
 # Installation
 
-Install using the these [instructions](installation.md).
+Install using the these [instructions](installation.md). Note the specific branches that need to be checked out, including `nxmx_writer_experimental` for `cctbx_project`, and `experimental_high_remote` for `exafel_project`.
+
 Creating a working directory:
 ```
 cd $WORK
@@ -17,7 +18,7 @@ export NUM_SHOTS=100000
 Run the image simulation script to simulate $NUM_SHOTS still shots of ferredoxin:
 ```
 cd $WORK/exafel_output
-sbatch --time=1:30:00 $MODULES/exafel_project/kpp-sim/sim_ferredoxin_high_remote.sh $NUM_SHOTS
+sbatch --time=1:30:00 -A $NERSC_GPU_ALLOCATION $MODULES/exafel_project/kpp-sim/sim_ferredoxin_high_remote.sh $NUM_SHOTS
 ```
 Images will be saved in `$SCRATCH/ferredoxin_sim/{JOB_ID_SIM}`, where `JOB_ID_SIM` is the job ID of the submitted job.
 
@@ -27,7 +28,7 @@ Images will be saved in `$SCRATCH/ferredoxin_sim/{JOB_ID_SIM}`, where `JOB_ID_SI
 
 Run the indexing and integration script:
 ```
-sbatch --time=1:30:00 $MODULES/exafel_project/kpp-sim/ferredoxin_index_high_remote.sh JOB_ID_SIM
+sbatch --time=1:30:00 -A $NERSC_CPU_ALLOCATION $MODULES/exafel_project/kpp-sim/ferredoxin_index_high_remote.sh {JOB_ID_SIM}
 ```
 Output will be saved in `$SCRATCH/ferredoxin_sim/{JOB_ID_INDEX}`, where `JOB_ID_INDEX` is the job ID of the submitted job. A phil file will be saved as `$WORK/exafel_output/index.phil` and used later in diffBragg stage 1 integrate.
 
@@ -75,7 +76,7 @@ This command outputs covariance file `covariance_tdata_cells.pickle` to the work
 Run the merging script:
 ```
 cd $WORK/exafel_output
-sbatch --time 00:10:00 $MODULES/exafel_project/kpp-sim/ferredoxin_merge_high_remote.sh {JOB_ID_INDEX}
+sbatch --time 00:10:00 -A $NERSC_CPU_ALLOCATION $MODULES/exafel_project/kpp-sim/ferredoxin_merge_high_remote.sh {JOB_ID_INDEX}
 ```
 Output will be saved in `$SCRATCH/ferredoxin_sim/{JOB_ID_MERGE}`, where `JOB_ID_MERGE` is the job ID of the submitted job.
 
@@ -94,7 +95,7 @@ diffBragg.make_input_file $SCRATCH/ferredoxin_sim/{JOB_ID_INDEX} exp_ref_spec
 Run the hopper script:
 ```
 cd $WORK/exafel_output
-sbatch --time 01:30:00 $MODULES/exafel_project/kpp-sim/slurm_hopper_stage1_kokkos.sh $SCRATCH/ferredoxin_sim/{JOB_ID_MERGE}/out/ly99sim_all.mtz exp_ref_spec_file=$WORK/exafel_output/exp_ref_spec
+sbatch --time 01:30:00 -A $NERSC_GPU_ALLOCATION $MODULES/exafel_project/kpp-sim/slurm_hopper_stage1_kokkos.sh $SCRATCH/ferredoxin_sim/{JOB_ID_MERGE}/out/ly99sim_all.mtz exp_ref_spec_file=$WORK/exafel_output/exp_ref_spec
 ```
 Output will be saved in `$SCRATCH/ferredoxin_sim/{JOB_ID_HOPPER}/hopper_stage_one`, where `JOB_ID_HOPPER` is the job ID of the submitted job.
 
@@ -116,7 +117,7 @@ We aim for the mismatch to be less than a pixel.
 Run the integrate script:
 ```
 cd $WORK/exafel_output
-sbatch --time 01:30:00 $MODULES/exafel_project/kpp-sim/slurm_integrate_stage1_kokkos.sh {JOB_ID_HOPPER}
+sbatch --time 01:30:00 -A $NERSC_GPU_ALLOCATION $MODULES/exafel_project/kpp-sim/slurm_integrate_stage1_kokkos.sh {JOB_ID_HOPPER}
 ```
 Output will be saved in `$SCRATCH/ferredoxin_sim/{JOB_ID_INTEGRATE}`, where `JOB_ID_INTEGRATE` is the job ID of the submitted job.
 
@@ -186,7 +187,7 @@ libtbx.python $MODULES/exafel_project/kpp_utils/convert_npz_to_mtz.py
 Run the stage 2 script with 10,000 still shots:
 <mark>Running with >10,000 shots causes an OOM error.</mark>
 ```
-sbatch --time 01:30:00 $MODULES/exafel_project/kpp-sim/diffBragg_stage2.sh {JOB_ID_INTEGRATE} 10k
+sbatch --time 01:30:00 -A $NERSC_GPU_ALLOCATION $MODULES/exafel_project/kpp-sim/diffBragg_stage2.sh {JOB_ID_INTEGRATE} 10k {JOB_ID_MERGE}
 ```
 Results are saved in `$WORK/diffbragg_stage2/{JOB_ID_STAGE2}`, where `JOB_ID_STAGE2` is the job ID of the submitted job.
 
@@ -200,12 +201,29 @@ libtbx.python $MODULES/exafel_project/kpp_utils/convert_npz_to_mtz.py
 
 # Example Processing Results
 
-## 100,000 still shots of ferredoxin
-$SCRATCH is /pscratch/sd/v/vidyagan
-$WORK is 
+## 10 still shots of ferredoxin
 
-JOB_ID_INDEX
-JOB_ID
+<mark>TODO with instructions above, all times above are listed for 100,000 shots, adjust time accordingly for 10 still shots, erring on the generous side because there may be some fixed amount of setup time. The entire pipeline for 10 shots could be run on an interactive node, no need to submit jobs.
+
+JOB_ID_SIM =
+JOB_ID_INDEX =
+JOB_ID_MERGE =
+JOB_ID_HOPPER =
+JOB_ID_INTEGRATE =
+JOB_ID_STAGE2 =
+</mark>
 
 ## 10,000 still shots of ferredoxin
-$SCRATCH is /pscratch/sd/v/vidyagan
+
+<mark>
+TODO with instructions above, all times above are listed for 100,000 shots, adjust time accordingly for 10,000 still shots, erring on the generous side because there may be some fixed amount of setup time.
+</mark>
+
+## 100,000 still shots of ferredoxin
+
+See [notes](notes.txt) for notes on previous processing 100,000 still shots; those notes do not follow the instructions above exactly.
+
+<mark>
+TODO with instructions above
+</mark>
+
