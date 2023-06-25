@@ -2,7 +2,7 @@
 
 Install using the these [instructions](installation.md). Note the specific branches that need to be checked out, including `nxmx_writer_experimental` for `cctbx_project`, and `experimental_high_remote` for `exafel_project`.
 
-Creating a working directory:
+Create a working directory:
 ```
 cd $WORK
 mkdir exafel_output
@@ -35,7 +35,7 @@ Output will be saved in `$SCRATCH/ferredoxin_sim/{JOB_ID_INDEX}`, where `JOB_ID_
 Visualize example indexed image:
 ```
 cd $SCRATCH/ferredoxin_sim/{JOB_ID_INDEX}
-dials.image_viewer idx-image_rank_00000_00000_indexed.refl idx-image_rank_00122_00065_refined.expt
+dials.image_viewer idx-image_rank_00000_00000_indexed.refl idx-image_rank_00000_00000_refined.expt
 ```
 
 Visualize example integrated image:
@@ -65,9 +65,9 @@ cd $WORK/exafel_output
 
 Run covariance analysis command:
 ```
-uc_metrics.dbscan file_name=$SCRATCH/ferredoxin_sim/{JOB_ID_INDEX}/tdata_cells.tdata space_group=C12/m1 feature_vector=a,b,c eps=0.20 write_covariance=5991038.tt metric=L2norm show_plot=True 
+uc_metrics.dbscan file_name=$SCRATCH/ferredoxin_sim/{JOB_ID_INDEX}/tdata_cells.tdata space_group=C12/m1 feature_vector=a,b,c eps=0.20 write_covariance=True metric=L2norm show_plot=True 
 ```
-<mark>Possible issue: Should the space group be C12/m1 or C121?</mark>
+<span style="background-color: yellow;">Possible issue: Should the space group be C12/m1 or C121?</span>
 
 This command outputs covariance file `covariance_tdata_cells.pickle` to the working directory `$WORK/exafel_output`.
 
