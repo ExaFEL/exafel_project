@@ -238,7 +238,7 @@ JOB_ID_STAGE2 =
 
 ## 100,000 still shots of ferredoxin
 
-See [notes](notes.txt) for notes on previous processing 100,000 still shots; those notes do not follow the instructions above exactly.
+See [notes](notes.txt) for notes on previous processing of 100,000 still shots; those notes do not follow the instructions above exactly.
 
 **TODO with instructions above**
 
