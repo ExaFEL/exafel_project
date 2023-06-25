@@ -204,7 +204,7 @@ libtbx.python $MODULES/exafel_project/kpp_utils/convert_npz_to_mtz.py
 
 ## 10 still shots of ferredoxin
 
-**TODO with instructions above, all times above are listed for 100,000 shots, adjust time accordingly for 10 still shots, erring on the generous side because there may be some fixed amount of setup time. The entire pipeline for 10 shots could be run on an interactive node, no need to submit jobs.
+**TODO with instructions above, all times above are listed for 100,000 shots, adjust time accordingly for 10 still shots, erring on the generous side because there may be some fixed amount of setup time. The entire pipeline for 10 shots could be run on an interactive node, no need to submit jobs.**
 
 JOB_ID_SIM =
 
@@ -217,11 +217,11 @@ JOB_ID_HOPPER =
 JOB_ID_INTEGRATE =
 
 JOB_ID_STAGE2 =
-**
+
 
 ## 10,000 still shots of ferredoxin
 
-**TODO with instructions above, all times above are listed for 100,000 shots, adjust time accordingly for 10,000 still shots, erring on the generous side because there may be some fixed amount of setup time.
+**TODO with instructions above, all times above are listed for 100,000 shots, adjust time accordingly for 10,000 still shots, erring on the generous side because there may be some fixed amount of setup time.**
 
 JOB_ID_SIM =
 
@@ -234,13 +234,13 @@ JOB_ID_HOPPER =
 JOB_ID_INTEGRATE =
 
 JOB_ID_STAGE2 =
-**
+
 
 ## 100,000 still shots of ferredoxin
 
 See [notes](notes.txt) for notes on previous processing 100,000 still shots; those notes do not follow the instructions above exactly.
 
-**TODO with instructions above
+**TODO with instructions above**
 
 JOB_ID_SIM =
 
@@ -253,5 +253,5 @@ JOB_ID_HOPPER =
 JOB_ID_INTEGRATE =
 
 JOB_ID_STAGE2 =
-**
+
 
