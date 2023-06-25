@@ -5,7 +5,6 @@
 #SBATCH -A m2859          # allocation
 #SBATCH -C cpu
 #SBATCH -q regular    # regular queue
-#SBATCH -t 00:10:00         # wall clock time limit
 #SBATCH -o %j.out
 #SBATCH -e %j.err
 
@@ -15,7 +14,7 @@ mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER
 export TRIAL=ly99sim
 export OUT_DIR=${PWD}
 # NO PSF:
-export DIALS_OUTPUT=${SCRATCH}/ferredoxin_sim/9398750
+export DIALS_OUTPUT=${SCRATCH}/ferredoxin_sim/$1
 
 echo "input.path=${DIALS_OUTPUT}
 input.experiments_suffix=_integrated.expt

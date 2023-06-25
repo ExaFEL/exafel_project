@@ -31,7 +31,6 @@ def npz_to_mtz(npz_path,
     mset = miller.set(cs, miller_idx, True)
     mdat = flex.double(f)
     ma = miller.array(mset,mdat)
-    # ma.is_xray_amplitude_array()
     ma = ma.set_observation_type_xray_amplitude()
     # print(npz_path, ma.size(), np.max(ma.data()), np.mean(ma.data()), np.std(ma.data()))
     if save_mtz:
@@ -74,10 +73,11 @@ if __name__=='__main__':
     space_group = 'C121'
 
     # path to output of diffBragg stage 2
-    JOB_ID = '10508234'
-    input_path = os.environ["WORK"] + 'diffbragg_stage2/' + JOB_ID
+    JOB_ID_STAGE2 = os.environ["JOB_ID_STAGE2"]
+    input_path = os.environ["WORK"] + 'diffbragg_stage2/' + JOB_ID_STAGE2
     # output of conventional merging mtz file
-    mtz_path = os.environ["SCRATCH"] + "/ferredoxin_sim/9521300/out/ly99sim_all.mtz" # output of conventional merging
+    JOB_ID_MERGE = os.environ["JOB_ID_MERGE"]
+    mtz_path = os.environ["SCRATCH"] + "/ferredoxin_sim/" + JOB_ID_MERGE + "/out/ly99sim_all.mtz" # output of conventional merging
     # Ground truth structure factors
     ma_calc = get_complex_fcalc_from_pdb(full_path("1m2a.pdb"),wavelength=1.3,dmin=1.9,dmax=1000).as_amplitude_array()
 

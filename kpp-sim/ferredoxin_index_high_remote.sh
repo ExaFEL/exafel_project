@@ -5,7 +5,6 @@
 #SBATCH -A m2859          # allocation
 #SBATCH -C cpu
 #SBATCH -q regular    # regular queue
-#SBATCH -t 01:30:00         # wall clock time limit
 #SBATCH -o %j.out
 #SBATCH -e %j.err
 
@@ -15,7 +14,7 @@ export OMP_PROC_BIND=spread
 export OMP_PLACES=threads
 export XFEL_CUSTOM_WORKER_PATH=$MODULES/psii_spread/merging/application # User must export $MODULES path
 
-export H5_SIM_PATH=$SCRATCH/ferredoxin_sim/9287607
+export H5_SIM_PATH=$SCRATCH/ferredoxin_sim/$1
 
 export SCRATCH_FOLDER=$SCRATCH/ferredoxin_sim/$SLURM_JOB_ID
 mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER
@@ -66,10 +65,10 @@ integration {
   }
 }
 profile.gaussian_rs.centroid_definition=com
-">trial.phil
+">index.phil
 
 echo "jobstart $(date)";pwd
-srun -n 256 -c 2 dials.stills_process trial.phil input.glob=$H5_SIM_PATH/image_rank_*.h5
+srun -n 256 -c 2 dials.stills_process index.phil input.glob=$H5_SIM_PATH/image_rank_*.h5
 echo "jobend $(date)";pwd
 export TRIAL=tdata
 export OUT_DIR=.

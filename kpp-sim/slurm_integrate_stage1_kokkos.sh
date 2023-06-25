@@ -6,7 +6,6 @@
 #SBATCH -A m2859_g       # allocation
 #SBATCH -C gpu
 #SBATCH -q regular
-#SBATCH -t 01:30:00
 #SBATCH --gpus-per-node=4
 #SBATCH --ntasks-per-gpu=2
 #SBATCH -o %j.out
@@ -37,6 +36,6 @@ export XFEL_CUSTOM_WORKER_PATH=$MODULES/psii_spread/merging/application # User m
 
 echo "jobstart $(date)";pwd
 
-srun -n 256 -G 128 -c 16 diffBragg.integrate $MODULES/exafel_project/kpp-sim/integrate_stage1_kokkos.phil $MODULES/exafel_project/kpp-sim/index.phil $SCRATCH/ferredoxin_sim/9689612/hopper_stage_one out --numdev 1
+srun -n 256 -G 128 -c 16 diffBragg.integrate $MODULES/exafel_project/kpp-sim/integrate_stage1_kokkos.phil $WORK/exafel_output/index.phil $SCRATCH/ferredoxin_sim/$1/hopper_stage_one out --numdev 1
 
 echo "jobend $(date)";pwd

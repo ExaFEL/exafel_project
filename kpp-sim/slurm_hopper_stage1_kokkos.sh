@@ -6,7 +6,6 @@
 #SBATCH -A m2859_g       # allocation
 #SBATCH -C gpu
 #SBATCH -q regular
-#SBATCH -t 01:30:00
 #SBATCH --gpus-per-node=4
 #SBATCH --ntasks-per-gpu=2
 #SBATCH -o %j.out
@@ -19,7 +18,6 @@ export CCTBX_DEVICE_PER_NODE=1
 export N_START=0
 export LOG_BY_RANK=1 # Use Aaron's rank logger
 export RANK_PROFILE=0 # 0 or 1 Use cProfiler, default 1
-export N_SIM=100000 # total number of images to simulate
 export ADD_BACKGROUND_ALGORITHM=cuda
 export DEVICES_PER_NODE=1
 export MOS_DOM=25
@@ -38,6 +36,6 @@ export XFEL_CUSTOM_WORKER_PATH=$MODULES/psii_spread/merging/application # User m
 
 echo "jobstart $(date)";pwd
 
-srun -n 256 -G 128 -c 16 hopper $MODULES/exafel_project/kpp-sim/hopper_stage1_kokkos.phil
+srun -n 256 -G 128 -c 16 hopper $MODULES/exafel_project/kpp-sim/hopper_stage1_kokkos.phil structure_factors.mtz_name=$1 exp_ref_spec_file=$2 
 
 echo "jobend $(date)";pwd

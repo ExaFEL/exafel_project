@@ -5,7 +5,6 @@
 #SBATCH -A m2859_g       # allocation
 #SBATCH -C gpu
 #SBATCH -q regular # regular or special queue
-#SBATCH -t 01:30:00      # wall clock time limit
 #SBATCH --gpus-per-node 4
 #SBATCH -o %j.out
 #SBATCH -e %j.err
@@ -17,7 +16,7 @@ export CCTBX_DEVICE_PER_NODE=1
 export N_START=0
 export LOG_BY_RANK=1 # Use Aaron's rank logger
 export RANK_PROFILE=0 # 0 or 1 Use cProfiler, default 1
-export N_SIM=100000 # total number of images to simulate
+export N_SIM=$1 # total number of images to simulate
 export ADD_BACKGROUND_ALGORITHM=cuda
 export DEVICES_PER_NODE=4
 export MOS_DOM=25
