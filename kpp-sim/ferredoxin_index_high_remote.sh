@@ -64,6 +64,11 @@ integration {
   }
 }
 profile.gaussian_rs.centroid_definition=com
+
+indexing.stills.refine_all_candidates=False
+refinement.reflection.outlier.algorithm=None
+dispatch.refine=True
+indexing.stills.nv_reject_outliers=False
 ">index.phil
 
 echo "jobstart $(date)";pwd

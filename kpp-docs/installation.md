@@ -192,7 +192,7 @@ cd $MODULES/LS49
 git checkout experimental
 
 cd $MODULES/dials
-git checkout dsp_image_mode
+git checkout dsp_disable_nv_outlier
 
 cd $MODULES/exafel_project
 git checkout experimental_high_remote

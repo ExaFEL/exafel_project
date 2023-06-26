@@ -6,6 +6,7 @@ min_multi = 1
 roi.allow_overlapping_spots=True
 refiner.force_symbol=C121
 use_restraints = False
+refiner.tradeps = 1e-20
 
 spectrum_from_imageset = True
 downsamp_spec {
