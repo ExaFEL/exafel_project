@@ -9,7 +9,7 @@ export NERSC_GPU_ALLOCATION=your_nersc_gpu_allocation (e.g. m2859_g)
 export NERSC_CPU_ALLOCATION=your_nersc_cpu_allocation (e.g. m2859)
 export CFS_ALLOCATION=your_cfs_allocation (e.g. m3562)
 ```
-```
+
 
 Create directories:
 ```
