@@ -22,7 +22,10 @@ sbatch --time=1:30:00 -A $NERSC_GPU_ALLOCATION $MODULES/exafel_project/kpp-sim/s
 ```
 Images will be saved in `$SCRATCH/ferredoxin_sim/{JOB_ID_SIM}`, where `JOB_ID_SIM` is the job ID of the submitted job.
 
-
+To view an example image:
+```
+dials.image_viewer image_rank_00000.h5
+```
 
 # Processing with DIALS
 
@@ -204,13 +207,17 @@ libtbx.python $MODULES/exafel_project/kpp_utils/convert_npz_to_mtz.py
 
 # Example Processing Results
 
-## 10 still shots of ferredoxin
+## 1024 still shots of ferredoxin
 
-**TODO with instructions above, all times above are listed for 100,000 shots, adjust time accordingly for 10 still shots, erring on the generous side because there may be some fixed amount of setup time. The entire pipeline for 10 shots could be run on an interactive node, no need to submit jobs.**
+**TODO with instructions above, all times above are listed for 100,000 shots, adjust time accordingly for 1024 still shots, erring on the generous side because there may be some fixed amount of setup time.**
 
-JOB_ID_SIM =
+$SCRATCH is /pscratch/sd/v/vidyagan
 
-JOB_ID_INDEX =
+$WORK is /global/cfs/cdirs/m3562/users/vidyagan/p20231
+
+JOB_ID_SIM = 10729219
+
+JOB_ID_INDEX = 10730634
 
 JOB_ID_MERGE =
 

@@ -28,6 +28,6 @@ io.output_dir=$SLURM_JOB_ID \
 pandas_table=$PANDA num_devices=$PERL_NDEV \
 exp_ref_spec_file = $WORK/exafel_output/exp_ref_spec \
 structure_factors.mtz_name = $SCRATCH/ferredoxin_sim/$3/out/ly99sim_all.mtz \
-refiner.reference_geom=$GEOM \
+refiner.reference_geom=$GEOM
 
 echo "jobend $(date)";pwd
