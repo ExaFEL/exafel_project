@@ -18,9 +18,11 @@ export NUM_SHOTS=100000
 Run the image simulation script to simulate $NUM_SHOTS still shots of ferredoxin:
 ```
 cd $WORK/exafel_output
-sbatch --time=1:30:00 -A $NERSC_GPU_ALLOCATION $MODULES/exafel_project/kpp-sim/sim_ferredoxin_high_remote.sh $NUM_SHOTS
+sbatch --time=1:30:00 -A $NERSC_GPU_ALLOCATION $MODULES/exafel_project/kpp-sim/sim_ferredoxin_high_remote_slurm.sh $NUM_SHOTS
 ```
 Images will be saved in `$SCRATCH/ferredoxin_sim/{JOB_ID_SIM}`, where `JOB_ID_SIM` is the job ID of the submitted job.
+
+
 
 # Processing with DIALS
 

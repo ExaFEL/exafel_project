@@ -125,7 +125,7 @@ def run_LY99_batch(test_without_mpi=False):
   print(rank, time(), "finished with the calculation of channels, now construct single broadcast")
   sfall_channels = bcast_large_dict(comm, sfall_channels, root=0)
   transmitted_info['sfall_info'] = sfall_channels
-  breakpoint()
+
   comm.barrier()
   parcels = list(range(rank,N_total,N_stride))
 
