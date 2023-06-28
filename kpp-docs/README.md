@@ -20,10 +20,16 @@ Run the image simulation script to simulate $NUM_SHOTS still shots of ferredoxin
 cd $WORK/exafel_output
 sbatch --time=1:30:00 -A $NERSC_GPU_ALLOCATION $MODULES/exafel_project/kpp-sim/sim_ferredoxin_high_remote_slurm.sh $NUM_SHOTS
 ```
-Images will be saved in `$SCRATCH/ferredoxin_sim/{JOB_ID_SIM}`, where `JOB_ID_SIM` is the job ID of the submitted job.
+Images will be saved in `$SCRATCH/ferredoxin_sim/{JOB_ID_SIM}`, where `{JOB_ID_SIM}` is the job ID of the submitted job.
+
+Set an environment variable for JOB_ID_SIM:
+```
+export JOB_ID_SIM={JOB_ID_SIM}
+```
 
 To view an example image:
 ```
+cd $SCRATCH/ferredoxin_sim/$JOB_ID_SIM
 dials.image_viewer image_rank_00000.h5
 ```
 
@@ -33,13 +39,20 @@ dials.image_viewer image_rank_00000.h5
 
 Run the indexing and integration script:
 ```
-sbatch --time=1:30:00 -A $NERSC_CPU_ALLOCATION $MODULES/exafel_project/kpp-sim/ferredoxin_index_high_remote.sh {JOB_ID_SIM}
+sbatch --time=1:30:00 -A $NERSC_CPU_ALLOCATION $MODULES/exafel_project/kpp-sim/ferredoxin_index_high_remote.sh $JOB_ID_SIM
 ```
-Output will be saved in `$SCRATCH/ferredoxin_sim/{JOB_ID_INDEX}`, where `JOB_ID_INDEX` is the job ID of the submitted job. A phil file will be saved as `$SCRATCH/ferredoxin_sim/{JOB_ID_INDEX}/index.phil` and used later in diffBragg stage 1 integrate.
+Output will be saved in `$SCRATCH/ferredoxin_sim/{JOB_ID_INDEX}`, where `JOB_ID_INDEX` is the job ID of the submitted job. 
+
+Set an environment variable for JOB_ID_INDEX:
+```
+export JOB_ID_INDEX={JOB_ID_INDEX}
+```
+
+A phil file will be saved as `$SCRATCH/ferredoxin_sim/$JOB_ID_INDEX/index.phil` and used later in diffBragg stage 1 integrate.
 
 Visualize example indexed image:
 ```
-cd $SCRATCH/ferredoxin_sim/{JOB_ID_INDEX}
+cd $SCRATCH/ferredoxin_sim/$JOB_ID_INDEX
 dials.image_viewer idx-image_rank_00000_00000_indexed.refl idx-image_rank_00000_00000_refined.expt
 ```
 
@@ -49,7 +62,7 @@ dials.image_viewer idx-image_rank_00000_00000_integrated.*
 ```
 
 ## Unit Cell Analysis
-The file for unit cell analysis is output in `$SCRATCH/ferredoxin_sim/{JOB_ID_INDEX}/tdata_cells.tdata` from the indexing and integration script.
+The file for unit cell analysis is output in `$SCRATCH/ferredoxin_sim/$JOB_ID_INDEX/tdata_cells.tdata` from the indexing and integration script.
 
 Start interactive session:
 ```
@@ -70,9 +83,8 @@ cd $WORK/exafel_output
 
 Run covariance analysis command:
 ```
-uc_metrics.dbscan file_name=$SCRATCH/ferredoxin_sim/{JOB_ID_INDEX}/tdata_cells.tdata space_group=C12/m1 feature_vector=a,b,c eps=0.20 write_covariance=True metric=L2norm show_plot=True 
+uc_metrics.dbscan file_name=$SCRATCH/ferredoxin_sim/$JOB_ID_INDEX/tdata_cells.tdata space_group=C12/m1 feature_vector=a,b,c eps=0.20 write_covariance=True metric=L2norm show_plot=True 
 ```
-
 **Possible issue: Should the space group be C12/m1 or C121?**
 
 This command outputs covariance file `covariance_tdata_cells.pickle` to the working directory `$WORK/exafel_output`.
@@ -82,9 +94,16 @@ This command outputs covariance file `covariance_tdata_cells.pickle` to the work
 Run the merging script:
 ```
 cd $WORK/exafel_output
-sbatch --time 00:10:00 -A $NERSC_CPU_ALLOCATION $MODULES/exafel_project/kpp-sim/ferredoxin_merge_high_remote.sh {JOB_ID_INDEX}
+sbatch --time 00:10:00 -A $NERSC_CPU_ALLOCATION $MODULES/exafel_project/kpp-sim/ferredoxin_merge_high_remote.sh $JOB_ID_INDEX
 ```
 Output will be saved in `$SCRATCH/ferredoxin_sim/{JOB_ID_MERGE}`, where `JOB_ID_MERGE` is the job ID of the submitted job.
+
+Set an environment variable for JOB_ID_MERGE:
+```
+export JOB_ID_MERGE={JOB_ID_MERGE}
+```
+
+There should be a file called `ly99sim_all.mtz` in `$SCRATCH/ferredoxin_sim/{JOB_ID_MERGE}/out`.
 
 # diffBragg Stage 1
 
@@ -93,7 +112,7 @@ Output will be saved in `$SCRATCH/ferredoxin_sim/{JOB_ID_MERGE}`, where `JOB_ID_
 Organize the output of indexing:
 ```
 cd $WORK/exafel_output
-diffBragg.make_input_file $SCRATCH/ferredoxin_sim/{JOB_ID_INDEX} exp_ref_spec
+diffBragg.make_input_file $SCRATCH/ferredoxin_sim/$JOB_ID_INDEX exp_ref_spec
 ```
 
 ## Step 2: hopper
@@ -101,9 +120,14 @@ diffBragg.make_input_file $SCRATCH/ferredoxin_sim/{JOB_ID_INDEX} exp_ref_spec
 Run the hopper script:
 ```
 cd $WORK/exafel_output
-sbatch --time 01:30:00 -A $NERSC_GPU_ALLOCATION $MODULES/exafel_project/kpp-sim/slurm_hopper_stage1_kokkos.sh $SCRATCH/ferredoxin_sim/{JOB_ID_MERGE}/out/ly99sim_all.mtz exp_ref_spec_file=$WORK/exafel_output/exp_ref_spec
+sbatch --time 01:30:00 -A $NERSC_GPU_ALLOCATION $MODULES/exafel_project/kpp-sim/slurm_hopper_stage1_kokkos.sh $SCRATCH/ferredoxin_sim/$JOB_ID_MERGE/out/ly99sim_all.mtz exp_ref_spec_file=$WORK/exafel_output/exp_ref_spec
 ```
 Output will be saved in `$SCRATCH/ferredoxin_sim/{JOB_ID_HOPPER}/hopper_stage_one`, where `JOB_ID_HOPPER` is the job ID of the submitted job.
+
+Set an environment variable for JOB_ID_HOPPER:
+```
+export JOB_ID_HOPPER={JOB_ID_HOPPER}
+```
 
 Visualize an example result:
 ```

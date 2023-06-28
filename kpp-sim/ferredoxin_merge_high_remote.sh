@@ -7,13 +7,14 @@
 #SBATCH -o %j.out
 #SBATCH -e %j.err
 
+export JOB_ID_INDEX=$1
 export SCRATCH_FOLDER=$SCRATCH/ferredoxin_sim/$SLURM_JOB_ID
 mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER
 
 export TRIAL=ly99sim
 export OUT_DIR=${PWD}
 # NO PSF:
-export DIALS_OUTPUT=${SCRATCH}/ferredoxin_sim/$1
+export DIALS_OUTPUT=${SCRATCH}/ferredoxin_sim/$JOB_ID_INDEX
 
 echo "input.path=${DIALS_OUTPUT}
 input.experiments_suffix=_integrated.expt
