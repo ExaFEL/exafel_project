@@ -63,7 +63,7 @@ vi ~/env_ecp
 
 Copy the following into the file:
 ```
-export CFSW=$CFS/$CFS_ALLOCATION/users/nersc_username
+export CFSW=$CFS/$CFS_ALLOCATION/users/$NERSC_USERNAME
 export CFSSRC=$CFSW/p20231 # software install
 export WORK=$CFSW/p20231/
 cd $WORK/

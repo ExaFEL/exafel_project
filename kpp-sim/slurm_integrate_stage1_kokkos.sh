@@ -33,8 +33,11 @@ export CCTBX_GPUS_PER_NODE=1
 export XFEL_CUSTOM_WORKER_PATH=$MODULES/psii_spread/merging/application # User must export $MODULES path
 
 
+export JOB_ID_INDEX=$1
+export JOB_ID_HOPPER=$2
+
 echo "jobstart $(date)";pwd
 
-srun -n 256 -G 128 -c 16 diffBragg.integrate $MODULES/exafel_project/kpp-sim/integrate_stage1_kokkos.phil $WORK/exafel_output/index.phil $SCRATCH/ferredoxin_sim/$1/hopper_stage_one out --numdev 1
+srun -n 256 -G 128 -c 16 diffBragg.integrate $MODULES/exafel_project/kpp-sim/integrate_stage1_kokkos.phil $SCRATCH/ferredoxin_sim/$JOB_ID_INDEX/index.phil $SCRATCH/ferredoxin_sim/$JOB_ID_HOPPER/hopper_stage_one out --numdev 1
 
 echo "jobend $(date)";pwd

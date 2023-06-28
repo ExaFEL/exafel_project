@@ -7,13 +7,15 @@
 #SBATCH -o %j.out
 #SBATCH -e %j.err
 
+export JOB_ID_SIM=$1
+
 export NUMEXPR_MAX_THREADS=128
 export SLURM_CPU_BIND=cores # critical to force ranks onto different cores. verify with ps -o psr <pid>
 export OMP_PROC_BIND=spread
 export OMP_PLACES=threads
 export XFEL_CUSTOM_WORKER_PATH=$MODULES/psii_spread/merging/application # User must export $MODULES path
 
-export H5_SIM_PATH=$SCRATCH/ferredoxin_sim/$1
+export H5_SIM_PATH=$SCRATCH/ferredoxin_sim/$JOB_ID_SIM
 
 export SCRATCH_FOLDER=$SCRATCH/ferredoxin_sim/$SLURM_JOB_ID
 mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER
@@ -66,7 +68,7 @@ integration {
 profile.gaussian_rs.centroid_definition=com
 
 indexing.stills.refine_all_candidates=False
-refinement.reflection.outlier.algorithm=None
+refinement.reflections.outlier.algorithm=None
 dispatch.refine=True
 indexing.stills.nv_reject_outliers=False
 ">index.phil

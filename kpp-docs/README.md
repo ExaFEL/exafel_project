@@ -35,7 +35,7 @@ Run the indexing and integration script:
 ```
 sbatch --time=1:30:00 -A $NERSC_CPU_ALLOCATION $MODULES/exafel_project/kpp-sim/ferredoxin_index_high_remote.sh {JOB_ID_SIM}
 ```
-Output will be saved in `$SCRATCH/ferredoxin_sim/{JOB_ID_INDEX}`, where `JOB_ID_INDEX` is the job ID of the submitted job. A phil file will be saved as `$WORK/exafel_output/index.phil` and used later in diffBragg stage 1 integrate.
+Output will be saved in `$SCRATCH/ferredoxin_sim/{JOB_ID_INDEX}`, where `JOB_ID_INDEX` is the job ID of the submitted job. A phil file will be saved as `$SCRATCH/ferredoxin_sim/{JOB_ID_INDEX}/index.phil` and used later in diffBragg stage 1 integrate.
 
 Visualize example indexed image:
 ```
@@ -123,7 +123,7 @@ We aim for the mismatch to be less than a pixel.
 Run the integrate script:
 ```
 cd $WORK/exafel_output
-sbatch --time 01:30:00 -A $NERSC_GPU_ALLOCATION $MODULES/exafel_project/kpp-sim/slurm_integrate_stage1_kokkos.sh {JOB_ID_HOPPER}
+sbatch --time 01:30:00 -A $NERSC_GPU_ALLOCATION $MODULES/exafel_project/kpp-sim/slurm_integrate_stage1_kokkos.sh {JOB_ID_INDEX} {JOB_ID_HOPPER}
 ```
 Output will be saved in `$SCRATCH/ferredoxin_sim/{JOB_ID_INTEGRATE}`, where `JOB_ID_INTEGRATE` is the job ID of the submitted job.
 
@@ -217,7 +217,7 @@ $WORK is /global/cfs/cdirs/m3562/users/vidyagan/p20231
 
 JOB_ID_SIM = 10729219
 
-JOB_ID_INDEX = 10730634
+JOB_ID_INDEX = 10731329
 
 JOB_ID_MERGE =
 
