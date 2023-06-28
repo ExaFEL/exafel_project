@@ -53,12 +53,12 @@ A phil file will be saved as `$SCRATCH/ferredoxin_sim/$JOB_ID_INDEX/index.phil` 
 Visualize example indexed image:
 ```
 cd $SCRATCH/ferredoxin_sim/$JOB_ID_INDEX
-dials.image_viewer idx-image_rank_00000_00000_indexed.refl idx-image_rank_00000_00000_refined.expt
+dials.image_viewer idx-image_rank_00000_refined.expt idx-image_rank_00000_indexed.refl 
 ```
 
 Visualize example integrated image:
 ```
-dials.image_viewer idx-image_rank_00000_00000_integrated.*
+dials.image_viewer idx-image_rank_00000_integrated.*
 ```
 
 ## Unit Cell Analysis
@@ -85,7 +85,6 @@ Run covariance analysis command:
 ```
 uc_metrics.dbscan file_name=$SCRATCH/ferredoxin_sim/$JOB_ID_INDEX/tdata_cells.tdata space_group=C12/m1 feature_vector=a,b,c eps=0.20 write_covariance=True metric=L2norm show_plot=True 
 ```
-**Possible issue: Should the space group be C12/m1 or C121?**
 
 This command outputs covariance file `covariance_tdata_cells.pickle` to the working directory `$WORK/exafel_output`.
 
@@ -131,13 +130,13 @@ export JOB_ID_HOPPER={JOB_ID_HOPPER}
 
 Visualize an example result:
 ```
-cd $SCRATCH/ferredoxin_sim/{JOB_ID_HOPPER}/hopper_stage_one
+cd $SCRATCH/ferredoxin_sim/$JOB_ID_HOPPER/hopper_stage_one
 dials.image_viewer expers/rank0/stage1_idx-image_rank_00000_00000_refined_00000.expt refls/rank0/stage1_idx-image_rank_00000_00000_refined_00000.refl
 ```
 
 Generate histogram to evaluate the mismatch between the predicted and observed reflection centroids:
 ```
-cd $SCRATCH/ferredoxin_sim/{JOB_ID_HOPPER}/hopper_stage_one
+cd $SCRATCH/ferredoxin_sim/$JOB_ID_HOPPER/hopper_stage_one
 diffBragg.pred_offsets "refls/rank*/*.refl"
 ```
 We aim for the mismatch to be less than a pixel.
@@ -147,13 +146,18 @@ We aim for the mismatch to be less than a pixel.
 Run the integrate script:
 ```
 cd $WORK/exafel_output
-sbatch --time 01:30:00 -A $NERSC_GPU_ALLOCATION $MODULES/exafel_project/kpp-sim/slurm_integrate_stage1_kokkos.sh {JOB_ID_INDEX} {JOB_ID_HOPPER}
+sbatch --time 01:30:00 -A $NERSC_GPU_ALLOCATION $MODULES/exafel_project/kpp-sim/slurm_integrate_stage1_kokkos.sh $JOB_ID_INDEX $JOB_ID_HOPPER
 ```
 Output will be saved in `$SCRATCH/ferredoxin_sim/{JOB_ID_INTEGRATE}`, where `JOB_ID_INTEGRATE` is the job ID of the submitted job.
 
+Set an environment variable for JOB_ID_INTEGRATE:
+```
+export JOB_ID_INTEGRATE={JOB_ID_INTEGRATE}
+```
+
 View an example result in dials.image_viewer:
 ```
-cd $SCRATCH/ferredoxin_sim/{JOB_ID_INTEGRATE}/out
+cd $SCRATCH/ferredoxin_sim/$JOB_ID_INTEGRATE/out
 dials.image_viewer stage1_idx-image_rank_00000_00000_refined_00000_00000_predicted.*
 ```
 
