@@ -120,7 +120,7 @@ diffBragg.make_input_file $SCRATCH/ferredoxin_sim/$JOB_ID_INDEX exp_ref_spec
 Run the hopper script:
 ```
 cd $WORK/exafel_output
-sbatch --time 01:30:00 -A $NERSC_GPU_ALLOCATION $MODULES/exafel_project/kpp-sim/slurm_hopper_stage1_kokkos.sh $SCRATCH/ferredoxin_sim/$JOB_ID_MERGE/out/ly99sim_all.mtz exp_ref_spec_file=$WORK/exafel_output/exp_ref_spec
+sbatch --time 01:30:00 -A $NERSC_GPU_ALLOCATION $MODULES/exafel_project/kpp-sim/slurm_hopper_stage1_kokkos.sh $SCRATCH/ferredoxin_sim/$JOB_ID_MERGE/out/ly99sim_all.mtz $WORK/exafel_output/exp_ref_spec
 ```
 Output will be saved in `$SCRATCH/ferredoxin_sim/{JOB_ID_HOPPER}/hopper_stage_one`, where `JOB_ID_HOPPER` is the job ID of the submitted job.
 
