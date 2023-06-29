@@ -170,7 +170,7 @@ dials.reflection_viewer stage1_idx-image_rank_00000_00000_refined_00000_00000_pr
 
 Edit output from diffBragg stage 1 integrate and create a 2-shot and 10-shot example for testing:
 ```
-cd $SCRATCH/ferredoxin_sim/{JOB_ID_INTEGRATE}/out
+cd $SCRATCH/ferredoxin_sim/$JOB_ID_INTEGRATE/out
 libtbx.python
 
 # in Python shell
@@ -204,32 +204,33 @@ cd $WORK/exafel_output
 
 Test the 2-shot example:
 ```
-simtbx.diffBragg.stage_two $MODULES/exafel_project/kpp-sim/hopper_stage1_kokkos_diff.phil io.output_dir=tests pandas_table=$SCRATCH/ferredoxin_sim/{JOB_ID_INTEGRATE}/out/2.pkl num_devices=1
+simtbx.diffBragg.stage_two $MODULES/exafel_project/kpp-sim/hopper_stage1_kokkos_diff.phil io.output_dir=tests pandas_table=$SCRATCH/ferredoxin_sim/$JOB_ID_INTEGRATE/out/2.pkl num_devices=1 exp_ref_spec_file=$WORK/exafel_output/exp_ref_spec structure_factors.mtz_name=$SCRATCH/ferredoxin_sim/$JOB_ID_MERGE/out/ly99sim_all.mtz refiner.reference_geom=$MODULES/exafel_project/kpp-sim/t000_rg002_chunk000_reintegrated_000000.expt
 ```
 
 Test the 10-shot example:
 ```
-simtbx.diffBragg.stage_two $MODULES/exafel_project/kpp-sim/hopper_stage1_kokkos_diff.phil io.output_dir=tests pandas_table=$SCRATCH/ferredoxin_sim/{JOB_ID_INTEGRATE}/out/10.pkl num_devices=1
+simtbx.diffBragg.stage_two $MODULES/exafel_project/kpp-sim/hopper_stage1_kokkos_diff.phil io.output_dir=tests pandas_table=$SCRATCH/ferredoxin_sim/$JOB_ID_INTEGRATE/out/10.pkl num_devices=1 exp_ref_spec_file=$WORK/exafel_output/exp_ref_spec structure_factors.mtz_name=$SCRATCH/ferredoxin_sim/$JOB_ID_MERGE/out/ly99sim_all.mtz refiner.reference_geom=$MODULES/exafel_project/kpp-sim/t000_rg002_chunk000_reintegrated_000000.expt
 ```
 
 The output structure factors can be analyzed with the following script:
 ```
 cd $WORK/exafel_output/tests
+export JOB_ID_STAGE2=tests
 libtbx.python $MODULES/exafel_project/kpp_utils/convert_npz_to_mtz.py
 ```
 
 Run the stage 2 script with 10,000 still shots:
 <mark>Running with >10,000 shots causes an OOM error.</mark>
 ```
-sbatch --time 01:30:00 -A $NERSC_GPU_ALLOCATION $MODULES/exafel_project/kpp-sim/diffBragg_stage2.sh {JOB_ID_INTEGRATE} 10k {JOB_ID_MERGE}
+sbatch --time 01:30:00 -A $NERSC_GPU_ALLOCATION $MODULES/exafel_project/kpp-sim/diffBragg_stage2.sh $JOB_ID_INTEGRATE 10k $JOB_ID_MERGE
 ```
 Results are saved in `$WORK/diffbragg_stage2/{JOB_ID_STAGE2}`, where `JOB_ID_STAGE2` is the job ID of the submitted job.
 
 Analyze the Pearson correlation coefficient between the ground truth and predicted structure factors, starting from the output of conventional merging with DIALS:
 ```
-cd $WORK/exafel_output/{JOB_ID_STAGE2}
 export JOB_ID_STAGE2={JOB_ID_STAGE2}
 export JOB_ID_MERGE={JOB_ID_MERGE}
+cd $WORK/exafel_output/$JOB_ID_STAGE2
 libtbx.python $MODULES/exafel_project/kpp_utils/convert_npz_to_mtz.py
 ```
 
