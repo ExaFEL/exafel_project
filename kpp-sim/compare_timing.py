@@ -22,7 +22,7 @@ def paths_smv():
 def paths_h5():
   for idx in range(rank,1024,size):
     # NOTE Hardcoded file path needs to be changed for your script
-    yield "/pscratch/sd/n/nksauter/ferredoxin_sim/6346286/image_rank_%05d.h5"%idx
+    yield "/pscratch/sd/v/vidyagan/ferredoxin_sim/10729219/image_rank_%05d.h5"%idx
 
 def run(iterator):
   for path in iterator:
@@ -52,9 +52,9 @@ if __name__=="__main__":
   import datetime
   if rank == 0:  print("Rank 0 time", datetime.datetime.now())
 
-  run(paths_smv())
-  comm.barrier()
-  if rank == 0:  print("Rank 0 time", datetime.datetime.now())
+  # run(paths_smv())
+  # comm.barrier()
+  # if rank == 0:  print("Rank 0 time", datetime.datetime.now())
 
   run(paths_h5())
   comm.barrier()

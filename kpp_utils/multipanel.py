@@ -83,6 +83,8 @@ def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,pa
   print("unit_cell_Adeg=",SIM.unit_cell_Adeg)
   print("unit_cell_tuple=",SIM.unit_cell_tuple)
   Amat = sqr(SIM.Amatrix).transpose() # recovered Amatrix from SIM
+  # print("Amat=",Amat.elems)
+  # print("Amatrix_RUB=",SIM.Amatrix_RUB)
   from cctbx import crystal_orientation
   Ori = crystal_orientation.crystal_orientation(Amat, crystal_orientation.basis_type.reciprocal)
 
@@ -226,5 +228,8 @@ def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,pa
     nominal_data.reshape(flex.grid((npanel*nslow,nfast)))
     reshape_data = tuple([ nominal_data[ip*nslow:(ip+1)*nslow, 0:nfast ] for ip in range(npanel)])
     kwargs["writer"].append_frame(data=reshape_data)
+    kwargs["writer"].handle.create_dataset("Amat",data=Amatrix_RUB)
+
+    # import IPython; IPython.embed()
 
   SIM.free_all()

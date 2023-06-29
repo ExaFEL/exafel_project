@@ -53,7 +53,7 @@ simulator {
   }
 }
 refiner {
-  sigma_r = 10
+  sigma_r = 3
 }
 roi {
   mask_outside_trusted_range = True

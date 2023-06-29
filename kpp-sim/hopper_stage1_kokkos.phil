@@ -42,7 +42,7 @@ simulator {
 }
 refiner {
   num_devices = 1
-  sigma_r = 10
+  sigma_r = 3
   adu_per_photon = 1
   reference_geom = "$MODULES/exafel_project/kpp-sim/t000_rg002_chunk000_reintegrated_000000.expt"
 }

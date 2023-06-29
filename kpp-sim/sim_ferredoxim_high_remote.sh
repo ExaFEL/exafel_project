@@ -8,7 +8,8 @@
 #SBATCH -o %j.out
 #SBATCH -e %j.err
 
-. $MODULES/exafel_project/kpp-sim/sim_ferredoxin_high_remote_setup.sh $1
+export N_SIM=$1
+. $MODULES/exafel_project/kpp-sim/sim_ferredoxin_high_remote_setup.sh $N_SIM
 
 echo "jobstart $(date)";pwd
 srun -n 1024 -c 4 libtbx.python $MODULES/exafel_project/kpp_utils/LY99_batch.py trial.phil
