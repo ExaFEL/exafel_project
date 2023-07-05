@@ -238,8 +238,6 @@ libtbx.python $MODULES/exafel_project/kpp_utils/convert_npz_to_mtz.py
 
 ## 1024 still shots of ferredoxin
 
-**TODO with instructions above, all times above are listed for 100,000 shots, adjust time accordingly for 1024 still shots, erring on the generous side because there may be some fixed amount of setup time.**
-
 $SCRATCH is /pscratch/sd/v/vidyagan
 
 $WORK is /global/cfs/cdirs/m3562/users/vidyagan/p20231
@@ -248,48 +246,35 @@ JOB_ID_SIM = 10729219
 
 JOB_ID_INDEX = 10731329
 
-JOB_ID_MERGE =
+JOB_ID_MERGE = 10750362
 
-JOB_ID_HOPPER =
+JOB_ID_HOPPER = 10776453
 
-JOB_ID_INTEGRATE =
+JOB_ID_INTEGRATE = 10780371
 
-JOB_ID_STAGE2 =
+JOB_ID_STAGE2 = 10797195 (error)
 
 
-## 10,000 still shots of ferredoxin
+## 20,000 still shots of ferredoxin
 
-**TODO with instructions above, all times above are listed for 100,000 shots, adjust time accordingly for 10,000 still shots, erring on the generous side because there may be some fixed amount of setup time.**
+$SCRATCH is /pscratch/sd/v/vidyagan
 
-JOB_ID_SIM =
+$WORK is /global/cfs/cdirs/m3562/users/vidyagan/p20231
 
-JOB_ID_INDEX =
+JOB_ID_SIM = 10747031
 
-JOB_ID_MERGE =
+JOB_ID_INDEX = 10777319
 
-JOB_ID_HOPPER =
+JOB_ID_MERGE = 10779262
 
-JOB_ID_INTEGRATE =
+JOB_ID_HOPPER = 10780908
 
-JOB_ID_STAGE2 =
+JOB_ID_INTEGRATE = 10786274
+
+JOB_ID_STAGE2 = 10797263 (error)
 
 
 ## 100,000 still shots of ferredoxin
 
 See [notes](notes.txt) for notes on previous processing of 100,000 still shots; those notes do not follow the instructions above exactly.
-
-**TODO with instructions above**
-
-JOB_ID_SIM =
-
-JOB_ID_INDEX =
-
-JOB_ID_MERGE =
-
-JOB_ID_HOPPER =
-
-JOB_ID_INTEGRATE =
-
-JOB_ID_STAGE2 =
-
 
