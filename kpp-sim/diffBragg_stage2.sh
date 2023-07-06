@@ -5,8 +5,8 @@
 #SBATCH -L SCRATCH       # job requires SCRATCH files
 #SBATCH -C gpu
 #SBATCH -q regular
+#SBATCH --cpus-per-task=16
 #SBATCH --ntasks-per-node=8
-#SBATCH --cpus-per-gpu=2
 #SBATCH --gpus-per-node=4
 #SBATCH -o %j.out
 #SBATCH -e %j.err

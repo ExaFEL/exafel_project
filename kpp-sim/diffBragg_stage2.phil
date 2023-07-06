@@ -1,3 +1,4 @@
+logging.other_ranks_level=normal
 relative_tilt = False
 refiner.check_expt_format = False
 refiner.max_calls = [501]
@@ -7,6 +8,7 @@ refiner.stage_two.min_multiplicity = 1
 refiner.refine_spot_scale = [1]
 refiner.refine_Fcell = [1]
 refiner.stage_two.use_nominal_hkl = False
+refiner.verbose = 1
 
 refiner.ncells_mask = 000
 refiner.force_symbol=C121
