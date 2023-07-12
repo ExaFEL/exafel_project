@@ -44,9 +44,24 @@ def parse_input():
         .type = choice
         .help = type of crystal structure to be simulated
       pdb {
+        source = *code file
+          .type = choice
+          .help = Download the code directly from PDB or source it from a local file?
+          .help = Not implemented yet.  Always assume PDB download.
         code = None
           .type = str
           .help = PDB code of the structure to be simulated
+        file = None
+          .type = path
+          .help = local path for the file, either pdb atom coordinates or structure factors
+        coefficients = fobs *fcalc
+          .type = choice
+          .help = get the Fourier coefficients from either Fmodel (fcalc) or experimental file (fobs)
+        label = None
+          .type = str
+          .help = if coefficients=fobs, identify the column label to use from the *-sf.cif?
+          .help = Label value should be a short substring for matching, like "tensity" in "pdbx_intensity"
+          .help = To identify the available labels use exafel_project/kpp_utils/labels.py <filename or pdb_code>
       }
       length_um = 4.0
         .type = float

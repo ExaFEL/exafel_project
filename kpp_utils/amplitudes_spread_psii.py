@@ -77,32 +77,65 @@ def amplitudes_spread_psii(comm, params, **kwargs):
   return sfall_channels
 
 def amplitudes_pdb(comm, params, **kwargs):
+  """ Matrix of choices for data source
+                                               params.crystal.pdb.source
+                                                code               file
+    params.crystal.pdb.coefficients        |---------------|---------------|
+                   fcalc                   |               |               |
+                                           |---------------|---------------|
+                   fobs                    |               |               |
+                                           |---------------|---------------|
+  """
   rank = comm.Get_rank()
   if params.absorption != "high_remote":
     raise ValueError("crystal.structure=pdb is only implemented for absorption=high_remote")
   assert len(params.crystal.pdb.code)==4 # for the moment codes are always 4 characters
-
-  from iotbx.pdb.fetch import fetch
-  pdb_lines = fetch(params.crystal.pdb.code).read().decode() # bytes to str
-
-  wavelength_A = ENERGY_CONV / params.beam.mean_energy
-  # general ballpark X-ray wavelength in Angstroms, does not vary shot-to-shot
-  centerline = float(params.spectrum.nchannels-1)/2.0
-  channel_mean_eV = (flex.double(range(params.spectrum.nchannels)) - centerline
-                      ) * params.spectrum.channel_width + params.beam.mean_energy
-  wavelengths = ENERGY_CONV/channel_mean_eV
-  direct_algo_res_limit = kwargs.get("direct_algo_res_limit", 1.85)
-
-  GF = gen_fmodel(resolution=direct_algo_res_limit,
-                  pdb_text=pdb_lines,
-                  algorithm="fft", wavelength=wavelength_A)
-  GF.set_k_sol(0.435)
-  GF.make_P1_primitive()
-
   # Generating sf for my wavelengths
   sfall_channels = {}
+  direct_algo_res_limit = kwargs.get("direct_algo_res_limit", 1.85)
 
-  if rank==0:
+  if params.crystal.pdb.coefficients=="fcalc":
+    if rank==0:
+      from iotbx.pdb.fetch import fetch
+      pdb_lines = fetch(params.crystal.pdb.code).read().decode() # bytes to str
+
+      wavelength_A = ENERGY_CONV / params.beam.mean_energy
+      # general ballpark X-ray wavelength in Angstroms, does not vary shot-to-shot
+      centerline = float(params.spectrum.nchannels-1)/2.0
+      channel_mean_eV = (flex.double(range(params.spectrum.nchannels)) - centerline
+                      ) * params.spectrum.channel_width + params.beam.mean_energy
+      wavelengths = ENERGY_CONV/channel_mean_eV
+
+      GF = gen_fmodel(resolution=direct_algo_res_limit,
+                  pdb_text=pdb_lines,
+                  algorithm="fft", wavelength=wavelength_A)
+      GF.set_k_sol(0.435)
+      GF.make_P1_primitive()
+
       sfall_channels[0] = GF.get_amplitudes()
-  return sfall_channels
 
+  else:
+    assert params.crystal.pdb.coefficients=="fobs"
+    if rank==0:
+      from iotbx import reflection_file_reader
+      if params.crystal.pdb.source=="file":
+        miller_arrays = reflection_file_reader.any_reflection_file(file_name =
+          params.crystal.pdb.file).as_miller_arrays()
+
+      else: # lookup by PDB code
+        from iotbx.pdb.fetch import fetch
+        lines = fetch(id=params.crystal.pdb.code,data_type="xray",format="cif")
+        miller_arrays = reflection_file_reader.cif_reader(file_object = lines).as_miller_arrays()
+
+      for ma in miller_arrays:
+        print(ma.info().label_string())
+        if params.crystal.pdb.label.lower() in ma.info().label_string().lower():
+          break
+      assert params.crystal.pdb.label.lower() in ma.info().label_string().lower()
+      mae = ma.expand_to_p1()
+      # assert mae.is_xray_intensity_array() # doesn't always have to be intensities
+      maec = mae.complete_array(d_min=direct_algo_res_limit)
+
+      sfall_channels[0] = maec.as_amplitude_array() # amplitudes in anomalous P1 cell out to direct_algo_res_limit
+
+  return sfall_channels
