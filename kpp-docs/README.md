@@ -219,10 +219,27 @@ export JOB_ID_STAGE2=tests
 libtbx.python $MODULES/exafel_project/kpp_utils/convert_npz_to_mtz.py
 ```
 
+## Testing 10,000 still shots
+
 Run the stage 2 script with 10,000 still shots:
-<mark>Running with >10,000 shots causes an OOM error.</mark>
 ```
 sbatch --time 01:30:00 -A $NERSC_GPU_ALLOCATION $MODULES/exafel_project/kpp-sim/diffBragg_stage2.sh $JOB_ID_INTEGRATE 10k $JOB_ID_MERGE
+```
+Results are saved in `$WORK/diffbragg_stage2/{JOB_ID_STAGE2_10k}`, where `JOB_ID_STAGE2_10k` is the job ID of the submitted job.
+
+Analyze the Pearson correlation coefficient between the ground truth and predicted structure factors, starting from the output of conventional merging with DIALS:
+```
+export JOB_ID_STAGE2={JOB_ID_STAGE2_10k}
+export JOB_ID_MERGE={JOB_ID_MERGE}
+cd $WORK/exafel_output/$JOB_ID_STAGE2
+libtbx.python $MODULES/exafel_project/kpp_utils/convert_npz_to_mtz.py
+```
+
+## Processing all still shots
+
+Run the stage 2 script with all still shots:
+```
+sbatch --time 01:30:00 -A $NERSC_GPU_ALLOCATION $MODULES/exafel_project/kpp-sim/diffBragg_stage2.sh $JOB_ID_INTEGRATE preds_for_hopper $JOB_ID_MERGE
 ```
 Results are saved in `$WORK/diffbragg_stage2/{JOB_ID_STAGE2}`, where `JOB_ID_STAGE2` is the job ID of the submitted job.
 
@@ -252,8 +269,31 @@ JOB_ID_HOPPER = 10776453
 
 JOB_ID_INTEGRATE = 10780371
 
-JOB_ID_STAGE2 = 10797195 (error)
+### diffBragg stage 2 processing
+Start an interactive node:
+```
+salloc -N 4 --time=240 -C gpu -A $NERSC_GPU_ALLOCATION --qos=interactive --ntasks-per-node=8 --cpus-per-gpu=2 --gpus-per-node=4
+```
 
+Export the following environment variables:
+```
+export JOB_ID_MERGE=10750362
+export JOB_ID_INTEGRATE=10780371
+export PKL_FILE=preds_for_hopper
+
+export PERL_NDEV=4  # number GPU per node
+export PANDA=$SCRATCH/ferredoxin_sim/$JOB_ID_INTEGRATE/out/${PKL_FILE}.pkl
+export GEOM=$MODULES/exafel_project/kpp-sim/t000_rg002_chunk000_reintegrated_000000.expt
+export IBV_FORK_SAFE=1
+export RDMAV_HUGEPAGES_SAFE=1
+export DIFFBRAGG_USE_KOKKOS=1
+export MPI4PY_RC_RECV_MPROBE=False
+```
+
+Run the following:
+```
+srun --cpus-per-task=16 -N 4 --ntasks-per-node=8 --cpus-per-gpu=32 --gpus-per-node=4 simtbx.diffBragg.stage_two $MODULES/exafel_project/kpp-sim/hopper_stage1_kokkos_diff.phil io.output_dir=$SLURM_JOB_ID pandas_table=$PANDA num_devices=4 exp_ref_spec_file=$WORK/exafel_output/exp_ref_spec structure_factors.mtz_name=$SCRATCH/ferredoxin_sim/$JOB_ID_MERGE/out/ly99sim_all.mtz refiner.reference_geom=$GEOM logfiles=true
+```
 
 ## 20,000 still shots of ferredoxin
 
@@ -271,10 +311,11 @@ JOB_ID_HOPPER = 10780908
 
 JOB_ID_INTEGRATE = 10786274
 
-JOB_ID_STAGE2 = 10797263 (error)
+JOB_ID_STAGE2_10k = 11161572 (error)
 
+JOB_ID_STAGE2 = 11161559 (diffBragg stage 2 fails intermittently, see 11209856 for a failed example)
 
 ## 100,000 still shots of ferredoxin
 
-See [notes](notes.txt) for notes on previous processing of 100,000 still shots; those notes do not follow the instructions above exactly.
+See [notes](notes.txt) for notes on previous processing of 100,000 still shots; those notes do not follow the instructions above exactly. In the processing of 100,000 still shots, diffBragg stage 2 was only successful for 10,000 still shots, 20,000 shots and above had an OOM error.
 
