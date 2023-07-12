@@ -113,7 +113,7 @@ Organize the output of indexing:
 cd $WORK/exafel_output
 diffBragg.make_input_file $SCRATCH/ferredoxin_sim/$JOB_ID_INDEX exp_ref_spec
 ```
-This command results in a file exp_ref_spec in the working directory `$WORK/exafel_output`.
+This command results in a file `exp_ref_spec` in the working directory `$WORK/exafel_output`.
 
 ## Step 2: hopper
 

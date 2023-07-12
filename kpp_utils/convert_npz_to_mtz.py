@@ -59,10 +59,12 @@ def evaluate_iter(ma,
     if show_fig:
         plt.figure()
         plt.scatter(val_0, ground_truth)
+        # plt.savefig('scatter.png')
         plt.show()
 
         plt.figure()
         plt.scatter(np.log(val_0), np.log(ground_truth))  # to make logarithmic axes
+        # plt.savefig('scatter_log.png')
         plt.show()
 
     return pearson_coeff, val_0, ground_truth
@@ -74,7 +76,7 @@ if __name__=='__main__':
 
     # path to output of diffBragg stage 2
     JOB_ID_STAGE2 = os.environ["JOB_ID_STAGE2"]
-    input_path = os.environ["WORK"] + 'diffbragg_stage2/' + JOB_ID_STAGE2
+    input_path = os.environ["WORK"] + 'exafel_output/' + JOB_ID_STAGE2
     # output of conventional merging mtz file
     JOB_ID_MERGE = os.environ["JOB_ID_MERGE"]
     mtz_path = os.environ["SCRATCH"] + "/ferredoxin_sim/" + JOB_ID_MERGE + "/out/ly99sim_all.mtz" # output of conventional merging
