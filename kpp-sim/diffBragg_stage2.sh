@@ -26,7 +26,7 @@ export MPI4PY_RC_RECV_MPROBE=False
 
 echo "jobstart $(date)";pwd
 
-srun -N 32 --ntasks-per-node=8 --cpus-per-gpu=2 --gpus-per-node=4 --cpus-per-task=16 simtbx.diffBragg.stage_two $MODULES/exafel_project/kpp-sim/hopper_stage1_kokkos_diff.phil io.output_dir=$SLURM_JOB_ID pandas_table=$PANDA num_devices=$PERL_NDEV exp_ref_spec_file=$WORK/exafel_output/exp_ref_spec structure_factors.mtz_name=$SCRATCH/ferredoxin_sim/$JOB_ID_MERGE/out/ly99sim_all.mtz refiner.reference_geom=$GEOM
+srun -N 32 --ntasks-per-node=8 --gpus-per-node=4 --cpus-per-task=16 simtbx.diffBragg.stage_two $MODULES/exafel_project/kpp-sim/hopper_stage1_kokkos_diff.phil io.output_dir=$SLURM_JOB_ID pandas_table=$PANDA num_devices=$PERL_NDEV exp_ref_spec_file=$WORK/exafel_output/exp_ref_spec structure_factors.mtz_name=$SCRATCH/ferredoxin_sim/$JOB_ID_MERGE/out/ly99sim_all.mtz refiner.reference_geom=$GEOM
 
 echo "jobend $(date)";pwd
 
