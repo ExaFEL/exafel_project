@@ -76,7 +76,7 @@ if __name__=='__main__':
 
     # path to output of diffBragg stage 2
     JOB_ID_STAGE2 = os.environ["JOB_ID_STAGE2"]
-    input_path = os.environ["WORK"] + 'exafel_output/' + JOB_ID_STAGE2
+    input_path = os.environ["WORK"] + '/exafel_output/' + JOB_ID_STAGE2
     # output of conventional merging mtz file
     JOB_ID_MERGE = os.environ["JOB_ID_MERGE"]
     mtz_path = os.environ["SCRATCH"] + "/ferredoxin_sim/" + JOB_ID_MERGE + "/out/ly99sim_all.mtz" # output of conventional merging

@@ -228,7 +228,6 @@ def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,pa
     nominal_data.reshape(flex.grid((npanel*nslow,nfast)))
     reshape_data = tuple([ nominal_data[ip*nslow:(ip+1)*nslow, 0:nfast ] for ip in range(npanel)])
     kwargs["writer"].append_frame(data=reshape_data)
-    kwargs["writer"].handle.create_dataset("Amat",data=Amatrix_RUB)
 
     # import IPython; IPython.embed()
 
