@@ -312,9 +312,17 @@ JOB_ID_HOPPER = 10780908
 
 JOB_ID_INTEGRATE = 10786274
 
-JOB_ID_STAGE2_10k = 11161572 (error)
+JOB_ID_STAGE2 = 11161559
 
-JOB_ID_STAGE2 = 11161559 (diffBragg stage 2 fails intermittently, see 11209856 for a failed example)
+
+|                            | walltime | nodes | ranks | node type |
+| -------------------------- | -------- | ----- | ----- | --------- |
+| Image Creation             | 19:23    | 32    | 1024  | gpu       |
+| DIALS indexing/integration | 20:16    | 8     | 256   | cpu       |
+| DIALS merging              | 01:19    | 8     | 256   | cpu       |
+| diffBragg hopper           | 12:32    | 32    | 256   | gpu       |
+| diffBragg integrate        | 11:51    | 32    | 256   | gpu       |
+| diffBragg stage 2          | 04:48    | 32    | 256   | gpu       |
 
 ## 100,000 still shots of ferredoxin
 
