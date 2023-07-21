@@ -315,14 +315,14 @@ JOB_ID_INTEGRATE = 10786274
 JOB_ID_STAGE2 = 11161559
 
 
-|                            | walltime | nodes | ranks | node type |
-| -------------------------- | -------- | ----- | ----- | --------- |
-| Image Creation             | 19:23    | 32    | 1024  | gpu       |
-| DIALS indexing/integration | 20:16    | 8     | 256   | cpu       |
-| DIALS merging              | 01:19    | 8     | 256   | cpu       |
-| diffBragg hopper           | 12:32    | 32    | 256   | gpu       |
-| diffBragg integrate        | 11:51    | 32    | 256   | gpu       |
-| diffBragg stage 2          | 04:48    | 32    | 256   | gpu       |
+|                            | walltime | nodes | ranks | node type | inodes | disk space |
+| -------------------------- | -------- | ----- | ----- | --------- | ------ | ---------- |
+| Image Creation             | 19:23    | 32    | 1024  | gpu       | 3073   | 356G       |
+| DIALS indexing/integration | 20:16    | 8     | 256   | cpu       | 102041 | 38G        |
+| DIALS merging              | 01:19    | 8     | 256   | cpu       | 1285   | 156M       |
+| diffBragg hopper           | 12:32    | 32    | 256   | gpu       | 139988 | 15G        |
+| diffBragg integrate        | 11:51    | 32    | 256   | gpu       | 79998  | 54G        |
+| diffBragg stage 2          | 04:48    | 32    | 256   | gpu       | 20031  | 17G        |
 
 ## 100,000 still shots of ferredoxin
 
