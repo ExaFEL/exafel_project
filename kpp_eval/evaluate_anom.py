@@ -1,19 +1,17 @@
+"""
+This script reports the value of map value, by default the anomalous signal
+map, at the position of selected atoms, by default Fe and S.
+
+This entire script is a refactor of `exafel_project/nks/map_height_at_atoms.py`
+"""
+
 from __future__ import division, print_function
 
 import sys
 
-from exafel_project.kpp_eval.phil import parse_input
 from libtbx.str_utils import make_sub_header
 from libtbx.utils import Sorry
 from scitbx.math import five_number_summary
-
-
-message = """
-This script reports the value of map value, by default the anomalous signal
-map, at the position of selected atoms, by default Fe and S. 
-
-This entire script is a refactor of `exafel_project/nks/map_height_at_atoms.py`
-""".strip()
 
 
 master_phil_str = """
@@ -64,22 +62,17 @@ def run(args, out=sys.stdout):
   real_map = fft_map.real_map_unpadded()
   make_sub_header("Map analysis", out=out)
 
-  grid_fns = five_number_summary(real_map.as_1d())
-  print(f'Grid points 5-number summary: {grid_fns!s}', file=out)
-  for name, value in zip('min q_1 med q_3 max'.split(), grid_fns):
-    print(f'{name}: {value:6.2f}', file=out)
+  grid5 = five_number_summary(real_map.as_1d())
+  print(f'Grid points 5-number summary:', file=out)
+  for n, v in zip('minimum quartile1 median quartile3 maximum'.split(), grid5):
+    print(f'{n+":":21} {v:6.2f}σ', file=out)
   print('', file=out)
 
   for i_seq in selection:
     sc = xray_structure.scatterers()[i_seq]
     map_value = real_map.tricubic_interpolation(sc.site)
-    print(f'{sc.label:8}: {map_value:6.2f}σ', file=out)
+    print(f'{sc.label+":":21} {map_value:6.2f}σ', file=out)
 
 
-params = []
 if __name__ == '__main__':
-  params, options = parse_input()
-  if '-h' in options or '--help' in options:
-    print(message)
-    exit()
-  run(params)
+  run(sys.argv[1:])
