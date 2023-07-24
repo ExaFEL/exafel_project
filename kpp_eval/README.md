@@ -24,7 +24,7 @@ as well as in the [Google Docs file][link], accessible upon request.
 Running all ExaFEL evaluation scripts presented in this directory
 requires a cctbx installation with the following modules and branches:
 
-- `cctbx_project` – `xfel_auto_match_expts_refls` (to be merged into `master`)
+- `cctbx_project` – any recent branch
 - `dials` – any recent branch
 - `exafel_project` – this branch (the instructions may differ between branches)
 - `LS49` – any recent branch
