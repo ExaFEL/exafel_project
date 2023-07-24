@@ -78,7 +78,7 @@ larger scatter at high resolutions. Unless some part of indexing is not
 performed or analyzed correctly, this remains true even
 after the mosaic outliers have been preserved:
 
-**dials spotfinding, no outliers**:
+**DIALS spotfinding, no outliers**:
 
      Resolution range N possible refl_cnt  rmsd  rms_radial_offset rms_tangential_offset Correl ΔR,ΔΨ Correl ΔT,ΔΨ
     -1.0000 -  3.8780    1688     300842  0.30px       0.27px              0.13px           -55.0%       -1.7%    
@@ -110,4 +110,86 @@ after the mosaic outliers have been preserved:
      1.8643 -  1.8000    1639          0     NaN          NaN                 NaN             NaN           NaN   
                                                                                                                   
     -1.0000 -  1.8000   16338     942621  0.87px       0.84px              0.20px           37.4%        -4.7%
+
+### **D & E** – Accuracy of measurement and anomalous signal
+Based on the results of Vidya's ExaFEL pipeline for 20k frames,
+the diffBragg-refined mtz fits the reference pdb marginally better than DIALS.
+The values of Rwork for DIALS and stage2 are 0.0675 and 0.0631, respectively.
+However, the anomalous signal peak height at iron positions are marginally
+lower (maximum 20.99σ vs 20.60σ). Based on these evidence it is ambiguous
+which dataset represents the reference structure better.
+
+**DIALS merge**
+
+                      ----------F(model) initialization----------                  
+    
+    Twinning will be detected automatically.
+                       start: r(all,work,free)=0.1833 0.1833 0.1833 n_refl.: 27250
+           re-set all scales: r(all,work,free)=0.1833 0.1833 0.1833 n_refl.: 27250
+             remove outliers: r(all,work,free)=0.1828 0.1828 0.1828 n_refl.: 27239
+    bulk-solvent and scaling: r(all,work,free)=0.0675 0.0675 0.0675 n_refl.: 27239
+             remove outliers: r(all,work,free)=0.0675 0.0675 0.0675 n_refl.: 27239
+    |--(resolution: 1.90 - 44.29 A, n_refl.=27239 (all), 100.00% free)------------|
+    |                                                                             |
+    | r_work= 0.0675 r_free= 0.0675 coordinate error (max.-lik. estimate): 0.09 A |
+    |                                                                             |
+    | normalized target function (ml) (work): 4.520227                            |
+    | target function (ml) not normalized (work): 123126.465831                   |
+    | target function (ml) not normalized (free):            None                 |
+    |-----------------------------------------------------------------------------|
+    
+    End of input processing
+    
+                            ----------Map analysis----------                       
+    
+    Grid points 5-number summary:
+    minimum:               -4.45σ
+    quartile1:             -0.66σ
+    median:                -0.00σ
+    quartile3:              0.65σ
+    maximum:               20.99σ
+    
+    pdb="FE1  FES A 201 ":  20.25σ
+    pdb="FE2  FES A 201 ":  21.17σ
+    pdb="FE1  FES B 202 ":  21.24σ
+    pdb="FE2  FES B 202 ":  20.57σ
+
+
+**stage2 merge, Vidya's pipeline**
+
+                  ----------F(model) initialization----------                  
+
+    Twinning will be detected automatically.
+                       start: r(all,work,free)=0.1822 0.1822 0.1822 n_refl.: 27250
+           re-set all scales: r(all,work,free)=0.1822 0.1822 0.1822 n_refl.: 27250
+             remove outliers: r(all,work,free)=0.1825 0.1825 0.1825 n_refl.: 27231
+    bulk-solvent and scaling: r(all,work,free)=0.0631 0.0631 0.0631 n_refl.: 27231
+             remove outliers: r(all,work,free)=0.0631 0.0631 0.0631 n_refl.: 27231
+    |--(resolution: 1.90 - 44.27 A, n_refl.=27231 (all), 100.00% free)------------|
+    |                                                                             |
+    | r_work= 0.0631 r_free= 0.0631 coordinate error (max.-lik. estimate): 0.09 A |
+    |                                                                             |
+    | normalized target function (ml) (work): 4.441006                            |
+    | target function (ml) not normalized (work): 120933.046333                   |
+    | target function (ml) not normalized (free):            None                 |
+    |-----------------------------------------------------------------------------|
+    
+    End of input processing
+    
+                            ----------Map analysis----------                       
+    
+    Grid points 5-number summary:
+    minimum:               -4.35σ
+    quartile1:             -0.66σ
+    median:                -0.00σ
+    quartile3:              0.65σ
+    maximum:               20.60σ
+    
+    pdb="FE1  FES A 201 ":  19.91σ
+    pdb="FE2  FES A 201 ":  20.84σ
+    pdb="FE1  FES B 202 ":  20.83σ
+    pdb="FE2  FES B 202 ":  20.38σ
+
+TODO: test Derek's pipeline, which apparently converges much faster.
+
 
