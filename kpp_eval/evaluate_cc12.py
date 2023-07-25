@@ -19,12 +19,10 @@ from iotbx.phil import parse
 
 
 phil_scope_str = """
-input {
-  mtz = None
+mtz = None
   .type = str
   .multiple = True
   .help = Individual paths to the mtz files to be evaluated against each other.
-}
 """
 phil_scope = parse(phil_scope_str)
 
