@@ -71,6 +71,20 @@ class CrossCorrelationTable(object):
     self.cumulative_theor_asu_count = 0
     self.cumulative_cross_correlation = 0.0
 
+  def __str__(self):
+    s = '           bin_range obs_asu# / thr_asu#    cc1/2'
+    for i_bin in range(self.binner.n_bins_all()):
+      ccb: CrossCorrelationBin = self.cc_bins[i_bin]
+      s += f'{self.binner.bin_d_range(i_bin)!s:20}' \
+           f' {ccb.observed_matching_asu_count:>8d} /' \
+           f' {ccb.theoretical_asu_count:>8d}' \
+           f' {100*ccb.cross_correlation:8.4f}%\n'
+    s += '-' * 60 + '\n'
+    s += f'{self.binner.range_all()!s:20}' \
+         f' {self.cumulative_observed_matching_asu_count:>8d} /' \
+         f' {self.cumulative_theor_asu_count:>8d}' \
+         f' {100 * self.cumulative_cross_correlation:8.4f}%\n'
+
   def build(self, cross_correlation_sums_list: List[CrossCorrelationSums]):
     cum_cc_sums = CrossCorrelationSums()
     cumulative_theoretical_asu_count = 0
@@ -87,7 +101,6 @@ class CrossCorrelationTable(object):
     self.cumulative_observed_matching_asu_count = cum_cc_sums.count
     self.cumulative_theor_asu_count = cumulative_theoretical_asu_count
     self.cumulative_cross_correlation = self.formula(*cum_cc_sums)
-    return self
 
   @staticmethod
   def formula(count, sum_xx, sum_yy, sum_xy, sum_x, sum_y):
@@ -140,13 +153,15 @@ def calculate_cross_correlation(mtz1_path, mtz2_path):
       y = ma2.data()[pair[1]]
       cc_sums_list[i_bin] += CrossCorrelationSums(1, x**2, y**2, x*y, x, y)
   cct = CrossCorrelationTable(binner=binner)
-  return cct.build(cc_sums_list)
+  cct.build(cc_sums_list)
+  return cct
 
 
 def run(params_):
   assert len(params_.mtz) == 2, 'Exactly two mtz file paths must be provided'
   mtz_path1, mtz_path2 = params_.mtz[0:2]
-  calculate_cross_correlation(mtz_path1, mtz_path2)
+  cct = calculate_cross_correlation(mtz_path1, mtz_path2)
+  print(str(cct))
 
 
 params = []
