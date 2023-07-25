@@ -73,15 +73,18 @@ class CrossCorrelationTable(object):
 
   def __str__(self):
     cc_bins_iterator = iter(self.cc_bins)
-    s = '           bin_range obs_asu# / thr_asu#    cc1/2'
+    s = '     d_max     d_min obs_asu# / thr_asu#    cc1/2\n'
     for i_bin in self.binner.range_used():
       ccb: CrossCorrelationBin = next(cc_bins_iterator)
-      s += f'{self.binner.bin_d_range(i_bin)!s:20}' \
+      s += f'({self.binner.bin_d_range(i_bin)[0]:8.4f},' \
+           f' {self.binner.bin_d_range(i_bin)[1]:8.4f})' \
            f' {ccb.observed_matching_asu_count:>8d} /' \
            f' {ccb.theoretical_asu_count:>8d}' \
            f' {100*ccb.cross_correlation:8.4f}%\n'
     s += '-' * 60 + '\n'
-    s += f'{self.binner.range_all()!s:20}' \
+    i_bins_used = list(self.binner.range_all())
+    s += f'({self.binner.bin_d_range(i_bins_used[0])[0]:8.4f},' \
+         f' {self.binner.bin_d_range(i_bins_used[-1])[1]:8.4f})' \
          f' {self.cumulative_observed_matching_asu_count:>8d} /' \
          f' {self.cumulative_theor_asu_count:>8d}' \
          f' {100 * self.cumulative_cross_correlation:8.4f}%\n'
