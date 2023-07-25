@@ -85,6 +85,7 @@ class CrossCorrelationTable(object):
          f' {self.cumulative_observed_matching_asu_count:>8d} /' \
          f' {self.cumulative_theor_asu_count:>8d}' \
          f' {100 * self.cumulative_cross_correlation:8.4f}%\n'
+    return s
 
   def build(self, cross_correlation_sums_list: List[CrossCorrelationSums]):
     cum_cc_sums = CrossCorrelationSums()
