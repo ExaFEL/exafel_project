@@ -73,7 +73,7 @@ class CrossCorrelationTable(object):
 
   def __str__(self):
     cc_bins_iterator = iter(self.cc_bins)
-    s = '    d_max     d_min  #obs_asu / #thr_asu    cc1/2\n'
+    s = '    d_max     d_min  #obs_asu / #thr_asu     cc1/2\n'
     s += '-' * 50 + '\n'
     for i_bin in self.binner.range_used():
       ccb: CrossCorrelationBin = next(cc_bins_iterator)
@@ -92,6 +92,7 @@ class CrossCorrelationTable(object):
     return s
 
   def build(self, cross_correlation_sums_list: List[CrossCorrelationSums]):
+    """Evaluate values in self based on binner and sums lists provided"""
     cum_cc_sums = CrossCorrelationSums()
     cumulative_theoretical_asu_count = 0
 
@@ -129,10 +130,7 @@ def generate_hkl_to_bin_map(binner, miller_set):
 
 
 def calculate_cross_correlation(mtz1_path, mtz2_path):
-  """Calculate cc1/2 between two mtz files. Based on
-  xfel/merging/application/model/crystal_model.py,
-  xfel/merging/application/model/resolution_binner.py and
-  xfel/merging/application/statistics/intensity_resolution_statistics.py"""
+  """Calculate cc1/2 between two mtz files."""
   ma1 = refl_file_reader.any_reflection_file(mtz1_path).as_miller_arrays()[0]
   ma2 = refl_file_reader.any_reflection_file(mtz2_path).as_miller_arrays()[0]
   d_min = min([ma1.d_min(), ma2.d_min()])
