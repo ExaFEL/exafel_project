@@ -140,7 +140,7 @@ def calculate_cross_correlation(mtz1_path, mtz2_path):
       y = ma2.data()[pair[1]]
       cc_sums_list[i_bin] += CrossCorrelationSums(1, x**2, y**2, x*y, x, y)
   cct = CrossCorrelationTable(binner=binner)
-  return cct.build(*[list(i) for i in zip(*cc_sums_list)])
+  return cct.build(cc_sums_list)
 
 
 def run(params_):
