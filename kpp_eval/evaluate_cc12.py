@@ -73,7 +73,7 @@ class CrossCorrelationTable(object):
 
   def __str__(self):
     s = '           bin_range obs_asu# / thr_asu#    cc1/2'
-    for i_bin in range(self.binner.n_bins_all()):
+    for i_bin in self.binner.range_used():
       ccb: CrossCorrelationBin = self.cc_bins[i_bin]
       s += f'{self.binner.bin_d_range(i_bin)!s:20}' \
            f' {ccb.observed_matching_asu_count:>8d} /' \
