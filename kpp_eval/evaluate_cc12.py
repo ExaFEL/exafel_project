@@ -98,12 +98,12 @@ class CrossCorrelationTable(object):
     return numerator / denominator if denominator else 0.0
 
 
-def generate_hkl_to_bin_map(binner):
+def generate_hkl_to_bin_map(binner, miller_set):
   """Generate dict: hkl to bin number for input binner"""
   hkl_to_bin_map = {}  # hkl vs resolution bin number
   for i_bin in binner.range_used():
     bin_hkl_selection = binner.selection(i_bin)
-    bin_hkls = binner.select(bin_hkl_selection)
+    bin_hkls = miller_set.select(bin_hkl_selection)
     for hkl in bin_hkls.indices():
       hkl_to_bin_map[hkl] = i_bin
   return hkl_to_bin_map
@@ -117,13 +117,13 @@ def calculate_cross_correlation(mtz1_path, mtz2_path):
   ma1 = refl_file_reader.any_reflection_file(mtz1_path).as_miller_arrays()[0]
   ma2 = refl_file_reader.any_reflection_file(mtz2_path).as_miller_arrays()[0]
   d_min = min([ma1.d_min(), ma2.d_min()])
-  space_group = ma1.space_group().info()
+  space_group_info = ma1.space_group().info()
   unit_cell = ma1.unit_cell()
-  symm = symmetry(unit_cell=unit_cell, space_group=space_group)
+  symm = symmetry(unit_cell=unit_cell, space_group_info=space_group_info)
   ms = symm.build_miller_set(anomalous_flag=True, d_max=1000000, d_min=d_min)
   ms.setup_binner(d_max=100000, d_min=d_min, n_bins=10)
   binner = ms.binner()  # as in self.params.statistics.resolution_binner
-  hkl_map = generate_hkl_to_bin_map(binner)  # statistics.hkl_resolution_bins
+  hkl_map = generate_hkl_to_bin_map(binner, ms)  # as in .hkl_resolution_bins
   n_bins = binner.n_bins_all()
   cc_sums_list = [CrossCorrelationSums() for _ in range(n_bins)]
 
