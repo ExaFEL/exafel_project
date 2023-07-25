@@ -65,7 +65,7 @@ class CrossCorrelationSums(NamedTuple):
 class CrossCorrelationTable(object):
   """Represents a table of cross-correlations for resolution bins"""
   def __init__(self, binner):
-    self.binner = None
+    self.binner = binner
     self.cc_bins = []
     self.cumulative_observed_matching_asu_count = 0
     self.cumulative_theor_asu_count = 0
