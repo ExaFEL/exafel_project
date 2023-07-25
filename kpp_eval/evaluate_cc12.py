@@ -1,11 +1,43 @@
-"""Tools for calculating cc1/2 between two mtz files."""
+"""
+This python script allows calculations of cross-correlation between two mtz
+files. It is based on many methods in `cctbx.xfel.merge` routine, see files:
+
+* xfel/merging/application/model/crystal_model.py
+* xfel/merging/application/model/resolution_binner.py
+* xfel/merging/application/statistics/intensity_resolution_statistics.py
+"""
 
 import math
+import sys
 from typing import NamedTuple, List
 
 from cctbx import miller
 from cctbx.crystal import symmetry
+from dials.util.options import ArgumentParser
 from iotbx import reflection_file_reader as refl_file_reader
+from iotbx.phil import parse
+
+
+phil_scope_str = """
+input {
+  mtz = None
+  .type = str
+  .multiple = True
+  .help = Individual paths to the mtz files to be evaluated against each other.
+}
+"""
+phil_scope = parse(phil_scope_str)
+
+
+def parse_input():
+  import libtbx.load_env  # implicit import
+  parser = ArgumentParser(
+    usage=f"\n libtbx.python {sys.argv[0]}",
+    phil=phil_scope,
+    epilog="Calculate cross-correlation")
+  # Parse the command line. quick_parse is required for MPI compatibility
+  params_, options_ = parser.parse_args(show_diff_phil=True, quick_parse=True)
+  return params_, options_
 
 
 class CrossCorrelationBin(NamedTuple):
@@ -111,3 +143,18 @@ def calculate_cross_correlation(mtz1_path, mtz2_path):
       cc_sums_list[i_bin] += CrossCorrelationSums(1, x**2, y**2, x*y, x, y)
   cct = CrossCorrelationTable(binner=binner)
   return cct.build(*[list(i) for i in zip(*cc_sums_list)])
+
+
+def run(params_):
+  assert len(params_.mtz) == 2, 'Exactly two mtz file paths must be provided'
+  mtz_path1, mtz_path2 = params_.mtz[0:2]
+  calculate_cross_correlation(mtz_path1, mtz_path2)
+
+
+params = []
+if __name__ == '__main__':
+  params, options = parse_input()
+  if '-h' in options or '--help' in options:
+    print(__doc__)
+    exit()
+  run(params)
