@@ -69,7 +69,7 @@ def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,pa
 
   # get same noise each time this test is run
   SIM.seed = 1
-  SIM.oversample=1
+  SIM.oversample = params.oversample
   SIM.wavelength_A = shot_to_shot_wavelength_A
   SIM.polarization=1
   # this will become F000, marking the beam center

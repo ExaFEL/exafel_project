@@ -22,6 +22,9 @@ def parse_input():
       .type = choice
       .help = either do a spread calculation, which calculates wavelength-dependent amplitudes, or
       .help = a high_remote energy calculation, where amplitudes are only calculated at the mean energy
+    oversample = 1
+      .type = int(value_min=0)
+      .help = directly set nanoBragg oversample parameter, currently only implemented for multipanel
     beam {
       mean_energy = None
         .type = float
