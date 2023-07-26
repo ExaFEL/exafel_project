@@ -22,8 +22,6 @@ def parse_input():
       .type = choice
       .help = either do a spread calculation, which calculates wavelength-dependent amplitudes, or
       .help = a high_remote energy calculation, where amplitudes are only calculated at the mean energy
-    res_limit = None
-      .type = float
     beam {
       mean_energy = None
         .type = float

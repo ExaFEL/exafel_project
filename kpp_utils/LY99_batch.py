@@ -112,10 +112,7 @@ def run_LY99_batch(test_without_mpi=False):
       consistent_beam_dict["wavelength"] = ENERGY_CONV/params.beam.mean_energy
       consistent_beam = type(specific.beam).from_dict(consistent_beam_dict)
       nominal_resolution = DETECTOR.get_max_resolution(s0=consistent_beam.get_s0())
-      if params.res_limit is None:
-        direct_algo_res_limit = math.pow(math.pow(nominal_resolution,-3)*1.005,-(1./3.)) # allow 1% bandpass
-      else:
-        direct_algo_res_limit = params.res_limit
+      direct_algo_res_limit = math.pow(math.pow(nominal_resolution,-3)*1.005,-(1./3.)) # allow 1% bandpass
       kwargs["direct_algo_res_limit"] = direct_algo_res_limit
     kwargs["writer"].construct_detector(DETECTOR)
 
