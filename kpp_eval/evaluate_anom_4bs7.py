@@ -22,7 +22,7 @@ fill_missing_f_obs = False
   .type = bool
 resolution_factor = 0.25
   .type = float
-selection = element FE or element S
+selection = element Yb or element S
   .type = atom_selection
 """
 
