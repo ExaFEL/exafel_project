@@ -101,6 +101,10 @@ def parse_input():
           .help = Subtract 0.5 from the float-valued pixels, thus the Nexus writer behaves like SMV (cast to lower integer)
           .help = instead of nearest integer rounding.
       }
+      ground_truth = None
+        .type = str
+        .help = if present, write the simulated structure factors to file
+        .help = current implementation is only for PDB fcalc structure factors
     }
   """
   phil_scope = parse(master_phil)

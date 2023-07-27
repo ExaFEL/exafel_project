@@ -110,8 +110,18 @@ def amplitudes_pdb(comm, params, **kwargs):
                   pdb_text=pdb_lines,
                   algorithm="fft", wavelength=wavelength_A)
       GF.set_k_sol(0.435)
-      GF.make_P1_primitive()
 
+      if params.output.ground_truth is not None:
+        # write the fcalc to file so it can be later used as control for hopper
+        hi_sym_amplitudes = GF.get_amplitudes()
+        mtz_out = hi_sym_amplitudes.as_mtz_dataset(
+          column_root_label="F",
+          title="ground truth reference amplitudes",
+          wavelength=wavelength_A)
+        mtz_obj = mtz_out.mtz_object()
+        mtz_obj.write(params.output.ground_truth) # mtz file name
+
+      GF.make_P1_primitive()
       sfall_channels[0] = GF.get_amplitudes()
 
   else:

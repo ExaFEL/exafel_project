@@ -5,7 +5,7 @@
 #SBATCH -A m2859          # allocation
 #SBATCH -C cpu
 #SBATCH -q regular    # regular queue
-#SBATCH -t 6
+#SBATCH -t 35
 #SBATCH -o %j.out
 #SBATCH -e %j.err
 

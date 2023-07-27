@@ -40,6 +40,7 @@ psf=False
 attenuation=True
 context=kokkos_gpu
 absorption=high_remote
+oversample=1
 beam {
   mean_energy=9500.
 }
@@ -59,6 +60,7 @@ detector {
 }
 output {
   format=h5
+  ground_truth=${SCRATCH_FOLDER}/ground_truth.mtz
 }
 " > trial.phil
 
