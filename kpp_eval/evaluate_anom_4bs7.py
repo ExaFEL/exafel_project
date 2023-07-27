@@ -37,8 +37,12 @@ def master_phil():
 def enhance_fmodel_with_anomalous_dispersion(fmodel):
   """Replace fmodel.f_calc() with ones simulated assuming experimental
   Yb anomalous signal to reproduce structure factors used in diffBragg paper"""
-  from cxid9114.sf.struct_fact_special import sfgen
-  from cxid9114.parameters import WAVELEN_HIGH
+  try:
+    from cxid9114.sf.struct_fact_special import sfgen
+    from cxid9114.parameters import WAVELEN_HIGH
+  except ImportError as e:
+    raise Sorry('Running this script requires cloning the cxid9114 repository '
+                '(https://github.com/dermen/cxid9114/) to $MODULES') from e
   env_modules = os.environ.get('MODULES')
   pdb_path = os.path.join(env_modules, 'cxid9114/sim/4bs7.pdb')
   yb_path = os.path.join(env_modules, 'cxid9114/sf/scanned_fp_fdp.tsv')
