@@ -38,13 +38,16 @@ def parse_input():
 
 class PixelArray:
   def __init__(self, data: Sequence) -> None:
-    self._data = data
+    self.data = data
 
   def __sub__(self, other) -> 'PixelArray':
     return self.__class__(self.data - other.data)
 
   def __abs__(self):
     return PixelArray(np.absolute(self.data))
+
+  def __str__(self):
+    return f'{self.__class__!s}({self.data!s})'
 
   @classmethod
   def from_h5(cls, h5_path: str) -> 'PixelArray':
@@ -85,6 +88,7 @@ def summarize_pixel_convergence(h5_paths: Sequence[str]) -> None:
     stats = delta.stats()
     label = f"{stats['mean']:6.2f} +/- {stats['std']:6.2f}"
     delta.plot_distribution(axes=ax, color=colors[i], label=label)
+  plt.plot()
 
 def run(params_):
   summarize_pixel_convergence(h5_paths=params_.h5)
