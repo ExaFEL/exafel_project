@@ -45,6 +45,7 @@ def parse_input():
 
 
 class PixelArray:
+  """Object which stores and allows algebra on detector data in 1d array"""
   STATS_PERCENTILES = [1 - 0.1 ** n for n in range(1, 7)]
 
   def __init__(self, data: Sequence) -> None:
@@ -86,9 +87,11 @@ class PixelArray:
     axes.step(x, y, where='mid', color=color, label=label)
 
   def stats(self) -> pd.DataFrame:
-    return pd.Series(self.data).describe(percentiles=[.9, .99, .999, .9999])
+    return pd.Series(self.data).describe(percentiles=self.STATS_PERCENTILES)
 
 def summarize_pixel_convergence(parameters) -> None:
+  """Plot and report statistics on the difference between the intensities
+  of individual pixels in subsequent h5 files provided"""
   arrays = [PixelArray.from_h5(h5_path) for h5_path in parameters.h5]
   deltas = [abs(pa2 - pa1) for pa1, pa2 in zip(arrays[1:], arrays[:-1])]
   colors = plt.get_cmap('viridis')(np.linspace(0., 1., len(deltas) + 2)[1:-1])
@@ -96,15 +99,17 @@ def summarize_pixel_convergence(parameters) -> None:
   print(pd.concat(stats, axis=1))
   fig = plt.figure()
   ax = fig.add_subplot(111)
+  ax.set_title('Histogram of difference in pixel intensity for subsequent h5s')
   ax.set_yscale('log')
   for i, delta in enumerate(deltas):
-    label = f"{stats[i]['mean']:6.2f} +/- {stats[i]['std']:6.2f}"
+    label = f"{i+1}-{i}: Mean delta = {stats[i]['mean']:6.2f}"
     delta.plot_distribution(axes=ax, color=colors[i], label=label)
   plt.xlim(parameters.plot.x_min, parameters.plot.x_max)
   plt.legend()
   plt.show()
 
 def run(params_):
+  assert len(params_.h5) > 1, 'Provide more than 1 h5 for delta comparison'
   summarize_pixel_convergence(params_)
 
 
