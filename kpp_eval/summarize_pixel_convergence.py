@@ -43,10 +43,10 @@ class PixelArray:
   def __sub__(self, other) -> 'PixelArray':
     return self.__class__(self.data - other.data)
 
-  def __abs__(self):
+  def __abs__(self) -> 'PixelArray':
     return PixelArray(np.absolute(self.data))
 
-  def __str__(self):
+  def __str__(self) -> str:
     return f'{self.__class__!s}({self.data!s})'
 
   @classmethod
@@ -76,7 +76,7 @@ class PixelArray:
     axes.step(x, y, where='mid', color=color, label=label)
 
   def stats(self) -> pd.DataFrame:
-    return pd.DataFrame(self.data).describe()
+    return pd.Series(self.data).describe()
 
 def summarize_pixel_convergence(h5_paths: Sequence[str]) -> None:
   arrays = [PixelArray.from_h5(h5_path) for h5_path in h5_paths]
