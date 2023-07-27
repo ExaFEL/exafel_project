@@ -21,6 +21,14 @@ h5 = None
   .type = str
   .multiple = True
   .help = Ordered paths to the h5 files to be compared against each other.
+plot {
+  x_min = 0.
+    .type = float
+    .help = Minimum of x range to be plotted
+  x_max = 50.
+    .type = float
+    .help = Maximum of x range to be plotted
+}
 """
 phil_scope = parse(phil_scope_str)
 
@@ -37,6 +45,8 @@ def parse_input():
 
 
 class PixelArray:
+  STATS_PERCENTILES = [1 - 0.1 ** n for n in range(1, 7)]
+
   def __init__(self, data: Sequence) -> None:
     self.data = data
 
@@ -78,8 +88,8 @@ class PixelArray:
   def stats(self) -> pd.DataFrame:
     return pd.Series(self.data).describe(percentiles=[.9, .99, .999, .9999])
 
-def summarize_pixel_convergence(h5_paths: Sequence[str]) -> None:
-  arrays = [PixelArray.from_h5(h5_path) for h5_path in h5_paths]
+def summarize_pixel_convergence(parameters) -> None:
+  arrays = [PixelArray.from_h5(h5_path) for h5_path in parameters.h5]
   deltas = [abs(pa2 - pa1) for pa1, pa2 in zip(arrays[1:], arrays[:-1])]
   colors = plt.get_cmap('viridis')(np.linspace(0., 1., len(deltas) + 2)[1:-1])
   stats = [delta.stats() for delta in deltas]
@@ -90,12 +100,12 @@ def summarize_pixel_convergence(h5_paths: Sequence[str]) -> None:
   for i, delta in enumerate(deltas):
     label = f"{stats[i]['mean']:6.2f} +/- {stats[i]['std']:6.2f}"
     delta.plot_distribution(axes=ax, color=colors[i], label=label)
-  plt.xlim(-0.5, 10.5)
+  plt.xlim(parameters.plot.x_min, parameters.plot.x_max)
   plt.legend()
   plt.show()
 
 def run(params_):
-  summarize_pixel_convergence(h5_paths=params_.h5)
+  summarize_pixel_convergence(params_)
 
 
 params = []
