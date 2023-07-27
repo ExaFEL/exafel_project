@@ -81,13 +81,16 @@ class PixelArray:
 def summarize_pixel_convergence(h5_paths: Sequence[str]) -> None:
   arrays = [PixelArray.from_h5(h5_path) for h5_path in h5_paths]
   deltas = [abs(pa2 - pa1) for pa1, pa2 in zip(arrays[1:], arrays[:-1])]
-  colors = plt.get_cmap('viridis')(np.linspace(0.0, 1.0, len(deltas)+2)[1:-1])
+  colors = plt.get_cmap('viridis')(np.linspace(0., 1., len(deltas) + 2)[1:-1])
+  stats = [delta.stats() for delta in deltas]
+  print(pd.concat(stats, axis=1))
   fig = plt.figure()
   ax = fig.add_subplot(111)
   for i, delta in enumerate(deltas):
-    stats = delta.stats()
-    label = f"{stats['mean']:6.2f} +/- {stats['std']:6.2f}"
+    label = f"{stats[i]['mean']:6.2f} +/- {stats[i]['std']:6.2f}"
     delta.plot_distribution(axes=ax, color=colors[i], label=label)
+  plt.xlim(-0.5, 10.5)
+  plt.legend()
   plt.show()
 
 def run(params_):
