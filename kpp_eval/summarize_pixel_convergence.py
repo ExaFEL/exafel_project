@@ -1,6 +1,8 @@
 """
 This python script accepts an N-length list of h5 files and returns a summary
 of the evolution of pixel deltas between every pair of subsequent files.
+
+As of 2023/07/26, requires `dxtbx` repository to be on branch `nxmx_writer`
 """
 
 import sys
