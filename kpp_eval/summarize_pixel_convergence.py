@@ -95,7 +95,11 @@ def summarize_pixel_convergence(parameters) -> None:
   arrays = [PixelArray.from_h5(h5_path) for h5_path in parameters.h5]
   deltas = [abs(pa2 - pa1) for pa1, pa2 in zip(arrays[1:], arrays[:-1])]
   colors = plt.get_cmap('viridis')(np.linspace(0., 1., len(deltas) + 2)[1:-1])
-  stats = [delta.stats() for delta in deltas]
+  stats = []
+  for i, delta in enumerate(deltas):
+    stat = delta.stats()
+    stat.name = f'{i+1}-{i}'
+    stats.append(stat)
   print(pd.concat(stats, axis=1))
   fig = plt.figure()
   ax = fig.add_subplot(111)
