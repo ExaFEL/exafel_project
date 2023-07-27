@@ -88,7 +88,7 @@ def summarize_pixel_convergence(h5_paths: Sequence[str]) -> None:
     stats = delta.stats()
     label = f"{stats['mean']:6.2f} +/- {stats['std']:6.2f}"
     delta.plot_distribution(axes=ax, color=colors[i], label=label)
-  plt.plot()
+  plt.show()
 
 def run(params_):
   summarize_pixel_convergence(h5_paths=params_.h5)
