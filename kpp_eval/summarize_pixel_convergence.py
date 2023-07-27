@@ -76,7 +76,7 @@ class PixelArray:
     axes.step(x, y, where='mid', color=color, label=label)
 
   def stats(self) -> pd.DataFrame:
-    return pd.Series(self.data).describe()
+    return pd.Series(self.data).describe(percentiles=[.9, .99, .999, .9999])
 
 def summarize_pixel_convergence(h5_paths: Sequence[str]) -> None:
   arrays = [PixelArray.from_h5(h5_path) for h5_path in h5_paths]
@@ -86,6 +86,7 @@ def summarize_pixel_convergence(h5_paths: Sequence[str]) -> None:
   print(pd.concat(stats, axis=1))
   fig = plt.figure()
   ax = fig.add_subplot(111)
+  ax.set_yscale('log')
   for i, delta in enumerate(deltas):
     label = f"{stats[i]['mean']:6.2f} +/- {stats[i]['std']:6.2f}"
     delta.plot_distribution(axes=ax, color=colors[i], label=label)
