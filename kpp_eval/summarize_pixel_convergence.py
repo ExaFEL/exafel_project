@@ -2,11 +2,11 @@
 This python script accepts an N-length list of h5 files and returns a summary
 of the evolution of pixel deltas between every pair of subsequent files.
 
-As of 2023/07/26, requires `dxtbx` repository to be on branch `nxmx_writer`
+As of 2023/07/27, requires `dxtbx` repository to be on branch `nxmx_writer`
 """
 
 import sys
-from typing import Sequence
+from typing import List, Sequence
 
 from dials.util.options import ArgumentParser
 from dxtbx.imageset import ImageSetFactory
@@ -23,6 +23,10 @@ h5 = None
   .type = str
   .multiple = True
   .help = Ordered paths to the h5 files to be compared against each other.
+labels = None
+  .type = str
+  .multiple = False
+  .help = Ordered comma-separated labels for h5 files to use instead of ints
 plot {
   x_min = 0.
     .type = float
@@ -91,16 +95,23 @@ class PixelArray:
   def stats(self) -> pd.DataFrame:
     return pd.Series(self.data).describe(percentiles=self.STATS_PERCENTILES)
 
+
+def parse_pixel_array_labels(params_) -> List[str]:
+  """Parse a comma-separated list of labels from `parameters.labels` to list"""
+  return params_.labels.split(',') if params_.labels \
+    else [str(i) for i in range(len(params_.h5))]
+
 def summarize_pixel_convergence(parameters) -> None:
   """Plot and report statistics on the difference between the intensities
   of individual pixels in subsequent h5 files provided"""
   arrays = [PixelArray.from_h5(h5_path) for h5_path in parameters.h5]
+  labels = parse_pixel_array_labels(parameters)[:len(arrays)]
   deltas = [abs(pa2 - pa1) for pa1, pa2 in zip(arrays[1:], arrays[:-1])]
   colors = plt.get_cmap('viridis')(np.linspace(0., 1., len(deltas) + 2)[1:-1])
   stats = []
   for i, delta in enumerate(deltas):
     stat = delta.stats()
-    stat.name = f'{i+1}-{i}'
+    stat.name = f'{labels[i+1]}-{labels[i]}'
     stats.append(stat)
   print(pd.concat(stats, axis=1))
   fig = plt.figure()
@@ -108,13 +119,13 @@ def summarize_pixel_convergence(parameters) -> None:
   ax.set_title('Histogram of difference in pixel intensity for subsequent h5s')
   ax.set_yscale('log')
   for i, delta in enumerate(deltas):
-    label = f"{i+1}-{i}: Mean delta = {stats[i]['mean']:6.2f}"
+    label = f"{stats[i].name}: Mean delta = {stats[i]['mean']:6.2f}"
     delta.plot_distribution(axes=ax, color=colors[i], label=label)
   plt.xlim(parameters.plot.x_min, parameters.plot.x_max)
   plt.legend()
   plt.show()
 
-def run(params_):
+def run(params_) -> None:
   assert len(params_.h5) > 1, 'Provide more than 1 h5 for delta comparison'
   summarize_pixel_convergence(params_)
 
