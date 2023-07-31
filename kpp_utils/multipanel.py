@@ -209,9 +209,9 @@ def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,pa
     nominal_data = gpu_simulation.add_noise(gpu_detector)
     #estimate_gain(SIM.raw_pixels,offset=SIM.adc_offset_adu,algorithm="slow")
     #estimate_gain(SIM.raw_pixels,offset=SIM.adc_offset_adu,algorithm="kabsch")
+  else:                                           # the normal way to gt the data,
+    nominal_data = gpu_detector.get_raw_pixels()  # but shortcut due to noise call.
   del QQ
-
-  # nominal_data = gpu_detector.get_raw_pixels() # the normal way to gt the data, but shortcut due to noise call.
   gpu_detector.each_image_free() # deallocate GPU arrays
 
   if params.output.format == "h5":
