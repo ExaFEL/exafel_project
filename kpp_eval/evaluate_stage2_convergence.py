@@ -31,7 +31,7 @@ stage2 = None
   .help = Directory with stage 2 results. If None,
   .help = use $WORK/exafel_output/$JOB_ID_STAGE2
 stat = cc_gt cc_anom *PearsonR_gt
-  .type = choice(multi=True)
+  .type = choice(multi=False)
   .help = List of statistics to be implemented
 d_min = 1.9
   .type = float
@@ -113,8 +113,8 @@ def evaluate_iteration(
     ma_db: miller.array,  # diffBragg-refined sfs for Pearson's r calc.
     ma_gt: miller.array,  # ground-truth sfs for Pearson's r calc.
     ma_cm: miller.array,  # conventional merging sfs for index selection
-    scatter_label: int = None  # If not None, make a scatter plot
-) -> List[float]:
+    scatter_label: int = None,  # If not None, make a scatter plot
+    ) -> List[float]:
   """Calculate Pearson's R between `ma_db` and `ma_gt` for data in `ma_cm`"""
   binner = ma_gt.binner()
   ma_db = ma_db.common_set(ma_cm)
