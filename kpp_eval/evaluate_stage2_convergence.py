@@ -91,22 +91,21 @@ def expand_integer_ranges(ranges_str: str) -> List[int]:
   return indices
 
 
-def npz_to_mtz(npz_path: str,
-               f_asu_map: dict,
-               symmetry: 'crystal.symmetry',
-               save_mtz: bool = False,
-               ) -> miller.array:
-  d=np.load(npz_path + '.npz')
-  f=d['fvals']
-
-  miller_idx = flex.miller_index([f_asu_map[i] for i in range(len(f))])
-  mset = miller.set(symmetry, miller_idx, True)
-  mdat = flex.double(f)
-  ma = miller.array(mset,mdat)
+def read_npz(npz_path: str,
+             f_asu_map: dict,
+             symmetry: 'crystal.symmetry',
+             save_mtz: bool = False,
+             ) -> miller.array:
+  """Read Miller array from .npz and f_asu_map, optionally save it as mtz"""
+  f_values = np.load(npz_path)['fvals']
+  miller_idx = flex.miller_index([f_asu_map[i] for i in range(len(f_values))])
+  miller_set = miller.set(symmetry, miller_idx, True)
+  miller_data = flex.double(f_values)
+  ma = miller.array(miller_set, miller_data)
   ma = ma.set_observation_type_xray_amplitude()
-  # print(npz_path, ma.size(), np.max(ma.data()), np.mean(ma.data()), np.std(ma.data()))
   if save_mtz:
-    ma.as_mtz_dataset(column_root_label='F').mtz_object().write(npz_path + '.mtz')
+    mtz_path = os.path.splitext(npz_path)[0] + '.mtz'
+    ma.as_mtz_dataset(column_root_label='F').mtz_object().write(mtz_path)
   return ma
 
 
@@ -177,9 +176,9 @@ def run(parameters):
 
   all_iter_npz = len(glob.glob(input_path + '/_fcell_trial0_iter*.npz'))
   for num_iter in range(all_iter_npz):
-    npz_file = input_path + '/_fcell_trial0_iter' + str(num_iter)
+    npz_file = f'{input_path}/_fcell_trial0_iter{num_iter}.npz'
     print(npz_file)
-    ma = npz_to_mtz(npz_file, f_asu_map, symmetry, save_mtz=True)
+    ma = read_npz(npz_file, f_asu_map, symmetry, save_mtz=True)
     # import IPython
     # IPython.embed()
     pearson_rs_list.append(evaluate_iteration(ma, ma_calc, ma_proc))
