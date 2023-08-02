@@ -232,7 +232,9 @@ def run(parameters):
   # Plot stat as a function of iteration
   indices = [-1] + list(range(all_iter_npz))
   fig, axes = plt.subplots()
-  for bin_i, (bin_label, stats_row) in enumerate(stats_dataframe.iterrows()):
+  for bin_i, (bin_range, stats_row) in enumerate(stats_dataframe.iterrows()):
+    bin_label = '-'.join(['{:.4f}'.format(f if (f := float(s)) > 0 else np.nan)
+                          for s in str(bin_range).split(',', 1)])
     axes.plot(indices, stats_row, '-', color=bin_colors[bin_i], label=bin_label)
   axes.set_xlabel('diffBragg iteration step')
   axes.set_ylabel(stat_kind.name)
