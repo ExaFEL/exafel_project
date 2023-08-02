@@ -203,7 +203,7 @@ def plot_scatters(db_data_binned: List[Sequence[float]],  # plot along x axis
   fig, axes = plt.subplots(nrows=1, ncols=2)
   for i_bin, (x, y) in enumerate(zip(db_data_binned, gt_data_binned)):
     axes[0].plot(x, y, '.', color=bin_colors[i_bin])
-    axes[1].loglog(x, y, '.', color=bin_colors[i_bin])
+    axes[1].loglog(abs(x), abs(y), '.', color=bin_colors[i_bin])
   axes[0].axline((0., 0.), (1., 1.), color='r')
   axes[1].axline((0., 0.), (1., 1.), color='r')
   axes[0].set_xlabel(f'refined data, step {label}')
