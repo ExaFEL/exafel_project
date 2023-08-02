@@ -189,7 +189,7 @@ def plot_scatters(xs: List[Sequence[float]],  # values along x axis
   fig, axes = plt.subplots(nrows=1, ncols=2)
   for i_bin, (x, y) in enumerate(zip(xs, ys)):
     axes[0].scatter(x, y, color=bin_colors[i_bin])
-    axes[1].loglog(x, y, color=bin_colors[i_bin])
+    axes[1].loglog(x, y, '.', color=bin_colors[i_bin])
   plt.savefig(f'scatter_{label}.png')
 
 
