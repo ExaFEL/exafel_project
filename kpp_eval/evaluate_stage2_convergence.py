@@ -237,6 +237,7 @@ def run(parameters):
 
   # Plot stat as a function of iteration
   indices = [-1] + list(range(all_iter_npz))
+  plt.close("all")  # remove all previously generated figures from memory
   fig, axes = plt.subplots()
   for bin_i, (bin_range, stats_row) in enumerate(stats_dataframe.iterrows()):
     bin_label = bin_label_from(bin_range)
@@ -244,9 +245,9 @@ def run(parameters):
   axes.set_xlabel('diffBragg iteration step')
   axes.set_ylabel(stat_kind.name)
   if parameters.n_bins > 1:
-    axes.legend()
+    axes.legend(loc='lower right')
   fig.savefig(stat_kind.name.lower() + '.png')
-  fig.show()
+  plt.show()
 
 params = []
 if __name__ == '__main__':
