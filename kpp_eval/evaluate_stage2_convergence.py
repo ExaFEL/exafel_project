@@ -5,6 +5,8 @@ the evolution of Pearson's R or CC1/2 as a function of stage2 progress.
 from enum import Enum
 from functools import wraps
 from typing import Callable, Iterable, List, Sequence, Tuple
+
+import matplotlib.figure
 import numpy as np
 import pandas as pd
 import os
@@ -188,7 +190,7 @@ def plot_scatters(xs: List[Sequence[float]],  # values along x axis
   for i_bin, (x, y) in enumerate(zip(xs, ys)):
     axes[0].scatter(x, y, color=bin_colors[i_bin])
     axes[1].loglog(x, y, '.', color=bin_colors[i_bin])
-  plt.savefig(f'scatter_{label}.png')
+  fig.savefig(f'scatter_{label}.png')
 
 
 def run(parameters):
@@ -243,9 +245,8 @@ def run(parameters):
   axes.set_ylabel(stat_kind.name)
   if parameters.n_bins > 1:
     axes.legend()
-  plt.savefig(stat_kind.name.lower() + '.png')
-  plt.show()
-
+  fig.savefig(stat_kind.name.lower() + '.png')
+  fig.show()
 
 params = []
 if __name__ == '__main__':
