@@ -166,7 +166,7 @@ def evaluate_iteration(
     ma_cm: miller.array,  # conventional merging sfs for index selection
     stat_kind: StatKind,  # What should be calculated:PearsonR/CC/Rwork_gt/anom
     scatter_label: int = None,  # If not None, make a scatter plot
-    ) -> pd.Series[float]:
+    ) -> pd.Series:
   """Calculate `stat_kind` between `ma_db` and `ma_gt` for data in `ma_cm`"""
   binner = ma_gt.binner()
   ma_db = ma_db.common_set(ma_cm)
