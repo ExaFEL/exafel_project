@@ -6,7 +6,7 @@ from enum import Enum
 from functools import wraps
 import glob
 import os
-from typing import Callable, Iterable, List, Sequence, Tuple
+from typing import Callable, List, Sequence, Tuple
 
 from matplotlib import pyplot as plt
 import numpy as np
@@ -34,7 +34,7 @@ stage2 = None
   .type = str
   .help = Directory with stage 2 results. If None,
   .help = use $WORK/exafel_output/$JOB_ID_STAGE2
-stat = cc_gt cc_anom *PearsonR_gt PearsonR_anom
+stat = cc_gt cc_anom *PearsonR_gt PearsonR_anom Rwork_gt Rwork_anom
   .type = choice(multi=False)
   .help = The type of statistic to be calculated
 d_min = 1.9
@@ -124,12 +124,16 @@ def bin_label_from(bin_range: Tuple[float, float]) -> str:
   return '-'.join(['{:.4f}'.format(m if m > 0 else np.nan) for m in bin_range])
 
 
-def calc_pearson_r(x: Iterable, y: Iterable) -> float:
-  return pearsonr(x, y)[0]
+def calc_pearson_r(ma1: miller.array, ma2: miller.array) -> float:
+  return pearsonr(ma1.data(), ma2.data())[0]
 
 
-def calc_cc_parameter(x: Iterable, y: Iterable) -> float:
-  return CrossCorrelationSums.from_xy(x, y).parameter
+def calc_cc_parameter(ma1: miller.array, ma2: miller.array) -> float:
+  return CrossCorrelationSums.from_xy(ma1.data(), ma2.data()).parameter
+
+
+def calc_r_work(ma1: miller.array, ma2: miller.array) -> float:
+  return ma1.r1_factor(ma2, assume_index_matching=True)
 
 
 class StatKind(Enum):
@@ -137,10 +141,13 @@ class StatKind(Enum):
   PEARSON_R_ANOM = 1
   CC_GT = 2
   CC_ANOM = 3
+  R_WORK_GT = 4
+  R_WORK_ANOM = 5
 
   @classmethod
   def from_param(cls, param: str) -> 'StatKind':
-    enum_vals = ['PearsonR_gt', 'PearsonR_anom', 'cc_gt', 'cc_anom']
+    enum_vals = ['PearsonR_gt', 'PearsonR_anom', 'cc_gt', 'cc_anom',
+                 'Rwork_gt', 'Rwork_anom']
     return cls(enum_vals.index(param))
 
   @property
@@ -149,16 +156,17 @@ class StatKind(Enum):
 
   @property
   def function(self) -> Callable:
-    return calc_pearson_r if self.value < 2 else calc_cc_parameter
+    return calc_pearson_r if self.value in {0, 1}\
+      else calc_cc_parameter if self.value in {2, 3} else calc_r_work
 
 
 def evaluate_iteration(
     ma_db: miller.array,  # diffBragg-refined sfs for Pearson's r calc.
     ma_gt: miller.array,  # ground-truth sfs for Pearson's r calc.
     ma_cm: miller.array,  # conventional merging sfs for index selection
-    stat_kind: StatKind,  # What should be calculated, PearsonR/CC_gt/anom
+    stat_kind: StatKind,  # What should be calculated:PearsonR/CC/Rwork_gt/anom
     scatter_label: int = None,  # If not None, make a scatter plot
-    ) -> List[float]:
+    ) -> pd.Series[float]:
   """Calculate `stat_kind` between `ma_db` and `ma_gt` for data in `ma_cm`"""
   binner = ma_gt.binner()
   ma_db = ma_db.common_set(ma_cm)
@@ -172,16 +180,16 @@ def evaluate_iteration(
   gt_data_binned = []
   for i_bin in binner.range_used():
     bin_selection = binner.selection(i_bin)
-    db_data = ma_db.select(bin_selection).data()
-    gt_data = ma_gt.select(bin_selection).data()
+    ma_db_selection = ma_db.select(bin_selection)
+    ma_gt_selection = ma_gt.select(bin_selection)
     try:
-      stats_binned.append(stat_kind.function(db_data, gt_data))
+      stats_binned.append(stat_kind.function(ma_db_selection, ma_gt_selection))
     except ValueError:
       stats_binned.append(np.nan)
     bin_ranges.append(binner.bin_d_range(i_bin))
     if scatter_label is not None:
-      db_data_binned.append(db_data)
-      gt_data_binned.append(gt_data)
+      db_data_binned.append(ma_db_selection.data())
+      gt_data_binned.append(ma_gt_selection.data())
   print(f'{stat_kind.name}: {stats_binned}')
   if scatter_label is not None:
     plot_scatters(db_data_binned, gt_data_binned, scatter_label)
@@ -194,17 +202,17 @@ def plot_scatters(db_data_binned: List[Sequence[float]],  # plot along x axis
   """Prepare and save a pair of xs vs ys plots, colored according to bin"""
   fig, axes = plt.subplots(nrows=1, ncols=2)
   for i_bin, (x, y) in enumerate(zip(db_data_binned, gt_data_binned)):
-    axes[0].axline((0., 0.), (1., 1.), color='r')
-    axes[0].scatter(x, y, color=bin_colors[i_bin])
-    axes[0].set_xlabel(f'refined data, step {label}')
-    axes[0].set_ylabel(f'ground truth data')
-    axes[1].axline((0., 0.), (1., 1.), color='r')
+    axes[0].plot(x, y, '.', color=bin_colors[i_bin])
     axes[1].loglog(x, y, '.', color=bin_colors[i_bin])
-    axes[1].set_xlabel(f'(log scale)')
+  axes[0].axline((0., 0.), (1., 1.), color='r')
+  axes[1].axline((0., 0.), (1., 1.), color='r')
+  axes[0].set_xlabel(f'refined data, step {label}')
+  axes[0].set_ylabel(f'ground truth data')
+  axes[1].set_xlabel(f'(log scale)')
   fig.savefig(f'scatter_{label}.png')
 
 
-def run(parameters):
+def run(parameters) -> None:
   # set up paths, convenience classes, global variables
   bin_colors_pos = [(i + .5) / parameters.n_bins for i in range(parameters.n_bins)]
   bin_colors.extend(plt.get_cmap("viridis")(bin_colors_pos))
@@ -241,8 +249,6 @@ def run(parameters):
     ma = read_npz(npz_file, f_asu_map, symmetry, save_mtz=True)
     if stat_kind.anomalous_differences:
       ma = ma.anomalous_differences()
-    # import IPython
-    # IPython.embed()
     scatter_id = f'diffBragg{num_iter}' if num_iter in scatter_idx else None
     stat_binned = evaluate_iteration(ma, ma_gt, ma_ref, stat_kind, scatter_id)
     stats_binned_steps.append(stat_binned)
