@@ -170,7 +170,7 @@ def evaluate_iteration(
     if scatter_label is not None:
       db_data_binned.append(db_data)
       gt_data_binned.append(gt_data)
-  print(stat_kind.name, ': ', stats_binned)
+  print(f'{stat_kind.name}: {stats_binned}')
   if scatter_label is not None:
     plot_scatters(db_data_binned, gt_data_binned, scatter_label)
   return pd.Series(data=stats_binned, index=bin_ranges)
@@ -208,6 +208,8 @@ def run(parameters):
   # Output of conventional merging
   ma_proc = iotbx.mtz.object(mtz_path).as_miller_arrays()[0]
   ma_proc = ma_proc.as_amplitude_array()
+  if stat_kind.anomalous_differences:
+    ma_proc = ma_proc.anomalous_differences()
   scatter_idx = expand_integer_ranges(parameters.scatter_ranges)
   sid = 'DIALS' if 1 in scatter_idx else None
   stat_binned = evaluate_iteration(ma_proc, ma_calc, ma_proc, stat_kind, sid)
@@ -218,6 +220,8 @@ def run(parameters):
     npz_file = f'{input_path}/_fcell_trial0_iter{num_iter}.npz'
     print(npz_file)
     ma = read_npz(npz_file, f_asu_map, symmetry, save_mtz=True)
+    if stat_kind.anomalous_differences:
+      ma = ma.anomalous_differences()
     # import IPython
     # IPython.embed()
     sid = f'diffBragg{num_iter}' if num_iter in scatter_idx else None
@@ -232,7 +236,8 @@ def run(parameters):
     axes.plot(indices, stats_row, '-', color=bin_colors[bin_i], label=bin_label)
   axes.set_xlabel('diffBragg iteration step')
   axes.set_ylabel(stat_kind.name)
-  axes.legend()
+  if len(parameters.n_bins) > 1:
+    axes.legend()
   plt.savefig(stat_kind.name.lower() + '.png')
   plt.show()
 
