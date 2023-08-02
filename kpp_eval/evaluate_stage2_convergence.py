@@ -274,6 +274,6 @@ params = []
 if __name__ == '__main__':
   params, options = parse_input(phil_scope)
   if '-h' in options or '--help' in options:
-    print(__doc__)
+    print(__doc__ + phil_scope_str)
     exit()
   run(params)
