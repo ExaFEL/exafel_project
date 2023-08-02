@@ -191,11 +191,13 @@ def plot_scatters(db_data_binned: List[Sequence[float]],  # plot along x axis
   """Prepare and save a pair of xs vs ys plots, colored according to bin"""
   fig, axes = plt.subplots(nrows=1, ncols=2)
   for i_bin, (x, y) in enumerate(zip(db_data_binned, gt_data_binned)):
+    axes[0].axline((0., 0.), 'r-', slope=1.0)
     axes[0].scatter(x, y, color=bin_colors[i_bin])
     axes[0].set_xlabel(f'refined data, step {label}')
+    axes[0].set_ylabel(f'ground truth data')
+    axes[1].axline((0., 0.), 'r-', slope=1.0)
     axes[1].loglog(x, y, '.', color=bin_colors[i_bin])
     axes[1].set_xlabel(f'(log scale)')
-    axes[0].set_ylabel(f'ground truth data')
   fig.savefig(f'scatter_{label}.png')
 
 
