@@ -112,10 +112,8 @@ def read_npz(npz_path: str,
   return ma
 
 
-def bin_label_from(bin_range: str) -> str:
-  bin_edges_str = bin_range.strip('()').split(',', 1)
-  bin_edges = [f if (f := float(s)) > 0 else np.nan for s in bin_edges_str]
-  return '-'.join(bin_edges)
+def bin_label_from(bin_range: Tuple[float, float]) -> str:
+  return '-'.join([m if m > 0 else np.nan for m in bin_range])
 
 
 def calc_pearson_r(x: Iterable, y: Iterable) -> float:
