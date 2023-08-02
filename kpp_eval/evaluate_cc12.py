@@ -9,8 +9,9 @@ files. It is based on many methods in `cctbx.xfel.merge` routine, see files:
 
 import math
 import sys
-from typing import NamedTuple, List
+from typing import Iterable, NamedTuple, List
 
+import numpy as np
 from cctbx import miller
 from cctbx.crystal import symmetry
 from dials.util.options import ArgumentParser
@@ -55,11 +56,23 @@ class CrossCorrelationSums(NamedTuple):
   sum_x: float = 0.0
   sum_y: float = 0.0
 
+  @classmethod
+  def from_xy(cls, x: Iterable, y: Iterable) -> 'CrossCorrelationSums':
+    x, y = np.array(x), np.array(y)
+    return cls(len(x), sum(x * x), sum(y * y), sum(x * y), sum(x), sum(y))
+
   def __add__(self, other):
     return CrossCorrelationSums(*[s + o for s, o in zip(self, other)])
 
   def __radd__(self, other):
     return self if other == 0 else self.__add__(other)
+
+  @property
+  def parameter(self):
+    numerator = (self.count * self.sum_xy - self.sum_x * self.sum_y)
+    denominator = (math.sqrt(self.count * self.sum_xx - self.sum_x ** 2) *
+                   math.sqrt(self.count * self.sum_yy - self.sum_y ** 2))
+    return numerator / denominator if denominator else 0.0
 
 
 class CrossCorrelationTable(object):
@@ -98,7 +111,7 @@ class CrossCorrelationTable(object):
 
     for i_bin in self.binner.range_used():
       cc_sums = cross_correlation_sums_list[i_bin]
-      cc = self.formula(*cc_sums)
+      cc = cc_sums.parameter
       theoretical_count = self.binner.counts()[i_bin]
       cc_bin = CrossCorrelationBin(i_bin, theoretical_count, cc_sums.count, cc)
       self.cc_bins.append(cc_bin)
@@ -107,15 +120,7 @@ class CrossCorrelationTable(object):
 
     self.cumulative_observed_matching_asu_count = cum_cc_sums.count
     self.cumulative_theor_asu_count = cumulative_theoretical_asu_count
-    self.cumulative_cross_correlation = self.formula(*cum_cc_sums)
-
-  @staticmethod
-  def formula(count, sum_xx, sum_yy, sum_xy, sum_x, sum_y):
-    """Calculate cross correlation given count and certain sums"""
-    numerator = (count * sum_xy - sum_x * sum_y)
-    denominator = (math.sqrt(count * sum_xx - sum_x ** 2) *
-                   math.sqrt(count * sum_yy - sum_y ** 2))
-    return numerator / denominator if denominator else 0.0
+    self.cumulative_cross_correlation = cum_cc_sums.parameter
 
 
 def generate_hkl_to_bin_map(binner, miller_set):
