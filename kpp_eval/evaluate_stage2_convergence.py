@@ -211,7 +211,7 @@ def run(parameters):
   scatter_idx = expand_integer_ranges(parameters.scatter_ranges)
   sid = 'DIALS' if 1 in scatter_idx else None
   stat_binned = evaluate_iteration(ma_proc, ma_calc, ma_proc, stat_kind, sid)
-  stats_binned_steps = stat_binned
+  stats_binned_steps = [stat_binned]
 
   all_iter_npz = len(glob.glob(input_path + '/_fcell_trial0_iter*.npz'))
   for num_iter in range(all_iter_npz):
