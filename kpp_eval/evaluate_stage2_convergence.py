@@ -115,7 +115,7 @@ def read_npz(npz_path: str,
 
 
 def bin_label_from(bin_range: Tuple[float, float]) -> str:
-  return '-'.join([str(m if m > 0 else np.nan) for m in bin_range])
+  return '-'.join(['{:.4f}'.format(m if m > 0 else np.nan) for m in bin_range])
 
 
 def calc_pearson_r(x: Iterable, y: Iterable) -> float:
