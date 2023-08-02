@@ -54,6 +54,9 @@ scatter_ranges = None
   .help = DiffBragg step ranges (in Python convention) to plot ground truth vs
   .help = refined data scatter for, f.e. "0:8:2,10" for steps 0, 2, 4, 6 & 10.
   .help = DIALS merging results can be plotted using step value of -1.
+show = True
+  .type = bool
+  .help = Display final figure in an interactive window
 """
 phil_scope = parse(phil_scope_str)
 
@@ -257,7 +260,8 @@ def run(parameters):
   if parameters.n_bins > 1:
     axes.legend(loc='lower right')
   fig.savefig(stat_kind.name.lower() + '.png')
-  plt.show()
+  if parameters.show:
+    plt.show()
 
 
 params = []
