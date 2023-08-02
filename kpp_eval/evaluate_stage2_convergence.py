@@ -81,16 +81,16 @@ def get_stage2_path(params_) -> str:
 
 def expand_integer_ranges(ranges_str: str) -> List[int]:
   """Convert string of int ranges (e.g. "1:4,6") into list ([1, 2, 3, 5])"""
-  ranges_str = str(ranges_str) if ranges_str else ''
   indices = []
-  for range_str in ranges_str.split(','):
-    range_descriptors = [int(v) for v in range_str.split(':')]
-    if len(range_descriptors) == 1:
-      indices.append(int(range_descriptors[0]))
-    elif len(range_descriptors) in {2, 3}:
-      indices.extend(list(range(*range_descriptors)))
-    else:
-      raise IndexError(f'Unknown range string format: "{range_str}"')
+  if ranges_str:
+    for range_str in ranges_str.split(','):
+      range_descriptors = [int(v) for v in range_str.split(':')]
+      if len(range_descriptors) == 1:
+        indices.append(int(range_descriptors[0]))
+      elif len(range_descriptors) in {2, 3}:
+        indices.extend(list(range(*range_descriptors)))
+      else:
+        raise IndexError(f'Unknown range string format: "{range_str}"')
   return indices
 
 
