@@ -112,6 +112,12 @@ def read_npz(npz_path: str,
   return ma
 
 
+def bin_label_from(bin_range: str) -> str:
+  bin_edges_str = bin_range.strip('()').split(',', 1)
+  bin_edges = [f if (f := float(s)) > 0 else np.nan for s in bin_edges_str]
+  return '-'.join(bin_edges)
+
+
 def calc_pearson_r(x: Iterable, y: Iterable) -> float:
   return pearsonr(x, y)[0]
 
@@ -233,8 +239,7 @@ def run(parameters):
   indices = [-1] + list(range(all_iter_npz))
   fig, axes = plt.subplots()
   for bin_i, (bin_range, stats_row) in enumerate(stats_dataframe.iterrows()):
-    bin_label = '-'.join(['{:.4f}'.format(f if (f := float(s)) > 0 else np.nan)
-                          for s in str(bin_range).split(',', 1)])
+    bin_label = bin_label_from(bin_range)
     axes.plot(indices, stats_row, '-', color=bin_colors[bin_i], label=bin_label)
   axes.set_xlabel('diffBragg iteration step')
   axes.set_ylabel(stat_kind.name)
