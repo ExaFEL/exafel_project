@@ -184,14 +184,17 @@ def evaluate_iteration(
   return pd.Series(data=stats_binned, index=bin_ranges)
 
 
-def plot_scatters(xs: List[Sequence[float]],  # values along x axis
-                  ys: List[Sequence[float]],  # values along y axis
+def plot_scatters(db_data_binned: List[Sequence[float]],  # plot along x axis
+                  gt_data_binned: List[Sequence[float]],  # plot along y axis
                   label: str) -> None:        # label used in saved file name
   """Prepare and save a pair of xs vs ys plots, colored according to bin"""
   fig, axes = plt.subplots(nrows=1, ncols=2)
-  for i_bin, (x, y) in enumerate(zip(xs, ys)):
+  for i_bin, (x, y) in enumerate(zip(db_data_binned, gt_data_binned)):
     axes[0].scatter(x, y, color=bin_colors[i_bin])
+    axes[0].set_xlabel(f'refined data, step {label}')
     axes[1].loglog(x, y, '.', color=bin_colors[i_bin])
+    axes[1].set_xlabel(f'(log scale)')
+    axes[0].set_ylabel(f'ground truth data')
   fig.savefig(f'scatter_{label}.png')
 
 
