@@ -1,24 +1,25 @@
 """
 Convert the .npz output of simtbx.diffBragg.stage_two to .mtz and plot
-the evolution of Pearson's R or CC1/2 as a function of stage2 progress.
+the evolution of Pearson's R or CC of F or anom as a function of stage2 step.
 """
 from enum import Enum
 from functools import wraps
+import glob
+import os
 from typing import Callable, Iterable, List, Sequence, Tuple
 
+from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
-import os
-from matplotlib import pyplot as plt
 from scipy.stats import pearsonr
-import glob
-import iotbx.mtz
-import iotbx.pdb
+
 from dials.array_family import flex
 from cctbx import miller, crystal
-from simtbx.diffBragg.utils import get_complex_fcalc_from_pdb
+import iotbx.mtz
+import iotbx.pdb
 from exafel_project.kpp_eval.phil import parse, parse_input
 from exafel_project.kpp_eval.evaluate_cc12 import CrossCorrelationSums
+from simtbx.diffBragg.utils import get_complex_fcalc_from_pdb
 
 
 phil_scope_str = """
@@ -57,7 +58,7 @@ scatter_ranges = None
 phil_scope = parse(phil_scope_str)
 
 
-bin_colors = []  # global list of colors for plotting set-up later
+bin_colors = []  # global list of colors used for plotting bins, filled later
 
 
 def set_default_return(default_path: str) -> Callable:
@@ -199,6 +200,7 @@ def plot_scatters(db_data_binned: List[Sequence[float]],  # plot along x axis
 
 
 def run(parameters):
+  # set up paths, convenience classes, global variables
   bin_colors_pos = [(i + .5) / parameters.n_bins for i in range(parameters.n_bins)]
   bin_colors.extend(plt.get_cmap("viridis")(bin_colors_pos))
   stat_kind = StatKind.from_param(parameters.stat)
@@ -206,7 +208,9 @@ def run(parameters):
   mtz_path = get_mtz_path(parameters)  # conventional merging mtz file
   pdb_path = get_pdb_path(parameters)  # ground truth structure factors
   symmetry = iotbx.pdb.input(pdb_path).crystal_symmetry()
+  scatter_idx = expand_integer_ranges(parameters.scatter_ranges)
 
+  # generate ground truth data
   ma_gt = get_complex_fcalc_from_pdb(pdb_path, wavelength=parameters.wavelength,
                                      dmin=parameters.d_min, dmax=parameters.d_max)
   ma_gt = ma_gt.as_amplitude_array()
@@ -214,19 +218,17 @@ def run(parameters):
     ma_gt = ma_gt.anomalous_differences()
   ma_gt.setup_binner(d_min=parameters.d_min, d_max=parameters.d_max, n_bins=parameters.n_bins)
 
-  # Miller index map
-  f_asu_map=np.load(input_path + '/f_asu_map.npy',allow_pickle=True)[()]
-
-  # Reference output of conventional merging used to select correlated data
+  # Read reference: output of conventional merging used to select compared data
   ma_ref = iotbx.mtz.object(mtz_path).as_miller_arrays()[0]
   ma_ref = ma_ref.as_amplitude_array()
   if stat_kind.anomalous_differences:
     ma_ref = ma_ref.anomalous_differences()
-  scatter_idx = expand_integer_ranges(parameters.scatter_ranges)
   scatter_id = 'DIALS' if 1 in scatter_idx else None
   stat_binned = evaluate_iteration(ma_ref, ma_gt, ma_ref, stat_kind, scatter_id)
   stats_binned_steps = [stat_binned]
 
+  # iterate over and evaluate all npz files present
+  f_asu_map = np.load(input_path + '/f_asu_map.npy', allow_pickle=True)[()]
   all_iter_npz = len(glob.glob(input_path + '/_fcell_trial0_iter*.npz'))
   for num_iter in range(all_iter_npz):
     npz_file = f'{input_path}/_fcell_trial0_iter{num_iter}.npz'
@@ -254,6 +256,7 @@ def run(parameters):
     axes.legend(loc='lower right')
   fig.savefig(stat_kind.name.lower() + '.png')
   plt.show()
+
 
 params = []
 if __name__ == '__main__':
