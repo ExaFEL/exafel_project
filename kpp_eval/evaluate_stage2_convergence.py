@@ -236,7 +236,7 @@ def run(parameters):
     axes.plot(indices, stats_row, '-', color=bin_colors[bin_i], label=bin_label)
   axes.set_xlabel('diffBragg iteration step')
   axes.set_ylabel(stat_kind.name)
-  if len(parameters.n_bins) > 1:
+  if parameters.n_bins > 1:
     axes.legend()
   plt.savefig(stat_kind.name.lower() + '.png')
   plt.show()
