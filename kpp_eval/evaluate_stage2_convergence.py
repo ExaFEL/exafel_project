@@ -6,7 +6,6 @@ from enum import Enum
 from functools import wraps
 from typing import Callable, Iterable, List, Sequence, Tuple
 
-import matplotlib.figure
 import numpy as np
 import pandas as pd
 import os
@@ -43,6 +42,9 @@ d_min = 1.9
 d_max = 9999.
   .type = float
   .help = If given, upper bound of data resolution to be investigated
+wavelength = 1.3
+  .type = float
+  .help = Radiation wavelength used to generate ground-truth data, in Angstrom
 n_bins = 1
   .type = int
   .help = Data will be divided into `bins` resolution ranges for evaluation
@@ -202,23 +204,24 @@ def run(parameters):
   pdb_path = get_pdb_path(parameters)  # ground truth structure factors
   symmetry = iotbx.pdb.input(pdb_path).crystal_symmetry()
 
-  ma_calc = get_complex_fcalc_from_pdb(pdb_path, wavelength=1.3, dmin=1.9, dmax=1000)
-  ma_calc = ma_calc.as_amplitude_array()
+  ma_gt = get_complex_fcalc_from_pdb(pdb_path, wavelength=parameters.wavelength,
+                                     dmin=parameters.d_min, dmax=parameters.d_max)
+  ma_gt = ma_gt.as_amplitude_array()
   if stat_kind.anomalous_differences:
-    ma_calc = ma_calc.anomalous_differences()
-  ma_calc.setup_binner(d_min=parameters.d_min, d_max=parameters.d_max, n_bins=parameters.n_bins)
+    ma_gt = ma_gt.anomalous_differences()
+  ma_gt.setup_binner(d_min=parameters.d_min, d_max=parameters.d_max, n_bins=parameters.n_bins)
 
   # Miller index map
   f_asu_map=np.load(input_path + '/f_asu_map.npy',allow_pickle=True)[()]
 
-  # Output of conventional merging
-  ma_proc = iotbx.mtz.object(mtz_path).as_miller_arrays()[0]
-  ma_proc = ma_proc.as_amplitude_array()
+  # Reference output of conventional merging used to select correlated data
+  ma_ref = iotbx.mtz.object(mtz_path).as_miller_arrays()[0]
+  ma_ref = ma_ref.as_amplitude_array()
   if stat_kind.anomalous_differences:
-    ma_proc = ma_proc.anomalous_differences()
+    ma_ref = ma_ref.anomalous_differences()
   scatter_idx = expand_integer_ranges(parameters.scatter_ranges)
-  sid = 'DIALS' if 1 in scatter_idx else None
-  stat_binned = evaluate_iteration(ma_proc, ma_calc, ma_proc, stat_kind, sid)
+  scatter_id = 'DIALS' if 1 in scatter_idx else None
+  stat_binned = evaluate_iteration(ma_ref, ma_gt, ma_ref, stat_kind, scatter_id)
   stats_binned_steps = [stat_binned]
 
   all_iter_npz = len(glob.glob(input_path + '/_fcell_trial0_iter*.npz'))
@@ -230,8 +233,8 @@ def run(parameters):
       ma = ma.anomalous_differences()
     # import IPython
     # IPython.embed()
-    sid = f'diffBragg{num_iter}' if num_iter in scatter_idx else None
-    stat_binned = evaluate_iteration(ma, ma_calc, ma_proc, stat_kind, sid)
+    scatter_id = f'diffBragg{num_iter}' if num_iter in scatter_idx else None
+    stat_binned = evaluate_iteration(ma, ma_gt, ma_ref, stat_kind, scatter_id)
     stats_binned_steps.append(stat_binned)
   stats_dataframe = pd.concat(stats_binned_steps, axis=1)
 
