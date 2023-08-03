@@ -17,9 +17,11 @@ from dials.array_family import flex
 from cctbx import miller, crystal
 import iotbx.mtz
 import iotbx.pdb
-from exafel_project.kpp_eval.phil import parse, parse_input
-from exafel_project.kpp_eval.evaluate_cc12 import CrossCorrelationSums
+from libtbx import Auto
 from simtbx.diffBragg.utils import get_complex_fcalc_from_pdb
+
+from exafel_project.kpp_eval.phil import parse_phil
+from exafel_project.kpp_eval.evaluate_cc12 import CrossCorrelationSums
 
 
 phil_scope_str = """
@@ -34,7 +36,7 @@ stage2 = None
   .type = str
   .help = Directory with stage 2 results. If None,
   .help = use $WORK/exafel_output/$JOB_ID_STAGE2
-stat = cc_gt cc_anom *PearsonR_gt PearsonR_anom Rwork_gt Rwork_anom
+stat = cc_gt cc_anom *PearsonR_gt PearsonR_anom Rwork_gt Rwork_anom significance_gt significance_anom
   .type = choice(multi=False)
   .help = The type of statistic to be calculated
 d_min = 1.9
@@ -58,7 +60,6 @@ show = True
   .type = bool
   .help = Display final figure in an interactive window
 """
-phil_scope = parse(phil_scope_str)
 
 
 bin_colors = []  # global list of colors used for plotting bins, filled later
@@ -133,7 +134,7 @@ def calc_cc_parameter(ma1: miller.array, ma2: miller.array) -> float:
 
 
 def calc_r_work(ma1: miller.array, ma2: miller.array) -> float:
-  return ma1.r1_factor(ma2, assume_index_matching=True)
+  return ma1.r1_factor(ma2, scale_factor=Auto, assume_index_matching=True)
 
 
 class StatKind(Enum):
@@ -146,8 +147,10 @@ class StatKind(Enum):
 
   @classmethod
   def from_param(cls, param: str) -> 'StatKind':
-    enum_vals = ['PearsonR_gt', 'PearsonR_anom', 'cc_gt', 'cc_anom',
-                 'Rwork_gt', 'Rwork_anom']
+    enum_vals = ['PearsonR_gt', 'PearsonR_anom',
+                 'cc_gt', 'cc_anom',
+                 'Rwork_gt', 'Rwork_anom',
+                 'significance_gt', 'significance_anom']
     return cls(enum_vals.index(param))
 
   @property
@@ -272,8 +275,8 @@ def run(parameters) -> None:
 
 params = []
 if __name__ == '__main__':
-  params, options = parse_input(phil_scope)
+  params, options = parse_phil(phil_scope_str)
   if '-h' in options or '--help' in options:
-    print(__doc__ + phil_scope_str)
+    print(__doc__)
     exit()
   run(params)

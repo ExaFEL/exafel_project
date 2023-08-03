@@ -8,15 +8,14 @@ files. It is based on many methods in `cctbx.xfel.merge` routine, see files:
 """
 
 import math
-import sys
 from typing import Iterable, NamedTuple, List
 
 import numpy as np
 from cctbx import miller
 from cctbx.crystal import symmetry
-from dials.util.options import ArgumentParser
 from iotbx import reflection_file_reader as refl_file_reader
-from iotbx.phil import parse
+
+from exafel_project.kpp_eval.phil import parse_phil
 
 
 phil_scope_str = """
@@ -25,18 +24,6 @@ mtz = None
   .multiple = True
   .help = Individual paths to the mtz files to be evaluated against each other.
 """
-phil_scope = parse(phil_scope_str)
-
-
-def parse_input():
-  import libtbx.load_env  # implicit import
-  parser = ArgumentParser(
-    usage=f"\n libtbx.python {sys.argv[0]}",
-    phil=phil_scope,
-    epilog="Calculate cross-correlation")
-  # Parse the command line. quick_parse is required for MPI compatibility
-  params_, options_ = parser.parse_args(show_diff_phil=True, quick_parse=True)
-  return params_, options_
 
 
 class CrossCorrelationBin(NamedTuple):
@@ -175,7 +162,7 @@ def run(params_):
 
 params = []
 if __name__ == '__main__':
-  params, options = parse_input()
+  params, options = parse_phil(phil_scope_str)
   if '-h' in options or '--help' in options:
     print(__doc__)
     exit()

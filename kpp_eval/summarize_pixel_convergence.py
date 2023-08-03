@@ -5,17 +5,16 @@ of the evolution of pixel deltas between every pair of subsequent files.
 As of 2023/07/27, requires `dxtbx` repository to be on branch `nxmx_writer`
 """
 
-import sys
 from typing import List, Sequence
 
-from dials.util.options import ArgumentParser
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+
 from dxtbx.imageset import ImageSetFactory
 from dxtbx.model.experiment_list import ExperimentListFactory
-from iotbx.phil import parse
 
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
+from exafel_project.kpp_eval.phil import parse_phil
 
 
 phil_scope_str = """
@@ -36,18 +35,6 @@ plot {
     .help = Maximum of x range to be plotted
 }
 """
-phil_scope = parse(phil_scope_str)
-
-
-def parse_input():
-  import libtbx.load_env  # implicit import
-  parser = ArgumentParser(
-    usage=f"\n libtbx.python {sys.argv[0]}",
-    phil=phil_scope,
-    epilog="Calculate cross-correlation")
-  # Parse the command line. quick_parse is required for MPI compatibility
-  params_, options_ = parser.parse_args(show_diff_phil=True, quick_parse=True)
-  return params_, options_
 
 
 class PixelArray:
@@ -132,7 +119,7 @@ def run(params_) -> None:
 
 params = []
 if __name__ == '__main__':
-  params, options = parse_input()
+  params, options = parse_phil(phil_scope_str)
   if '-h' in options or '--help' in options:
     print(__doc__)
     exit()
