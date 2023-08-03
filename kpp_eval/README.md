@@ -40,12 +40,12 @@ so the cctbx does not need to be rebuilt after introducing the patch.
     --- a/simtbx/diffBragg/src/diffBragg.cpp
     +++ b/simtbx/diffBragg/src/diffBragg.cpp
     @@ -1817,6 +1817,7 @@ void diffBragg::add_diffBragg_spots(const af::shared<size_t>& panels_fasts_slows
-     
+
          Npix_to_model = panels_fasts_slows.size()/3;
         SCITBX_ASSERT(Npix_to_model <= Npix_total);
         +    raw_pixels_roi = af::flex_double(Npix_to_model); // NKS, only way to correctly size & zero array
          double * floatimage_roi = raw_pixels_roi.begin();
-     
+
          diffBragg_rot_mats();
     diff --git a/xfel/merging/command_line/merge.py b/xfel/merging/command_line/merge.py
     index f045308541..0591ff200b 100644
@@ -56,7 +56,7 @@ so the cctbx does not need to be rebuilt after introducing the patch.
          self.mpi_helper = mpi_helper()
          self.mpi_logger = mpi_logger()
     +    self.common_store = dict(foo="hello") # always volatile, no serialization, no particular dict keys guaranteed
-     
+
        def __del__(self):
          self.mpi_helper.finalize()
     @@ -165,6 +166,7 @@ class Script(object):
@@ -65,7 +65,7 @@ so the cctbx does not need to be rebuilt after introducing the patch.
            worker.validate()
     +      worker.__dict__["common_store"] = self.common_store
          self.mpi_logger.log_step_time("CREATE_WORKERS", True)
-     
+
          # Do the work
 
 ## Results
@@ -81,34 +81,34 @@ after the mosaic outliers have been preserved:
 **DIALS spotfinding, no outliers**:
 
      Resolution range N possible refl_cnt  rmsd  rms_radial_offset rms_tangential_offset Correl ΔR,ΔΨ Correl ΔT,ΔΨ
-    -1.0000 -  3.8780    1688     300842  0.30px       0.27px              0.13px           -55.0%       -1.7%    
-     3.8780 -  3.0780    1641     168506  0.43px       0.40px              0.16px           -76.3%       -7.6%    
-     3.0780 -  2.6888    1634     125596  0.48px       0.44px              0.18px           -72.5%       -7.2%    
-     2.6888 -  2.4430    1620      98771  0.50px       0.45px              0.20px           -68.3%       -4.8%    
-     2.4430 -  2.2679    1643      82334  0.51px       0.46px              0.22px           -64.5%       -3.4%    
-     2.2679 -  2.1341    1617      61082  0.51px       0.45px              0.24px           -59.5%        1.5%    
-     2.1341 -  2.0272    1630      51394  0.51px       0.45px              0.25px           -56.3%        4.9%    
-     2.0272 -  1.9390    1623      43328  0.51px       0.44px              0.26px           -52.6%        5.9%    
-     1.9390 -  1.8643    1603      10770  0.51px       0.43px              0.26px           -49.5%        8.2%    
-     1.8643 -  1.8000    1639          0     NaN          NaN                 NaN              NaN         NaN    
-                                                                                                                  
-    -1.0000 -  1.8000   16338     942623  0.43px       0.39px              0.18px           -53.2%       -2.3% 
+    -1.0000 -  3.8780    1688     300842  0.30px       0.27px              0.13px           -55.0%       -1.7%
+     3.8780 -  3.0780    1641     168506  0.43px       0.40px              0.16px           -76.3%       -7.6%
+     3.0780 -  2.6888    1634     125596  0.48px       0.44px              0.18px           -72.5%       -7.2%
+     2.6888 -  2.4430    1620      98771  0.50px       0.45px              0.20px           -68.3%       -4.8%
+     2.4430 -  2.2679    1643      82334  0.51px       0.46px              0.22px           -64.5%       -3.4%
+     2.2679 -  2.1341    1617      61082  0.51px       0.45px              0.24px           -59.5%        1.5%
+     2.1341 -  2.0272    1630      51394  0.51px       0.45px              0.25px           -56.3%        4.9%
+     2.0272 -  1.9390    1623      43328  0.51px       0.44px              0.26px           -52.6%        5.9%
+     1.9390 -  1.8643    1603      10770  0.51px       0.43px              0.26px           -49.5%        8.2%
+     1.8643 -  1.8000    1639          0     NaN          NaN                 NaN              NaN         NaN
+
+    -1.0000 -  1.8000   16338     942623  0.43px       0.39px              0.18px           -53.2%       -2.3%
 
 
 **Stage1 hopper, no outliers**:
 
      Resolution range N possible refl_cnt  rmsd  rms_radial_offset rms_tangential_offset Correl ΔR,ΔΨ Correl ΔT,ΔΨ
-    -1.0000 -  3.8780    1688     300842  0.21px       0.17px              0.12px            9.3%         -2.6%   
-     3.8780 -  3.0780    1641     168506  0.47px       0.44px              0.18px           57.6%        -10.4%   
-     3.0780 -  2.6888    1634     125596  0.81px       0.78px              0.20px           71.2%        -11.9%   
-     2.6888 -  2.4430    1620      98771  1.09px       1.07px              0.23px           76.5%        -10.4%   
-     2.4430 -  2.2679    1643      82333  1.27px       1.25px              0.25px           78.6%         -8.9%   
-     2.2679 -  2.1341    1617      61082  1.36px       1.33px              0.26px           78.6%         -3.1%   
-     2.1341 -  2.0272    1630      51393  1.41px       1.38px              0.28px           79.4%          0.8%   
-     2.0272 -  1.9390    1623      43328  1.43px       1.40px              0.29px           79.1%          2.2%   
-     1.9390 -  1.8643    1603      10770  1.43px       1.40px              0.29px           78.5%          5.4%   
-     1.8643 -  1.8000    1639          0     NaN          NaN                 NaN             NaN           NaN   
-                                                                                                                  
+    -1.0000 -  3.8780    1688     300842  0.21px       0.17px              0.12px            9.3%         -2.6%
+     3.8780 -  3.0780    1641     168506  0.47px       0.44px              0.18px           57.6%        -10.4%
+     3.0780 -  2.6888    1634     125596  0.81px       0.78px              0.20px           71.2%        -11.9%
+     2.6888 -  2.4430    1620      98771  1.09px       1.07px              0.23px           76.5%        -10.4%
+     2.4430 -  2.2679    1643      82333  1.27px       1.25px              0.25px           78.6%         -8.9%
+     2.2679 -  2.1341    1617      61082  1.36px       1.33px              0.26px           78.6%         -3.1%
+     2.1341 -  2.0272    1630      51393  1.41px       1.38px              0.28px           79.4%          0.8%
+     2.0272 -  1.9390    1623      43328  1.43px       1.40px              0.29px           79.1%          2.2%
+     1.9390 -  1.8643    1603      10770  1.43px       1.40px              0.29px           78.5%          5.4%
+     1.8643 -  1.8000    1639          0     NaN          NaN                 NaN             NaN           NaN
+
     -1.0000 -  1.8000   16338     942621  0.87px       0.84px              0.20px           37.4%        -4.7%
 
 
@@ -151,8 +151,8 @@ intense i.e. higher-weighted spots.
 
 **DIALS merge, 1800 images from Derek's pipeline provided by Nick**
 
-                      ----------F(model) initialization----------                  
-    
+                      ----------F(model) initialization----------
+
     Twinning will be detected automatically.
                        start: r(all,work,free)=0.1370 0.1370 0.1370 n_refl.: 15209
            re-set all scales: r(all,work,free)=0.1370 0.1370 0.1370 n_refl.: 15209
@@ -167,18 +167,18 @@ intense i.e. higher-weighted spots.
     | target function (ml) not normalized (work): 69372.701814                    |
     | target function (ml) not normalized (free):            None                 |
     |-----------------------------------------------------------------------------|
-    
+
     End of input processing
-    
-                            ----------Map analysis----------                       
-    
+
+                            ----------Map analysis----------
+
     Grid points 5-number summary:
     minimum:               -4.69σ
     quartile1:             -0.66σ
     median:                -0.01σ
     quartile3:              0.65σ
     maximum:               17.26σ
-    
+
     pdb=" SG  CYS A   6 ":   0.78σ
     pdb=" SD  MET A  12 ":  -0.25σ
     pdb=" SG  CYS A  30 ":   0.36σ
@@ -193,8 +193,8 @@ intense i.e. higher-weighted spots.
 
 **stage2 merge, 1800 images from Derek's pipeline provided by Nick**
 
-                      ----------F(model) initialization----------                  
-    
+                      ----------F(model) initialization----------
+
     Twinning will be detected automatically.
                        start: r(all,work,free)=0.0745 0.0745 0.0745 n_refl.: 15221
            re-set all scales: r(all,work,free)=0.0745 0.0745 0.0745 n_refl.: 15221
@@ -209,18 +209,18 @@ intense i.e. higher-weighted spots.
     | target function (ml) not normalized (work): 60706.575691                    |
     | target function (ml) not normalized (free):            None                 |
     |-----------------------------------------------------------------------------|
-    
+
     End of input processing
-    
-                            ----------Map analysis----------                       
-    
+
+                            ----------Map analysis----------
+
     Grid points 5-number summary:
     minimum:               -4.30σ
     quartile1:             -0.66σ
     median:                -0.01σ
     quartile3:              0.65σ
     maximum:               20.67σ
-    
+
     pdb=" SG  CYS A   6 ":   1.95σ
     pdb=" SD  MET A  12 ":   0.88σ
     pdb=" SG  CYS A  30 ":  -1.96σ
