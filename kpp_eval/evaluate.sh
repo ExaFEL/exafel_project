@@ -8,6 +8,8 @@
 #SBATCH -o %j.out
 #SBATCH -e %j.err
 
+# This is a legacy file, to be deleted or adapted in the future
+
 if [ -z "$SLURM_JOB_ID" ]; then export SLURM_JOB_ID="interactive"; fi
 export RESULTS_DIRECTORY=./$SLURM_JOB_ID
 mkdir -p $RESULTS_DIRECTORY; cd $RESULTS_DIRECTORY || exit

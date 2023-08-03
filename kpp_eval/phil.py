@@ -1,3 +1,5 @@
+# This is a legacy file, to be deleted or adapted in the future
+
 from __future__ import absolute_import, division, print_function
 
 import sys

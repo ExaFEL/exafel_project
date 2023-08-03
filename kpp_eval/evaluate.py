@@ -1,3 +1,5 @@
+# This is a legacy file, to be deleted or adapted in the future
+
 from __future__ import division
 
 from math import log10, floor
