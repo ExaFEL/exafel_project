@@ -27,10 +27,11 @@ export JOB_ID_MERGE=`sbatch $MODULES/exafel_project/kpp-sim/yb_lyso/yb_lyso_100k
 echo MERGE $JOB_ID_MERGE
 ```
 
-Make input step, single process, long run time:
+Make input step, splits files:
 
 ```
-cd $SCRATCH/yb_lyso; diffBragg.make_input_file ${JOB_ID_INDEX} ${JOB_ID_INDEX}_integ_exp_ref.txt; cd -
+export JOB_ID_SPLIT=`sbatch $MODULES/exafel_project/kpp-sim/yb_lyso/yb_lyso_100k_split.sh $JOB_ID_INDEX|awk '{print $4}'`
+echo SPLIT $JOB_ID_SPLIT
 ```
 
 Stage 1, hopper:
