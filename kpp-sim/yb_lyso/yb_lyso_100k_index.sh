@@ -24,7 +24,8 @@ mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER
 
 echo "
 output {
-  composite_output = False
+  composite_output = True
+  integration_pickle=None
   logging_dir=. # demangle by rank
 }
 dispatch {

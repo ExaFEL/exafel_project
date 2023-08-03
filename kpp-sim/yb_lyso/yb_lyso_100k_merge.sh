@@ -5,7 +5,7 @@
 #SBATCH -A m2859          # allocation
 #SBATCH -C cpu
 #SBATCH -q regular        # regular queue
-#SBATCH -t 00:16:00       # wall clock time limit
+#SBATCH -t 00:05:00       # wall clock time limit
 #SBATCH -o %j.out
 #SBATCH -e %j.err
 
@@ -24,7 +24,7 @@ input.reflections_suffix=_integrated.refl
 input.parallel_file_load.method=uniform
 filter.algorithm=unit_cell
 filter.unit_cell.algorithm=cluster
-filter.unit_cell.cluster.covariance.file=${WORK}/yb_lyso/covariance_tdata_cells.pickle
+filter.unit_cell.cluster.covariance.file=${MODULES}/exafel_project/kpp-sim/yb_lyso/covariance_tdata_cells.pickle
 filter.unit_cell.cluster.covariance.component=0
 filter.unit_cell.cluster.covariance.mahalanobis=5.0
 filter.outlier.min_corr=-1.0
