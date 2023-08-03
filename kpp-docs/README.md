@@ -217,7 +217,7 @@ The output structure factors can be analyzed with the following script:
 ```
 cd $WORK/exafel_output/tests
 export JOB_ID_STAGE2=tests
-libtbx.python $MODULES/exafel_project/kpp_utils/evaluate_stage_two.py
+libtbx.python $MODULES/exafel_project/kpp_eval/evaluate_stage2_convergence.py
 ```
 
 ## Testing 10,000 still shots
@@ -233,7 +233,7 @@ Analyze the Pearson correlation coefficient between the ground truth and predict
 export JOB_ID_STAGE2={JOB_ID_STAGE2_10k}
 export JOB_ID_MERGE={JOB_ID_MERGE}
 cd $WORK/exafel_output/$JOB_ID_STAGE2
-libtbx.python $MODULES/exafel_project/kpp_utils/evaluate_stage_two.py
+libtbx.python $MODULES/exafel_project/kpp_eval/evaluate_stage2_convergence.py
 ```
 
 ## Processing all still shots
@@ -249,7 +249,7 @@ Analyze the Pearson correlation coefficient between the ground truth and predict
 export JOB_ID_STAGE2={JOB_ID_STAGE2}
 export JOB_ID_MERGE={JOB_ID_MERGE}
 cd $WORK/exafel_output/$JOB_ID_STAGE2
-libtbx.python $MODULES/exafel_project/kpp_utils/evaluate_stage_two.py
+libtbx.python $MODULES/exafel_project/kpp_eval/evaluate_stage2_convergence.py
 ```
 
 # Example Processing Results
