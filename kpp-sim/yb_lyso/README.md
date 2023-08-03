@@ -37,7 +37,7 @@ echo SPLIT $JOB_ID_SPLIT
 Stage 1, hopper:
 
 ```
-export JOB_ID_HOPPER=`sbatch $MODULES/exafel_project/kpp-sim/yb_lyso/yb_lyso_100k_stage1.sh $SCRATCH/yb_lyso/${JOB_ID_MERGE}/out/ly99sim_all.mtz $SCRATCH/yb_lyso/${JOB_ID_INDEX}_integ_exp_ref.txt|awk '{print $4}'`
+export JOB_ID_HOPPER=`sbatch $MODULES/exafel_project/kpp-sim/yb_lyso/yb_lyso_100k_stage1.sh $SCRATCH/yb_lyso/${JOB_ID_MERGE}/out/ly99sim_all.mtz $SCRATCH/yb_lyso/${JOB_ID_SPLIT}_integ_exp_ref.txt|awk '{print $4}'`
 echo HOPPER ${JOB_ID_HOPPER}
 ```
 
@@ -62,4 +62,29 @@ echo STAGE2 ${JOB_ID_STAGE2}
 Elementary check on structure factor convergence over 450 iterations:
 ```
 libtbx.ipython $MODULES/exafel_project/kpp_eval/evaluate_stage2_convergence.py mtz=$SCRATCH/yb_lyso/${JOB_ID_MERGE}/out/ly99sim_all.mtz stage2=$SCRATCH/yb_lyso/${JOB_ID_STAGE2}/${JOB_ID_STAGE2} pdb=${MODULES}/cxid9114/sim/4bs7.pdb n_bins=8 d_min=2.3
+```
+If you are confident all the steps will run without failure you can submit them in a single
+block with SLURM dependencies:
+```
+export JOB_ID_SIM=`sbatch $MODULES/exafel_project/kpp-sim/yb_lyso/yb_lyso_100k_sim.sh|awk '{print $4}'`
+echo SIM $JOB_ID_SIM
+
+export JOB_ID_INDEX=`sbatch --dependency=afterok:${JOB_ID_SIM} $MODULES/exafel_project/kpp-sim/yb_lyso/yb_lyso_100k_index.sh $JOB_ID_SIM|awk '{print $4}'`
+echo INDEX $JOB_ID_INDEX
+
+export JOB_ID_MERGE=`sbatch --dependency=afterok:${JOB_ID_INDEX} $MODULES/exafel_project/kpp-sim/yb_lyso/yb_lyso_100k_merge.sh $JOB_ID_INDEX|awk '{print $4}'`
+echo MERGE $JOB_ID_MERGE
+
+export JOB_ID_SPLIT=`sbatch --dependency=afterok:${JOB_ID_MERGE} $MODULES/exafel_project/kpp-sim/yb_lyso/yb_lyso_100k_split.sh $JOB_ID_INDEX|awk '{print $4}'`
+echo SPLIT $JOB_ID_SPLIT
+
+export JOB_ID_HOPPER=`sbatch --dependency=afterok:${JOB_ID_SPLIT} $MODULES/exafel_project/kpp-sim/yb_lyso/yb_lyso_100k_stage1.sh $SCRATCH/yb_lyso/${JOB_ID_MERGE}/out/ly99sim_all.mtz $SCRATCH/yb_lyso/${JOB_ID_SPLIT}_integ_exp_ref.txt|awk '{print $4}'`
+echo HOPPER ${JOB_ID_HOPPER}
+
+export JOB_ID_INTEGRATE=`sbatch --dependency=afterok:${JOB_ID_HOPPER} $MODULES/exafel_project/kpp-sim/yb_lyso/yb_lyso_100k_predict.sh ${JOB_ID_HOPPER} | awk '{print $4}'`
+echo INTEGRATE ${JOB_ID_INTEGRATE}
+
+export JOB_ID_STAGE2=`sbatch --dependency=afterok:${JOB_ID_INTEGRATE} $MODULES/exafel_project/kpp-sim/yb_lyso/yb_lyso_100k_stage2.sh ${JOB_ID_INDEX} ${JOB_ID_MERGE} ${JOB_ID_INTEGRATE} | awk '{print $4}'`
+echo STAGE2 ${JOB_ID_STAGE2}
+
 ```

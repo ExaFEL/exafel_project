@@ -45,7 +45,7 @@ spectrum_from_imageset = True
 downsamp_spec {
   skip = True
 }
-
+debug_mode = False
 predictions {
   verbose = False
   laue_mode = False

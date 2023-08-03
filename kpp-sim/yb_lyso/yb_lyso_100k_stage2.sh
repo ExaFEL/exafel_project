@@ -50,7 +50,7 @@ downsamp_spec {
   skip = True
 }
 method = 'L-BFGS-B'
-
+debug_mode = False
 roi {
   shoebox_size = 15
   fit_tilt = True

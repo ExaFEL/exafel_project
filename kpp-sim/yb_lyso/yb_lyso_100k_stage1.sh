@@ -9,10 +9,10 @@
 #SBATCH -A m2859_g       # allocation
 #SBATCH -C gpu
 #SBATCH -q regular
-#SBATCH -t 15
+#SBATCH -t 01:00:00
 #SBATCH -o %j.out
 #SBATCH -e %j.err
-SRUN="srun -N64 --ntasks-per-node=8 --gpus-per-node=4 --cpus-per-gpu=2 -c2"
+SRUN="srun -N64 --ntasks-per-node=16 --gpus-per-node=4 --cpus-per-gpu=4 -c2"
 
 export SCRATCH_FOLDER=$SCRATCH/yb_lyso/$SLURM_JOB_ID
 mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER
@@ -40,7 +40,7 @@ echo "
 spectrum_from_imageset = True
 method = 'L-BFGS-B'
 outdir = 'stage1'
-
+debug_mode = False
 roi {
   shoebox_size = 15
   fit_tilt = True
