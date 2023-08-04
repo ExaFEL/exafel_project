@@ -1,4 +1,4 @@
-This directory presents the processing case of 130,000 diffraction patterns from Yb-Lysozyme, on Perlmutter. 08/01/2023.
+<h2>This directory presents the processing case of 130,000 diffraction patterns from Yb-Lysozyme, on Perlmutter. 08/01/2023.</h2>
 
 Github branch pre-requisites:<br>
 cctbx_project/nxmx_writer_experimental<br>
@@ -88,3 +88,17 @@ export JOB_ID_STAGE2=`sbatch --dependency=afterok:${JOB_ID_INTEGRATE} $MODULES/e
 echo STAGE2 ${JOB_ID_STAGE2}
 
 ```
+<h3>Frequently asked questoins</h3>
+Q. The simulation script does not work on Frontier, because the compute nodes cannot download the PDB file from the internet.
+
+A. Replace the crystal section of the phil string as follows:
+
+```
+crystal {
+  structure=pdb
+  pdb.source=file
+  pdb.file=/path_to_file/4bs7.pdb # Yb lysozyme, Celia Sauter(no relation), 1.7 Angstrom
+  length_um=0.5 # increase crystal path length
+}
+```
+To get the file, switch to a directory on Frontier (/path_to_file/) and type ```iotbx.fetch_pdb 4bs7```.
