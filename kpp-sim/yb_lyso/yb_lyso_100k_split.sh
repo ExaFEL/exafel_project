@@ -1,6 +1,6 @@
 #!/bin/bash -l
 #SBATCH -N 16              # Number of nodes
-#SBATCH -J merge
+#SBATCH -J split
 #SBATCH -L SCRATCH        # job requires SCRATCH files
 #SBATCH -A m2859          # allocation
 #SBATCH -C cpu
