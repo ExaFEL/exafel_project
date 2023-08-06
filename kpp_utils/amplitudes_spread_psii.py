@@ -89,15 +89,20 @@ def amplitudes_pdb(comm, params, **kwargs):
   rank = comm.Get_rank()
   if params.absorption != "high_remote":
     raise ValueError("crystal.structure=pdb is only implemented for absorption=high_remote")
-  assert len(params.crystal.pdb.code)==4 # for the moment codes are always 4 characters
+  if params.crystal.pdb.source=="code":
+    assert len(params.crystal.pdb.code)==4 # for the moment codes are always 4 characters
   # Generating sf for my wavelengths
   sfall_channels = {}
   direct_algo_res_limit = kwargs.get("direct_algo_res_limit", 1.85)
 
   if params.crystal.pdb.coefficients=="fcalc":
     if rank==0:
-      from iotbx.pdb.fetch import fetch
-      pdb_lines = fetch(params.crystal.pdb.code).read().decode() # bytes to str
+      if params.crystal.pdb.source=="file":
+        with open(params.crystal.pdb.file,"rb") as fopen:
+          pdb_lines = fopen.read().decode()
+      else: # lookup by PDB code
+        from iotbx.pdb.fetch import fetch
+        pdb_lines = fetch(params.crystal.pdb.code).read().decode() # bytes to str
 
       wavelength_A = ENERGY_CONV / params.beam.mean_energy
       # general ballpark X-ray wavelength in Angstroms, does not vary shot-to-shot
