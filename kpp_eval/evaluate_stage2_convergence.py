@@ -36,7 +36,7 @@ stage2 = None
   .type = str
   .help = Directory with stage 2 results. If None,
   .help = use $WORK/exafel_output/$JOB_ID_STAGE2
-stat = cc_gt cc_anom *PearsonR_gt PearsonR_anom Rwork_gt Rwork_anom significance_gt significance_anom
+stat = *PearsonR_F PearsonR_anom cc_F cc_anom Rwork_F Rwork_anom significance_F significance_anom
   .type = choice(multi=False)
   .help = The type of statistic to be calculated
 d_min = 1.9
@@ -75,13 +75,16 @@ def set_default_return(default_path: str) -> Callable:
     return wrapper
   return decorator
 
+
 @set_default_return('$MODULES/ls49_big_data/1m2a.pdb')
 def get_pdb_path(params_) -> str:
   return params_.pdb
 
+
 @set_default_return('$SCRATCH/ferredoxin_sim/$JOB_ID_MERGE/out/ly99sim_all.mtz')
 def get_mtz_path(params_) -> str:
   return params_.mtz
+
 
 @set_default_return('$WORK/exafel_output/$JOB_ID_STAGE2')
 def get_stage2_path(params_) -> str:
@@ -89,7 +92,7 @@ def get_stage2_path(params_) -> str:
 
 
 def expand_integer_ranges(ranges_str: str) -> List[int]:
-  """Convert string of int ranges (e.g. "1:4,6") into list ([1, 2, 3, 5])"""
+  """Convert string of int ranges (e.g. "1:4,6") into list ([1, 2, 3, 6])"""
   indices = []
   if ranges_str:
     for range_str in ranges_str.split(','):
@@ -137,40 +140,53 @@ def calc_r_work(ma1: miller.array, ma2: miller.array) -> float:
   return ma1.r1_factor(ma2, scale_factor=Auto, assume_index_matching=True)
 
 
-class StatKind(Enum):
-  PEARSON_R_GT = 0
-  PEARSON_R_ANOM = 1
-  CC_GT = 2
-  CC_ANOM = 3
-  R_WORK_GT = 4
-  R_WORK_ANOM = 5
+def calc_significance(ma1: miller.array, _: miller.array) -> float:
+  return flex.mean(ma1.data() / ma1.sigmas())
 
-  @classmethod
-  def from_param(cls, param: str) -> 'StatKind':
-    enum_vals = ['PearsonR_gt', 'PearsonR_anom',
-                 'cc_gt', 'cc_anom',
-                 'Rwork_gt', 'Rwork_anom',
-                 'significance_gt', 'significance_anom']
-    return cls(enum_vals.index(param))
+
+class Stat(Enum):
+  PEARSON_R_F = 'PearsonR_F'
+  PEARSON_R_ANOM = 'PearsonR_anom'
+  CC_F = 'cc_F'
+  CC_ANOM = 'cc_anom'
+  R_WORK_F = 'Rwork_F'
+  R_WORK_ANOM = 'Rwork_anom'
+  SIGNIFICANCE_F = 'significance_F'
+  SIGNIFICANCE_ANOM = 'significance_anom'
+
+  class Kind(Enum):
+    PEARSON_R = 'PearsonR'
+    CC = 'cc'
+    R_WORK = 'Rwork'
+    SIGNIFICANCE = 'significance'
+
+    @property
+    def function(self) -> Callable:
+      return calc_pearson_r if self is self.PEARSON_R \
+        else calc_cc_parameter if self is self.CC \
+        else calc_r_work if self is self.R_WORK else calc_significance
+
+  class Input(Enum):
+    F = 'F'
+    ANOM = 'anom'
 
   @property
-  def anomalous_differences(self) -> bool:
-    return bool(self.value % 2)
+  def kind(self):
+    return self.Kind(self.value.rsplit('_', 1)[1])
 
   @property
-  def function(self) -> Callable:
-    return calc_pearson_r if self.value in {0, 1}\
-      else calc_cc_parameter if self.value in {2, 3} else calc_r_work
+  def input(self):
+    return self.Input(self.value.split('_', 1)[0])
 
 
 def evaluate_iteration(
     ma_db: miller.array,  # diffBragg-refined sfs for Pearson's r calc.
     ma_gt: miller.array,  # ground-truth sfs for Pearson's r calc.
     ma_cm: miller.array,  # conventional merging sfs for index selection
-    stat_kind: StatKind,  # What should be calculated:PearsonR/CC/Rwork_gt/anom
+    stat: Stat,  # Statistic to calculate:PearsonR/CC/Rwork/significance_F/anom
     scatter_label: int = None,  # If not None, make a scatter plot
     ) -> pd.Series:
-  """Calculate `stat_kind` between `ma_db` and `ma_gt` for data in `ma_cm`"""
+  """Calculate `stat` between `ma_db` and `ma_gt` for data in `ma_cm`"""
   binner = ma_gt.binner()
   ma_db = ma_db.common_set(ma_cm)
   ma_db, ma_gt = ma_db.common_sets(ma_gt)
@@ -186,14 +202,14 @@ def evaluate_iteration(
     ma_db_selection = ma_db.select(bin_selection)
     ma_gt_selection = ma_gt.select(bin_selection)
     try:
-      stats_binned.append(stat_kind.function(ma_db_selection, ma_gt_selection))
+      stats_binned.append(stat.kind.function(ma_db_selection, ma_gt_selection))
     except ValueError:
       stats_binned.append(np.nan)
     bin_ranges.append(binner.bin_d_range(i_bin))
     if scatter_label is not None:
       db_data_binned.append(ma_db_selection.data())
       gt_data_binned.append(ma_gt_selection.data())
-  print(f'{stat_kind.name}: {stats_binned}')
+  print(f'{stat.value}: {stats_binned}')
   if scatter_label is not None:
     plot_scatters(db_data_binned, gt_data_binned, scatter_label)
   return pd.Series(data=stats_binned, index=bin_ranges)
@@ -219,7 +235,7 @@ def run(parameters) -> None:
   # set up paths, convenience classes, global variables
   bin_colors_pos = [(i + .5) / parameters.n_bins for i in range(parameters.n_bins)]
   bin_colors.extend(plt.get_cmap("viridis")(bin_colors_pos))
-  stat_kind = StatKind.from_param(parameters.stat)
+  stat = Stat(parameters.stat)
   input_path = get_stage2_path(parameters)  # diffBragg stage2 output dir
   mtz_path = get_mtz_path(parameters)  # conventional merging mtz file
   pdb_path = get_pdb_path(parameters)  # ground truth structure factors
@@ -230,17 +246,17 @@ def run(parameters) -> None:
   ma_gt = get_complex_fcalc_from_pdb(pdb_path, wavelength=parameters.wavelength,
                                      dmin=parameters.d_min, dmax=parameters.d_max)
   ma_gt = ma_gt.as_amplitude_array()
-  if stat_kind.anomalous_differences:
+  if stat.input is Stat.Input.ANOM:
     ma_gt = ma_gt.anomalous_differences()
   ma_gt.setup_binner(d_min=parameters.d_min, d_max=parameters.d_max, n_bins=parameters.n_bins)
 
   # Read reference: output of conventional merging used to select compared data
   ma_ref = iotbx.mtz.object(mtz_path).as_miller_arrays()[0]
   ma_ref = ma_ref.as_amplitude_array()
-  if stat_kind.anomalous_differences:
+  if stat.input is Stat.Input.ANOM:
     ma_ref = ma_ref.anomalous_differences()
   scatter_id = 'DIALS' if 1 in scatter_idx else None
-  stat_binned = evaluate_iteration(ma_ref, ma_gt, ma_ref, stat_kind, scatter_id)
+  stat_binned = evaluate_iteration(ma_ref, ma_gt, ma_ref, stat, scatter_id)
   stats_binned_steps = [stat_binned]
 
   # iterate over and evaluate all npz files present
@@ -250,10 +266,10 @@ def run(parameters) -> None:
     npz_file = f'{input_path}/_fcell_trial0_iter{num_iter}.npz'
     print(npz_file)
     ma = read_npz(npz_file, f_asu_map, symmetry, save_mtz=True)
-    if stat_kind.anomalous_differences:
+    if stat.input is Stat.Input.ANOM:
       ma = ma.anomalous_differences()
     scatter_id = f'diffBragg{num_iter}' if num_iter in scatter_idx else None
-    stat_binned = evaluate_iteration(ma, ma_gt, ma_ref, stat_kind, scatter_id)
+    stat_binned = evaluate_iteration(ma, ma_gt, ma_ref, stat, scatter_id)
     stats_binned_steps.append(stat_binned)
   stats_dataframe = pd.concat(stats_binned_steps, axis=1)
 
@@ -265,10 +281,10 @@ def run(parameters) -> None:
     bin_label = bin_label_from(bin_range)
     axes.plot(indices, stats_row, '-', color=bin_colors[bin_i], label=bin_label)
   axes.set_xlabel('diffBragg iteration step')
-  axes.set_ylabel(stat_kind.name)
+  axes.set_ylabel(stat.value)
   if parameters.n_bins > 1:
     axes.legend(loc='lower right')
-  fig.savefig(stat_kind.name.lower() + '.png')
+  fig.savefig(stat.value + '.png')
   if parameters.show:
     plt.show()
 
