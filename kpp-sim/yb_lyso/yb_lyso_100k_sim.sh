@@ -57,8 +57,14 @@ spectrum {
   channel_width=1.0
 }
 crystal {
+  # Perlmutter OK-download in job from PDB
+  # structure=pdb
+  # pdb.code=4bs7 # Yb lysozyme, Celia Sauter(no relation), 1.7 Angstrom
+  # Frontier OK-take PDB file from github
   structure=pdb
-  pdb.code=4bs7 # Yb lysozyme, Celia Sauter(no relation), 1.7 Angstrom
+  pdb.code=None
+  pdb.source=file
+  pdb.file=${MODULES}/cxid9114/sim/4bs7.pdb
   length_um=0.5 # increase crystal path length
 }
 detector {
