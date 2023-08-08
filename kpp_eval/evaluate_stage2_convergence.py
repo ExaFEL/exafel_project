@@ -144,11 +144,6 @@ def calc_significance(ma1: miller.array, _: miller.array) -> float:
   return flex.mean(ma1.data() / ma1.sigmas())
 
 
-class StatInput(Enum):
-  F = 'F'
-  ANOM = 'anom'
-
-
 class StatKind(Enum):
   PEARSON_R = 'PearsonR'
   CC = 'cc'
@@ -160,6 +155,11 @@ class StatKind(Enum):
     return calc_pearson_r if self is self.PEARSON_R \
       else calc_cc_parameter if self is self.CC \
       else calc_r_work if self is self.R_WORK else calc_significance
+
+
+class StatInput(Enum):
+  F = 'F'
+  ANOM = 'anom'
 
 
 class Stat(Enum):
@@ -174,11 +174,11 @@ class Stat(Enum):
 
   @property
   def kind(self):
-    return StatKind(self.value.rsplit('_', 1)[1])
+    return StatKind(self.value.split('_', 1)[0])
 
   @property
   def input(self):
-    return StatInput(self.value.split('_', 1)[0])
+    return StatInput(self.value.rsplit('_', 1)[1])
 
 
 def evaluate_iteration(
