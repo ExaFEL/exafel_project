@@ -141,7 +141,10 @@ def calc_r_work(ma1: miller.array, ma2: miller.array) -> float:
 
 
 def calc_significance(ma1: miller.array, _: miller.array) -> float:
-  return flex.mean(ma1.data() / ma1.sigmas())
+  try:
+    return flex.mean(ma1.data() / ma1.sigmas())
+  except TypeError as e:
+    raise NotImplementedError('No sigmas to read from diffBragg .npz') from e
 
 
 class StatKind(Enum):
