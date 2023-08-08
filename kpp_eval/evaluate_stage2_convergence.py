@@ -144,6 +144,24 @@ def calc_significance(ma1: miller.array, _: miller.array) -> float:
   return flex.mean(ma1.data() / ma1.sigmas())
 
 
+class StatInput(Enum):
+  F = 'F'
+  ANOM = 'anom'
+
+
+class StatKind(Enum):
+  PEARSON_R = 'PearsonR'
+  CC = 'cc'
+  R_WORK = 'Rwork'
+  SIGNIFICANCE = 'significance'
+
+  @property
+  def function(self) -> Callable:
+    return calc_pearson_r if self is self.PEARSON_R \
+      else calc_cc_parameter if self is self.CC \
+      else calc_r_work if self is self.R_WORK else calc_significance
+
+
 class Stat(Enum):
   PEARSON_R_F = 'PearsonR_F'
   PEARSON_R_ANOM = 'PearsonR_anom'
@@ -154,29 +172,13 @@ class Stat(Enum):
   SIGNIFICANCE_F = 'significance_F'
   SIGNIFICANCE_ANOM = 'significance_anom'
 
-  class Kind(Enum):
-    PEARSON_R = 'PearsonR'
-    CC = 'cc'
-    R_WORK = 'Rwork'
-    SIGNIFICANCE = 'significance'
-
-    @property
-    def function(self) -> Callable:
-      return calc_pearson_r if self is self.PEARSON_R \
-        else calc_cc_parameter if self is self.CC \
-        else calc_r_work if self is self.R_WORK else calc_significance
-
-  class Input(Enum):
-    F = 'F'
-    ANOM = 'anom'
-
   @property
   def kind(self):
-    return self.Kind(self.value.rsplit('_', 1)[1])
+    return StatKind(self.value.rsplit('_', 1)[1])
 
   @property
   def input(self):
-    return self.Input(self.value.split('_', 1)[0])
+    return StatInput(self.value.split('_', 1)[0])
 
 
 def evaluate_iteration(
@@ -246,14 +248,14 @@ def run(parameters) -> None:
   ma_gt = get_complex_fcalc_from_pdb(pdb_path, wavelength=parameters.wavelength,
                                      dmin=parameters.d_min, dmax=parameters.d_max)
   ma_gt = ma_gt.as_amplitude_array()
-  if stat.input is Stat.Input.ANOM:
+  if stat.input is StatInput.ANOM:
     ma_gt = ma_gt.anomalous_differences()
   ma_gt.setup_binner(d_min=parameters.d_min, d_max=parameters.d_max, n_bins=parameters.n_bins)
 
   # Read reference: output of conventional merging used to select compared data
   ma_ref = iotbx.mtz.object(mtz_path).as_miller_arrays()[0]
   ma_ref = ma_ref.as_amplitude_array()
-  if stat.input is Stat.Input.ANOM:
+  if stat.input is StatInput.ANOM:
     ma_ref = ma_ref.anomalous_differences()
   scatter_id = 'DIALS' if 1 in scatter_idx else None
   stat_binned = evaluate_iteration(ma_ref, ma_gt, ma_ref, stat, scatter_id)
@@ -266,7 +268,7 @@ def run(parameters) -> None:
     npz_file = f'{input_path}/_fcell_trial0_iter{num_iter}.npz'
     print(npz_file)
     ma = read_npz(npz_file, f_asu_map, symmetry, save_mtz=True)
-    if stat.input is Stat.Input.ANOM:
+    if stat.input is StatInput.ANOM:
       ma = ma.anomalous_differences()
     scatter_id = f'diffBragg{num_iter}' if num_iter in scatter_idx else None
     stat_binned = evaluate_iteration(ma, ma_gt, ma_ref, stat, scatter_id)
