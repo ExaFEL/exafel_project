@@ -86,6 +86,9 @@ simulator {
   #structure_factors.mtz_name = merged/iobs_all.mtz
   structure_factors.mtz_column = 'Iobs(+),SIGIobs(+),Iobs(-),SIGIobs(-)'
   beam.size_mm = 0.001
+  detector {
+    force_zero_thickness = True
+  }
 }
 
 logging {
