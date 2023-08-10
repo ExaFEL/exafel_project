@@ -1,11 +1,11 @@
 #!/bin/bash -l
-#SBATCH -N 8                # Number of nodes
+#SBATCH -N 4                # Number of nodes
 #SBATCH -J stills_proc
 #SBATCH -L SCRATCH          # job requires SCRATCH files
 #SBATCH -A m2859          # allocation
 #SBATCH -C cpu
 #SBATCH -q regular    # regular queue
-#SBATCH -t 02:00:00
+#SBATCH -t 04:00:00
 #SBATCH -o %j.out
 #SBATCH -e %j.err
 
@@ -101,5 +101,5 @@ mkdir -p ${OUT_DIR}/${TRIAL}/out
 mkdir -p ${OUT_DIR}/${TRIAL}/tmp
 
 echo "jobstart $(date)";pwd
-srun -n 1024 -c 2 cctbx.xfel.merge tdata.phil
+srun -n 512 -c 2 cctbx.xfel.merge tdata.phil
 echo "jobend $(date)";pwd
