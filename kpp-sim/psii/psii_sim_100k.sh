@@ -1,11 +1,11 @@
 #!/bin/bash -l
-#SBATCH -N 32            # Number of nodes
+#SBATCH -N 128           # Number of nodes
 #SBATCH -J psii_sim
 #SBATCH -L SCRATCH       # job requires SCRATCH files
 #SBATCH -A m2859_g       # allocation
 #SBATCH -C gpu
 #SBATCH -q regular       # regular or special queue
-#SBATCH -t 30
+#SBATCH -t 120
 #SBATCH --gpus-per-node 4
 #SBATCH -o %j.out
 #SBATCH -e %j.err
@@ -17,7 +17,7 @@ export CCTBX_DEVICE_PER_NODE=1
 export N_START=0
 export LOG_BY_RANK=1 # Use Aaron's rank logger
 export RANK_PROFILE=0 # 0 or 1 Use cProfiler, default 1
-export N_SIM=4096 # total number of images to simulate
+export N_SIM=131072 # total number of images to simulate
 export ADD_BACKGROUND_ALGORITHM=cuda
 export DEVICES_PER_NODE=4
 export MOS_DOM=25
@@ -58,7 +58,7 @@ crystal {
 detector {
   tiles=multipanel
   reference=$MODULES/exafel_project/kpp-sim/t000_rg002_chunk000_reintegrated_000000.expt
-  offset_mm=100.0 # desired 1.9 somewhere between inscribed and circumscribed.
+  offset_mm=100.0 # desired 1.7 somewhere between inscribed and circumscribed.
 }
 output {
   format=h5
@@ -67,5 +67,5 @@ output {
 " > trial.phil
 
 echo "jobstart $(date)";pwd
-srun -n 1024 -c 4 libtbx.python "$MODULES"/exafel_project/kpp_utils/LY99_batch.py trial.phil
+srun -n 4096 -c 4 libtbx.python "$MODULES"/exafel_project/kpp_utils/LY99_batch.py trial.phil
 echo "jobend $(date)";pwd
