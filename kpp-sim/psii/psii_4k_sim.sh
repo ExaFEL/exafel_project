@@ -58,7 +58,7 @@ crystal {
 detector {
   tiles=multipanel
   reference=$MODULES/exafel_project/kpp-sim/t000_rg002_chunk000_reintegrated_000000.expt
-  offset_mm=100.0 # desired 1.9 somewhere between inscribed and circumscribed.
+  offset_mm=100.0 # desired 1.7 somewhere between inscribed and circumscribed.
 }
 output {
   format=h5
