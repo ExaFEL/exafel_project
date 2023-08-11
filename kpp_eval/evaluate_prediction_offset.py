@@ -2,6 +2,7 @@
 Calculate, compare, and report the offset of observed vs predicted reflection
 position in DIALS' stills_process vs diffBragg's hopper (stage 1).
 """
+from collections import UserList
 import glob
 import sys
 import os
@@ -10,8 +11,12 @@ import numpy as np
 from pylab import *
 from dials.array_family import flex
 from joblib import Parallel, delayed
+from tabulate import tabulate
+
+from dxtbx.model import ExperimentList
 
 from exafel_project.kpp_eval.phil import parse_phil
+from exafel_project.kpp_eval.util import set_default_return
 
 # ggplot()
 # xkcd()
@@ -20,7 +25,8 @@ from exafel_project.kpp_eval.phil import parse_phil
 phil_scope_str = """
 stage1 = None
   .type = str
-  .help = Directory with stage 1 results, the one containing folder refls
+  .help = Directory with stage 1 results, the one containing folder refls.
+  .help = If None, $SCRATCH/psii/$JOB_ID_HOPPER/stage1 will be used.
 expt = None
   .type = str
   .help = Path to an expt files containing reference detector model. If None,
@@ -31,12 +37,52 @@ d_min = 1.9
 d_max = 9999.
   .type = float
   .help = Upper bound of data resolution to be investigated
+n_bins = 10
+  .type = int
+  .help = Data will be divided into `n_bins` resolution ranges for evaluation
+bins_type = same_count *same_volume
+  .type = choice(multi=False)
+  .help = Type of algorithm to be used when producing resolution bins
+stat = *median average rms
+  .type = choice(multi=False)
+  .help = Which statistic should be evaluated
 """
 
 
 NJ = 1
-D_MIN = 9999.9
-D_MAX = 2.0
+
+
+@set_default_return('$SCRATCH/psii/$JOB_ID_HOPPER/stage1')
+def get_stage1_path(params_) -> str:
+  return params_.stage1
+
+
+def get_expt_path(params_) -> str:
+  stage1_path = get_stage1_path(params_)
+  default_expt_glob = os.path.join(stage1_path, 'expers/rank0/*.expt')
+  default_expt_path = next(glob.iglob(default_expt_glob), None)
+  return set_default_return(default_expt_path)(lambda _: params_.expt)
+
+
+class BinLimits(UserList):
+  """Simple class to generate and store list of resolution bin limits"""
+  EPS = 1e-9
+
+  @classmethod
+  def with_same_count(cls, data: np.ndarray, params_) -> 'BinLimits':
+    d_min = params_.d_min if params_.d_min else min(data)
+    d_max = params_.d_max if params_.d_max else max(data)
+    data = data[(data >= d_min) & (data <= d_max)]
+    lims = np.quantile(data, q=np.linspace(1., 0., num=params_.n_bins + 1))
+    return cls([lims[0] + cls.EPS] + list(lims[1:-1]) + [lims[-1] - cls.EPS])
+
+  @classmethod
+  def with_same_volume(cls, data: np.ndarray, params_) -> 'BinLimits':
+    s3_min = pow(params_.d_min if params_.d_min else min(data), -3)
+    s3_max = pow(params_.d_max if params_.d_max else max(data), -3)
+    s3_linespace = np.linspace(s3_min, s3_max, num=params_.n_bins + 1)
+    lims = np.flip(np.power(s3_linespace, -1 / 3))
+    return cls([lims[0] + cls.EPS] + list(lims[1:-1]) + [lims[-1] - cls.EPS])
 
 
 def xy_to_polar(refl, DET, dials=False):
@@ -67,7 +113,6 @@ def xy_to_polar(refl, DET, dials=False):
 
 
 def main(jid, njobs):
-  from dxtbx.model import ExperimentList
   if len(sys.argv) == 2:
     curr_path = os.path.dirname(__file__)
     detpath = os.path.join(curr_path,
@@ -160,7 +205,7 @@ for i_bin in range(1, nbin + 1):
 print("overall diffBragg pred offset: %.5f pixels" % np_rmsd(all_d))
 print("overall DIALS pred offset: %.5f pixels" % np_rmsd(all_d2))
 
-from tabulate import tabulate
+
 
 print(tabulate(
   zip(*[ave_res, ave_d, ave_d2, ave_r, ave_r2, ave_t, ave_t2]),
