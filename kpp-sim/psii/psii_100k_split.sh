@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#SBATCH -N 32             # Number of nodes
+#SBATCH -N 2              # Number of nodes
 #SBATCH -J split
 #SBATCH -L SCRATCH        # job requires SCRATCH files
 #SBATCH -A m2859          # allocation
@@ -16,6 +16,6 @@ mkdir -p "$SCRATCH_FOLDER"; cd "$SCRATCH/psii" || exit
 
 echo "jobstart $(date)";pwd
 
-srun -n 512 -c 16 diffBragg.make_input_file "$JOB_ID_INDEX" "${SLURM_JOB_ID}_integ_exp_ref.txt" --splitDir "${SLURM_JOB_ID}/splits"
+srun -n 256 -c 2 diffBragg.make_input_file "$JOB_ID_INDEX" "${SLURM_JOB_ID}_integ_exp_ref.txt"
 
 echo "jobend $(date)";pwd
