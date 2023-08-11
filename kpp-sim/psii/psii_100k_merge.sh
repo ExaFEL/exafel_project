@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#SBATCH -N 8              # Number of nodes
+#SBATCH -N 16              # Number of nodes
 #SBATCH -J merge
 #SBATCH -L SCRATCH        # job requires SCRATCH files
 #SBATCH -A m2859          # allocation
@@ -54,5 +54,5 @@ mkdir -p "${OUT_DIR}/${TRIAL}/out"
 mkdir -p "${OUT_DIR}/${TRIAL}/tmp"
 
 echo "jobstart $(date)";pwd
-srun -n 512 -c 4 cctbx.xfel.merge merge.phil
+srun -n 256 -c 16 cctbx.xfel.merge merge.phil
 echo "jobend $(date)";pwd
