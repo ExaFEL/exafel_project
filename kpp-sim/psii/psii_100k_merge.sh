@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#SBATCH -N 16              # Number of nodes
+#SBATCH -N 32              # Number of nodes
 #SBATCH -J merge
 #SBATCH -L SCRATCH        # job requires SCRATCH files
 #SBATCH -A m2859          # allocation
@@ -10,9 +10,9 @@
 #SBATCH -e %j.err
 
 export JOB_ID_INDEX=$1
-export DIALS_OUTPUT=${SCRATCH}/yb_lyso/$JOB_ID_INDEX
+export DIALS_OUTPUT=${SCRATCH}/psii/$JOB_ID_INDEX
 
-export SCRATCH_FOLDER=$SCRATCH/yb_lyso/$SLURM_JOB_ID
+export SCRATCH_FOLDER=$SCRATCH/psii/$SLURM_JOB_ID
 mkdir -p "$SCRATCH_FOLDER"; cd "$SCRATCH_FOLDER" || exit
 
 export TRIAL=ly99sim
@@ -54,5 +54,5 @@ mkdir -p "${OUT_DIR}/${TRIAL}/out"
 mkdir -p "${OUT_DIR}/${TRIAL}/tmp"
 
 echo "jobstart $(date)";pwd
-srun -n 256 -c 16 cctbx.xfel.merge merge.phil
+srun -n 512 -c 16 cctbx.xfel.merge merge.phil
 echo "jobend $(date)";pwd
