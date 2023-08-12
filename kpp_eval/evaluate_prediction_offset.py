@@ -2,24 +2,24 @@
 Calculate, compare, and report the offset of observed vs predicted reflection
 position in DIALS' stills_process vs diffBragg's hopper (stage 1).
 """
-from collections import UserList
+from collections import OrderedDict, UserList
 import glob
-import sys
+from typing import Callable, Iterable, List
 import os
 
+import matplotlib.pyplot as plt
 import numpy as np
-from pylab import *
-from dials.array_family import flex
-from joblib import Parallel, delayed
-from tabulate import tabulate
+import pandas as pd
 
+from dials.array_family import flex
 from dxtbx.model import ExperimentList
+from libtbx.mpi4py import MPI
 
 from exafel_project.kpp_eval.phil import parse_phil
 from exafel_project.kpp_eval.util import set_default_return
 
-# ggplot()
-# xkcd()
+# plt.ggplot()
+# plt.xkcd()
 
 
 phil_scope_str = """
@@ -30,7 +30,7 @@ stage1 = None
 expt = None
   .type = str
   .help = Path to an expt files containing reference detector model. If None,
-  .help = the first expt file found recursively in stage1/expers will be used.
+  .help = the first expt file found in stage1/expers/rank0/ will be used.
 d_min = 1.9
   .type = float
   .help = Lower bound of data resolution to be investigated, in Angstrom
@@ -50,6 +50,12 @@ stat = *median average rms
 
 
 NJ = 1
+COMM = MPI.COMM_WORLD
+
+
+def print0(*args: str, **kwargs):
+  if COMM.rank == 0:
+    print(*args, **kwargs)
 
 
 @set_default_return('$SCRATCH/psii/$JOB_ID_HOPPER/stage1')
@@ -69,6 +75,13 @@ class BinLimits(UserList):
   EPS = 1e-9
 
   @classmethod
+  def from_params(cls, data: np.ndarray, params_) -> 'BinLimits':
+    if params_.bins_type == 'same_count':
+      return cls.with_same_count(data, params_)
+    else:  # params_.bins_type == 'same_volume':
+      return cls.with_same_volume(data, params_)
+
+  @classmethod
   def with_same_count(cls, data: np.ndarray, params_) -> 'BinLimits':
     d_min = params_.d_min if params_.d_min else min(data)
     d_max = params_.d_max if params_.d_max else max(data)
@@ -84,8 +97,39 @@ class BinLimits(UserList):
     lims = np.flip(np.power(s3_linespace, -1 / 3))
     return cls([lims[0] + cls.EPS] + list(lims[1:-1]) + [lims[-1] - cls.EPS])
 
+  @property
+  def bin_headers(self, overall=False) -> List[str]:
+    limits_str = [f'{limit:.6f}'[:6] for limit in self]
+    return [f'{b}-{e}' for b, e in zip(limits_str[:-1], limits_str[1:])]
 
-def xy_to_polar(refl, DET, dials=False):
+  @property
+  def overall_header(self):
+    return '-'.join([f'{limit:.6f}'[:6] for limit in [self[0], self[-1]]])
+
+
+class StatCalculatorsRegistry(OrderedDict):
+  def register(self, name: str) -> Callable:
+    """Register a `func` which calculates `params.stat` from 1D input array"""
+    def decorator(func: Callable) -> Callable:
+      self[name] = func
+      return func
+    return decorator
+stat_calculators = StatCalculatorsRegistry()
+
+@stat_calculators.register('median')
+def calculate_median(data: np.ndarray) -> float:
+  return np.median(data)
+
+@stat_calculators.register('average')
+def calculate_mean(data: np.ndarray) -> float:
+  return np.mean(data)
+
+@stat_calculators.register('rms')
+def calculate_rms(data: np.ndarray) -> float:
+  return np.sqrt(np.mean(data ** 2))
+
+
+def xy_to_polar(refl, detector, dials=False):
   x, y, _ = refl["xyzobs.px.value"]
   if dials:
     xcal, ycal, _ = refl["dials.xyzcal.px"]
@@ -93,7 +137,7 @@ def xy_to_polar(refl, DET, dials=False):
     xcal, ycal, _ = refl["xyzcal.px"]
 
   pid = refl['panel']
-  panel = DET[pid]
+  panel = detector[pid]
   x, y = panel.pixel_to_millimeter((x, y))
   xcal, ycal = panel.pixel_to_millimeter((xcal, ycal))
 
@@ -112,135 +156,72 @@ def xy_to_polar(refl, DET, dials=False):
   return rad_component / pxsize, tang_component / pxsize
 
 
-def main(jid, njobs):
-  if len(sys.argv) == 2:
-    curr_path = os.path.dirname(__file__)
-    detpath = os.path.join(curr_path,
-                           "../AD_SE_13_222/data_222/Jungfrau_model.json")
-    DET = ExperimentList.from_file(detpath, False)[0].detector
-  elif len(sys.argv) == 3:
-    expt_name = sys.argv[2]
-    DET = ExperimentList.from_file(expt_name, False)[0].detector
-
-  fnames = glob.glob("%s/refls/rank*/*.refl" % sys.argv[1])
-  print("%d fnames" % len(fnames))
-  assert fnames
-  all_d, all_d2 = [], []
-  all_r, all_r2 = [], []
-  all_t, all_t2 = [], []
-  reso = []
-  for i_f, f in enumerate(fnames):
-    if i_f % njobs != jid:
-      continue
-    R = flex.reflection_table.from_file(f)
-    if len(R) == 0:
-      continue
-    xyobs = R['xyzobs.px.value'].as_numpy_array()[:, :1]
-    xycal = R['xyzcal.px'].as_numpy_array()[:, :1]
-    reso += list(1. / np.linalg.norm(R['rlp'], axis=1))
-    xycal2 = R['dials.xyzcal.px'].as_numpy_array()[:, :1]
-    d = np.sqrt(np.sum((xyobs - xycal) ** 2, 1))
-    d2 = np.sqrt(np.sum((xyobs - xycal2) ** 2, 1))
-    all_d += list(d)
-    all_d2 += list(d2)
-    rad, theta = zip(
-      *[xy_to_polar(R[i_r], DET, dials=False) for i_r in range(len(R))])
-    rad2, theta2 = zip(
-      *[xy_to_polar(R[i_r], DET, dials=True) for i_r in range(len(R))])
-    all_r += list(rad)
-    all_r2 += list(rad2)
-    all_t += list(theta)
-    all_t2 += list(theta2)
-    # print(i_f)
-  return all_d, all_d2, all_r, all_r2, all_t, all_t2, reso
+def offsets_from_refl(refl_path: str, detector) -> pd.DataFrame:
+  refl = flex.reflection_table.from_file(refl_path)
+  if len(refl) == 0:
+    return None
+  r = {}
+  xy_cal = refl['xyzcal.px'].as_numpy_array()[:, :2]
+  xy_obs1 = refl['xyzobs.px.value'].as_numpy_array()[:, :2]
+  xy_obs2 = refl['dials.xyzcal.px'].as_numpy_array()[:, :2]
+  r['dB_offset'] = np.sqrt(np.sum((xy_obs1 - xy_cal) ** 2, axis=1))
+  r['DIALS_offset'] = np.sqrt(np.sum((xy_obs2 - xy_cal) ** 2, axis=1))
+  r['resolution'] = list(1. / np.linalg.norm(refl['rlp'], axis=1))
+  r['dB_rad'], r['dB_tang'] = zip(
+    *[xy_to_polar(refl[i_r], detector, dials=False)
+      for i_r in range(len(refl))])
+  r['DIALS_rad'], r['DIALS_tang'] = zip(
+    *[xy_to_polar(refl[i_r], detector, dials=False)
+      for i_r in range(len(refl))])
+  return pd.DataFrame.from_records(r)
 
 
-results = Parallel(n_jobs=NJ)(delayed(main)(j, NJ) for j in range(NJ))
-
-all_d, all_d2, all_r, all_r2, all_t, all_t2, reso = [], [], [], [], [], [], []  # zip(*results)
-for d, d2, r, r2, t, t2, dspacing in results:
-  all_d += d
-  all_d2 += d2
-  all_r += r
-  all_r2 += r2
-  all_t += t
-  all_t2 += t2
-  reso += dspacing
-
-nbin = 10
-# SAME-COUNT BINS
-# bins = [b[0] - 1e-6 for b in np.array_split(np.sort(reso), nbin)] + [
-#   max(reso) + 1e-6]
-
-# SAME - VOLUME BINS
-rec_cubed_start = pow(D_MIN if D_MIN else min(reso), -3)
-rec_cubed_stop = pow(D_MAX if D_MAX else max(reso), -3)
-rec_linspace = linspace(rec_cubed_start, rec_cubed_stop, nbin + 1)
-bins = np.flip(np.power(rec_linspace, -1 / 3))
-
-digs = np.digitize(reso, bins)
-
-def np_rmsd(offset: np.ndarray) -> float:
-  return np.sqrt(np.mean(offset ** 2))
-
-all_d = np.array(all_d)
-all_d2 = np.array(all_d2)
-all_r = np.array(all_r)
-all_r2 = np.array(all_r2)
-all_t = np.array(all_t)
-all_t2 = np.array(all_t2)
-reso = np.array(reso)
-ave_d, ave_d2, ave_r, ave_r2, ave_t, ave_t2, ave_res = [], [], [], [], [], [], []
-for i_bin in range(1, nbin + 1):
-  sel = digs == i_bin
-  ave_d.append(np_rmsd(all_d[sel]))
-  ave_d2.append(np_rmsd(all_d2[sel]))
-  ave_r.append(np_rmsd(all_r[sel]))
-  ave_r2.append(np_rmsd(all_r2[sel]))
-  ave_t.append(np_rmsd(all_t[sel]))
-  ave_t2.append(np_rmsd(all_t2[sel]))
-
-  ave_res.append(np_rmsd(reso[sel]))
-
-print("overall diffBragg pred offset: %.5f pixels" % np_rmsd(all_d))
-print("overall DIALS pred offset: %.5f pixels" % np_rmsd(all_d2))
-
-
-
-print(tabulate(
-  zip(*[ave_res, ave_d, ave_d2, ave_r, ave_r2, ave_t, ave_t2]),
-  floatfmt=".3f",
-  headers=("res (Ang)", "db (abs)", "DIALS (abs)", 'db (rad)', "DIALS (rad)",
-           "db (tang)", "DIALS (tang)")))
-
-for vals, vals2, title in [(ave_d, ave_d2, "overall"),
-                           (ave_r, ave_r2, "radial component"),
-                           (ave_t, ave_t2, "tangential component")]:
-  figure()
-  gca().set_title(title)
-  plot(vals[::-1], color='chartreuse', marker='s', mec='k')
-  plot(vals2[::-1], color="tomato", marker='o', mec='k')
-  xticks = range(nbin)
-  xlabels = ["%.2f" % r for r in ave_res]
-  gca().set_xticks(xticks)
-  gca().set_xticklabels(xlabels[::-1], rotation=90)
-  gcf().set_size_inches((5, 4))
-  subplots_adjust(bottom=0.2, left=0.15, right=0.98, top=0.9)
-  gca().tick_params(labelsize=10, length=0)  # direction='in')
-  grid(1, color="#777777", ls="--", lw=0.5)
-  xlabel("resolution ($\AA$)", fontsize=11, labelpad=5)
-  ylabel("prediction offset (pixels)", fontsize=11)
-  leg = legend(("diffBragg", "DIALS"), prop={"size": 10})
-  fr = leg.get_frame()
-  fr.set_facecolor("bisque")
-  fr.set_alpha(1)
-  gca().set_facecolor("gainsboro")
-
-show()
-
+Offsets = Iterable[float]
+def plot_offset(offset_summary: pd.DataFrame, title: str,
+                db_col: str, dials_col: str) -> None:
+  fig, ax = plt.subplots()
+  fig.set_size_inches((5, 4))
+  ax.set_title(title)
+  ax.plot(offset_summary[db_col], color='chartreuse', marker='s', mec='k')
+  ax.plot(offset_summary[dials_col], color='tomato', marker='o', mec='k')
+  ax.set_xticklabels(offset_summary['bin'])
+  ax.tick_params(labelsize=10, length=0)
+  ax.set_xlabel("resolution ($\AA$)", fontsize=11, labelpad=5)
+  ax.set_ylabel("prediction offset (pixels)", fontsize=11)
+  ax.set_facecolor('gainsboro')
+  plt.subplots_adjust(bottom=0.2, left=0.15, right=0.98, top=0.9)
+  legend = ax.legend(("diffBragg", "DIALS"), prop={"size": 10})
+  legend_frame = legend.get_frame()
+  legend_frame.set_facecolor("bisque")
+  legend_frame.set_alpha(1)
 
 def run(parameters) -> None:
-  pass
+  expt_path = get_expt_path(parameters)
+  detector = ExperimentList.from_file(expt_path, check_format=False)[0].detector
+  refl_glob = os.path.join(get_stage1_path(parameters), 'refls/rank*/*.refl')
+  refl_paths = glob.glob(refl_glob)
+  print0(f'#refl files: {len(refl_paths)}')
+  refl_paths = refl_paths[COMM.rank::COMM.size]
+  offsets = [o for rp in refl_paths if (o := offsets_from_refl(rp, detector))]
+  offsets_gathered = COMM.gather(offsets)
+  if COMM.rank != 0:
+    return
+  offsets = pd.concat(offsets_gathered, axis=0, ignore_index=True)
+  bin_limits = BinLimits.from_params(offsets['resolution'], parameters)
+  offsets['bin'] = np.digitize(offsets['resolution'], bin_limits) - 1
+  stat_calc = stat_calculators[parameters.stat]
+  offsets_total = offsets.apply(stat_calc, axis=0, raw=True)
+  offsets_binned = [offsets['bin' == b].apply(stat_calc, axis=0, raw=True)
+                    for b in range(parameters.n_bins)]
+  offset_summary = pd.concat(offsets_binned + [offsets_total], axis=1)
+  offset_summary['bin'] = bin_limits.bin_headers + [bin_limits.overall_header]
+  offset_summary.set_index('bin')
+  print0(offset_summary)
+  offset_summary = offset_summary[:-1]  # drop last row
+  plot_offset(offset_summary, 'Overall offset', 'dB_offset', 'DIALS_offset')
+  plot_offset(offset_summary, 'Radial component', 'dB_rad', 'DIALS_rad')
+  plot_offset(offset_summary, 'Tangential component', 'dB_tang', 'DIALS_tang')
+  plt.show()
 
 
 params = []
