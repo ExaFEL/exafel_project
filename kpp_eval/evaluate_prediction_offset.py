@@ -5,7 +5,7 @@ position in DIALS' stills_process vs diffBragg's hopper (stage 1).
 from collections import OrderedDict, UserList
 from itertools import chain
 import glob
-from typing import Callable, Iterable, List
+from typing import Callable, List, NamedTuple
 import os
 
 import matplotlib.pyplot as plt
@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 
 from dials.array_family import flex
-from dxtbx.model import ExperimentList
+from dxtbx.model import Detector, ExperimentList
 from libtbx.mpi4py import MPI
 
 from exafel_project.kpp_eval.phil import parse_phil
@@ -99,7 +99,7 @@ class BinLimits(UserList):
     return cls([lims[0] + cls.EPS] + list(lims[1:-1]) + [lims[-1] - cls.EPS])
 
   @property
-  def bin_headers(self, overall=False) -> List[str]:
+  def bin_headers(self) -> List[str]:
     limits_str = [f'{limit:.6f}'[:6] for limit in self]
     return [f'{b}-{e}' for b, e in zip(limits_str[:-1], limits_str[1:])]
 
@@ -157,6 +157,29 @@ def xy_to_polar(refl, detector, dials=False):
   return rad_component / pxsize, tang_component / pxsize
 
 
+def offset_polar(refl, detector: Detector, cal_col_name: str) -> np.ndarray:
+  xy_obs = flex.vec2_double(refl['xyzobs.px.value'].as_numpy_array()[:, :2])
+  xy_cal = flex.vec2_double(refl[cal_col_name].as_numpy_array()[:, :2])
+  xy_delta = np.empty((len(refl), 2), dtype=float)
+
+  panel_id_used = list(set(refl['panel']))
+  for panel_id in panel_id_used:
+    panel = detector[panel_id]
+    sel = refl['panel'] == panel_id
+    xy_obs_sel = xy_obs.select(sel)
+    xy_cal_sel = xy_cal.select(sel)
+    # xy_obs_sel = panel.pixel_to_millimeter(xy_obs_sel)  # in original script
+    # xy_cal_sel = panel.pixel_to_millimeter(xy_cal_sel)  # prob. by mistake?
+    xy_obs_lab = panel.get_lab_coord(xy_obs_sel)
+    xy_cal_lab = panel.get_lab_coord(xy_cal_sel)
+    xy_delta[sel] = np.array(xy_obs_lab - xy_cal_lab)
+  normal_vectors = xy_delta / np.linalg.norm(xy_delta, axis=1)[:, None]
+  perpendicular_vectors = np.array([-normal_vectors[1], normal_vectors[0]])
+  rad_component = np.abs(np.sum(xy_delta * normal_vectors, axis=1))
+  tang_component = np.abs(np.sum(xy_delta * perpendicular_vectors, axis=1))
+  return np.vstack([rad_component, tang_component])
+
+
 def offsets_from_refl(refl_path: str, detector) -> pd.DataFrame:
   refl = flex.reflection_table.from_file(refl_path)
   if len(refl) == 0:
@@ -168,34 +191,54 @@ def offsets_from_refl(refl_path: str, detector) -> pd.DataFrame:
   r['dB_offset'] = np.sqrt(np.sum((xy_obs - xy_cal1) ** 2, axis=1))
   r['DIALS_offset'] = np.sqrt(np.sum((xy_obs - xy_cal2) ** 2, axis=1))
   r['resolution'] = list(1. / np.linalg.norm(refl['rlp'], axis=1))
-  r['dB_rad'], r['dB_tang'] = zip(
-    *[xy_to_polar(refl[i_r], detector, dials=False)
-      for i_r in range(len(refl))])
-  r['DIALS_rad'], r['DIALS_tang'] = zip(
-    *[xy_to_polar(refl[i_r], detector, dials=True)
-      for i_r in range(len(refl))])
+  # r['dB_rad'], r['dB_tang'] = zip(
+  #   *[xy_to_polar(refl[i_r], detector, dials=False)
+  #     for i_r in range(len(refl))])
+  # r['DIALS_rad'], r['DIALS_tang'] = zip(
+  #   *[xy_to_polar(refl[i_r], detector, dials=True)
+  #     for i_r in range(len(refl))])
+  r['dB_rad'], r['dB_tang'] = offset_polar(refl, detector, 'xyzcal.px')
+  r['DIALS_rad'], r['DIALS_tang'] = offset_polar(refl, detector, 'dials.xyzcal.px')
   return pd.DataFrame.from_records(r)
 
 
-Offsets = Iterable[float]
-def plot_offset(offset_summary: pd.DataFrame, title: str,
-                db_col: str, dials_col: str) -> None:
-  fig, ax = plt.subplots()
-  fig.set_size_inches((5, 4))
-  ax.set_title(title)
-  ax.plot(offset_summary[db_col], color='chartreuse', marker='s', mec='k')
-  ax.plot(offset_summary[dials_col], color='tomato', marker='o', mec='k')
-  ax.set_xticks(list(range(len(offset_summary.index))))
-  ax.set_xticklabels(offset_summary.index)
-  ax.tick_params(labelsize=10, length=0)
-  ax.set_xlabel("resolution ($\AA$)", fontsize=11, labelpad=5)
-  ax.set_ylabel("prediction offset (pixels)", fontsize=11)
-  ax.set_facecolor('gainsboro')
-  plt.subplots_adjust(bottom=0.2, left=0.15, right=0.98, top=0.9)
-  legend = ax.legend(("diffBragg", "DIALS"), prop={"size": 10})
-  legend_frame = legend.get_frame()
-  legend_frame.set_facecolor("bisque")
-  legend_frame.set_alpha(1)
+class OffsetKind(NamedTuple):
+  title: str
+  dB_col_name: str
+  DIALS_col_name: str
+
+
+offset_kinds = [OffsetKind('Overall', 'dB_offset', 'DIALS_offset'),
+                OffsetKind('Radial', 'dB_rad', 'DIALS_rad'),
+                OffsetKind('Tangential', 'dB_tang', 'DIALS_tang')]
+
+
+class OffsetArtist:
+  def __init__(self, offset_summary: pd.DataFrame, stat: str):
+    self.data = offset_summary
+    self.stat = stat
+
+  def plot_offset(self, offset_kind: OffsetKind) -> None:
+    fig, ax = plt.subplots()
+    fig.set_size_inches((5, 4))
+    ax.set_title(offset_kind.title)
+    y1 = self.data[offset_kind.dB_col_name]
+    y2 = self.data[offset_kind.DIALS_col_name]
+    ax.plot(y1, color='chartreuse', marker='s', mec='k')
+    ax.plot(y2, color='tomato', marker='o', mec='k')
+    ax.set_xticks(list(range(len(self.data.index))))
+    ax.set_xticklabels([i.replace('-', '\n-\n') for i in self.data.index])
+    ax.tick_params(labelsize=10, length=0)
+    ax.grid(visible=True, color="#777777", ls="--", lw=0.5)
+    ax.set_xlabel("resolution ($\AA$)", fontsize=11, labelpad=5)
+    ax.set_ylabel(self.stat + " of prediction offset (pixels)", fontsize=11)
+    ax.set_facecolor('gainsboro')
+    plt.subplots_adjust(bottom=0.2, left=0.15, right=0.98, top=0.9)
+    legend = ax.legend(("diffBragg", "DIALS"), prop={"size": 10})
+    legend_frame = legend.get_frame()
+    legend_frame.set_facecolor("bisque")
+    legend_frame.set_alpha(1)
+
 
 def run(parameters) -> None:
   expt_path = get_expt_path(parameters)
@@ -221,10 +264,9 @@ def run(parameters) -> None:
   offset_summary['bin'] = bin_limits.bin_headers + [bin_limits.overall_header]
   offset_summary.set_index('bin', inplace=True)
   print0(offset_summary)
-  offset_summary = offset_summary[:-1]  # drop last row
-  plot_offset(offset_summary, 'Overall offset', 'dB_offset', 'DIALS_offset')
-  plot_offset(offset_summary, 'Radial component', 'dB_rad', 'DIALS_rad')
-  plot_offset(offset_summary, 'Tangential component', 'dB_tang', 'DIALS_tang')
+  oa = OffsetArtist(offset_summary[:-1], parameters.stat)  # no summary row
+  for offset_kind in offset_kinds:
+    oa.plot_offset(offset_kind)
   plt.show()
 
 
