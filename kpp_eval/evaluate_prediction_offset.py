@@ -162,11 +162,11 @@ def offsets_from_refl(refl_path: str, detector) -> pd.DataFrame:
   if len(refl) == 0:
     return None
   r = {}
-  xy_cal = refl['xyzcal.px'].as_numpy_array()[:, :2]
-  xy_obs1 = refl['xyzobs.px.value'].as_numpy_array()[:, :2]
-  xy_obs2 = refl['dials.xyzcal.px'].as_numpy_array()[:, :2]
-  r['dB_offset'] = np.sqrt(np.sum((xy_obs1 - xy_cal) ** 2, axis=1))
-  r['DIALS_offset'] = np.sqrt(np.sum((xy_obs2 - xy_cal) ** 2, axis=1))
+  xy_obs = refl['xyzobs.px.value'].as_numpy_array()[:, :2]
+  xy_cal1 = refl['xyzcal.px'].as_numpy_array()[:, :2]
+  xy_cal2 = refl['dials.xyzcal.px'].as_numpy_array()[:, :2]
+  r['dB_offset'] = np.sqrt(np.sum((xy_obs - xy_cal1) ** 2, axis=1))
+  r['DIALS_offset'] = np.sqrt(np.sum((xy_obs - xy_cal2) ** 2, axis=1))
   r['resolution'] = list(1. / np.linalg.norm(refl['rlp'], axis=1))
   r['dB_rad'], r['dB_tang'] = zip(
     *[xy_to_polar(refl[i_r], detector, dials=False)
