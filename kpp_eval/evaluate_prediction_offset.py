@@ -171,9 +171,9 @@ def offset_polar(refl, detector: Detector, cal_col_name: str) -> np.ndarray:
     xy_cal_sel = xy_cal.select(sel)
     # xy_obs_sel = panel.pixel_to_millimeter(xy_obs_sel)  # in original script
     # xy_cal_sel = panel.pixel_to_millimeter(xy_cal_sel)  # prob. by mistake?
-    xy_obs_lab = panel.get_lab_coord(xy_obs_sel)
-    xy_cal_lab = panel.get_lab_coord(xy_cal_sel)
-    xy_delta = np.array(xy_obs_lab - xy_cal_lab)[:, :2]
+    xy_obs_lab = np.array(panel.get_lab_coord(xy_obs_sel))[:, :2]
+    xy_cal_lab = np.array(panel.get_lab_coord(xy_cal_sel))[:, :2]
+    xy_delta = xy_obs_lab - xy_cal_lab
     rad_vectors = xy_obs_lab / np.linalg.norm(xy_obs_lab, axis=1)[:, None]
     tang_vectors = np.array([-rad_vectors[:, 1], rad_vectors[:, 0]]).T
     rad_component[sel] = np.abs(np.sum(xy_delta * rad_vectors, axis=1))
