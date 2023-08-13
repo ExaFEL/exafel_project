@@ -100,12 +100,12 @@ class BinLimits(UserList):
 
   @property
   def bin_headers(self, overall=False) -> List[str]:
-    limits_str = [f'{limit:.4f}'[:4] for limit in self]
+    limits_str = [f'{limit:.6f}'[:6] for limit in self]
     return [f'{b}-{e}' for b, e in zip(limits_str[:-1], limits_str[1:])]
 
   @property
   def overall_header(self):
-    return '-'.join([f'{limit:.4f}'[:4] for limit in [self[0], self[-1]]])
+    return '-'.join([f'{limit:.6f}'[:6] for limit in [self[0], self[-1]]])
 
 
 class StatCalculatorsRegistry(OrderedDict):
@@ -172,7 +172,7 @@ def offsets_from_refl(refl_path: str, detector) -> pd.DataFrame:
     *[xy_to_polar(refl[i_r], detector, dials=False)
       for i_r in range(len(refl))])
   r['DIALS_rad'], r['DIALS_tang'] = zip(
-    *[xy_to_polar(refl[i_r], detector, dials=False)
+    *[xy_to_polar(refl[i_r], detector, dials=True)
       for i_r in range(len(refl))])
   return pd.DataFrame.from_records(r)
 
@@ -185,6 +185,7 @@ def plot_offset(offset_summary: pd.DataFrame, title: str,
   ax.set_title(title)
   ax.plot(offset_summary[db_col], color='chartreuse', marker='s', mec='k')
   ax.plot(offset_summary[dials_col], color='tomato', marker='o', mec='k')
+  ax.set_xticks(list(range(len(offset_summary.index))))
   ax.set_xticklabels(offset_summary.index)
   ax.tick_params(labelsize=10, length=0)
   ax.set_xlabel("resolution ($\AA$)", fontsize=11, labelpad=5)
