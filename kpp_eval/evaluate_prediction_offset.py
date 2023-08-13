@@ -160,7 +160,8 @@ def xy_to_polar(refl, detector, dials=False):
 def offset_polar(refl, detector: Detector, cal_col_name: str) -> np.ndarray:
   xy_obs = flex.vec2_double(refl['xyzobs.px.value'].as_numpy_array()[:, :2])
   xy_cal = flex.vec2_double(refl[cal_col_name].as_numpy_array()[:, :2])
-  xy_delta = np.empty((len(refl), 2), dtype=float)
+  rad_component = np.empty((len(refl), 2), dtype=float)
+  tang_component = np.empty((len(refl), 2), dtype=float)
 
   panel_id_used = list(set(refl['panel']))
   for panel_id in panel_id_used:
@@ -172,11 +173,11 @@ def offset_polar(refl, detector: Detector, cal_col_name: str) -> np.ndarray:
     # xy_cal_sel = panel.pixel_to_millimeter(xy_cal_sel)  # prob. by mistake?
     xy_obs_lab = panel.get_lab_coord(xy_obs_sel)
     xy_cal_lab = panel.get_lab_coord(xy_cal_sel)
-    xy_delta[sel] = np.array(xy_obs_lab - xy_cal_lab)
-  normal_vectors = xy_delta / np.linalg.norm(xy_delta, axis=1)[:, None]
-  perpendicular_vectors = np.array([-normal_vectors[1], normal_vectors[0]])
-  rad_component = np.abs(np.sum(xy_delta * normal_vectors, axis=1))
-  tang_component = np.abs(np.sum(xy_delta * perpendicular_vectors, axis=1))
+    xy_delta = np.array(xy_obs_lab - xy_cal_lab)[:, :2]
+    rad_vectors = xy_obs_lab / np.linalg.norm(xy_obs_lab, axis=1)[:, None]
+    tang_vectors = np.array([-rad_vectors[:, 1], rad_vectors[:, 0]]).T
+    rad_component[sel] = np.abs(np.sum(xy_delta * rad_vectors, axis=1))
+    tang_component[sel] = np.abs(np.sum(xy_delta * tang_vectors, axis=1))
   return np.vstack([rad_component, tang_component])
 
 
