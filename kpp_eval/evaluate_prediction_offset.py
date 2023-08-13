@@ -3,6 +3,7 @@ Calculate, compare, and report the offset of observed vs predicted reflection
 position in DIALS' stills_process vs diffBragg's hopper (stage 1).
 """
 from collections import OrderedDict, UserList
+from itertools import chain
 import glob
 from typing import Callable, Iterable, List
 import os
@@ -67,7 +68,7 @@ def get_expt_path(params_) -> str:
   stage1_path = get_stage1_path(params_)
   default_expt_glob = os.path.join(stage1_path, 'expers/rank0/*.expt')
   default_expt_path = next(glob.iglob(default_expt_glob), None)
-  return set_default_return(default_expt_path)(lambda _: params_.expt)
+  return p if (p := params.expt) else default_expt_path
 
 
 class BinLimits(UserList):
@@ -184,7 +185,7 @@ def plot_offset(offset_summary: pd.DataFrame, title: str,
   ax.set_title(title)
   ax.plot(offset_summary[db_col], color='chartreuse', marker='s', mec='k')
   ax.plot(offset_summary[dials_col], color='tomato', marker='o', mec='k')
-  ax.set_xticklabels(offset_summary['bin'])
+  ax.set_xticklabels(offset_summary.index)
   ax.tick_params(labelsize=10, length=0)
   ax.set_xlabel("resolution ($\AA$)", fontsize=11, labelpad=5)
   ax.set_ylabel("prediction offset (pixels)", fontsize=11)
@@ -202,20 +203,22 @@ def run(parameters) -> None:
   refl_paths = glob.glob(refl_glob)
   print0(f'#refl files: {len(refl_paths)}')
   refl_paths = refl_paths[COMM.rank::COMM.size]
-  offsets = [o for rp in refl_paths if (o := offsets_from_refl(rp, detector))]
+  offsets = [offset for rp in refl_paths
+             if (offset := offsets_from_refl(rp, detector)) is not None]
   offsets_gathered = COMM.gather(offsets)
   if COMM.rank != 0:
     return
-  offsets = pd.concat(offsets_gathered, axis=0, ignore_index=True)
+  offsets_list = chain.from_iterable(offsets_gathered)
+  offsets = pd.concat(offsets_list, axis=0, ignore_index=True)
   bin_limits = BinLimits.from_params(offsets['resolution'], parameters)
   offsets['bin'] = np.digitize(offsets['resolution'], bin_limits) - 1
   stat_calc = stat_calculators[parameters.stat]
   offsets_total = offsets.apply(stat_calc, axis=0, raw=True)
-  offsets_binned = [offsets['bin' == b].apply(stat_calc, axis=0, raw=True)
+  offsets_binned = [offsets[offsets['bin'] == b].apply(stat_calc, axis=0, raw=True)
                     for b in range(parameters.n_bins)]
   offset_summary = pd.concat(offsets_binned + [offsets_total], axis=1)
   offset_summary['bin'] = bin_limits.bin_headers + [bin_limits.overall_header]
-  offset_summary.set_index('bin')
+  offset_summary.set_index('bin', inplace=True)
   print0(offset_summary)
   offset_summary = offset_summary[:-1]  # drop last row
   plot_offset(offset_summary, 'Overall offset', 'dB_offset', 'DIALS_offset')
