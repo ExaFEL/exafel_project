@@ -100,12 +100,12 @@ class BinLimits(UserList):
 
   @property
   def bin_headers(self, overall=False) -> List[str]:
-    limits_str = [f'{limit:.6f}'[:6] for limit in self]
+    limits_str = [f'{limit:.4f}'[:4] for limit in self]
     return [f'{b}-{e}' for b, e in zip(limits_str[:-1], limits_str[1:])]
 
   @property
   def overall_header(self):
-    return '-'.join([f'{limit:.6f}'[:6] for limit in [self[0], self[-1]]])
+    return '-'.join([f'{limit:.4f}'[:4] for limit in [self[0], self[-1]]])
 
 
 class StatCalculatorsRegistry(OrderedDict):
@@ -216,7 +216,7 @@ def run(parameters) -> None:
   offsets_total = offsets.apply(stat_calc, axis=0, raw=True)
   offsets_binned = [offsets[offsets['bin'] == b].apply(stat_calc, axis=0, raw=True)
                     for b in range(parameters.n_bins)]
-  offset_summary = pd.concat(offsets_binned + [offsets_total], axis=1)
+  offset_summary = pd.concat(offsets_binned + [offsets_total], axis=1).T
   offset_summary['bin'] = bin_limits.bin_headers + [bin_limits.overall_header]
   offset_summary.set_index('bin', inplace=True)
   print0(offset_summary)
