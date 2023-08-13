@@ -160,8 +160,8 @@ def xy_to_polar(refl, detector, dials=False):
 def offset_polar(refl, detector: Detector, cal_col_name: str) -> np.ndarray:
   xy_obs = flex.vec2_double(refl['xyzobs.px.value'].as_numpy_array()[:, :2])
   xy_cal = flex.vec2_double(refl[cal_col_name].as_numpy_array()[:, :2])
-  rad_component = np.empty((len(refl), 2), dtype=float)
-  tang_component = np.empty((len(refl), 2), dtype=float)
+  rad_component = np.empty((len(refl), ), dtype=float)
+  tang_component = np.empty((len(refl), ), dtype=float)
 
   panel_id_used = list(set(refl['panel']))
   for panel_id in panel_id_used:
