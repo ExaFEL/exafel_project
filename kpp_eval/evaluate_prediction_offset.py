@@ -239,6 +239,18 @@ class OffsetArtist:
     legend_frame.set_alpha(1)
 
 
+def load_refls(refl_paths: List[str]) -> flex.reflection_table:
+  refl_all = flex.reflection_table()
+  for rp in refl_paths:
+    refl_new = flex.reflection_table.from_file(rp)
+    # this ugly piece of code is necessary to avoid id-identifier name conflict
+    unused_id = max(refl_new.experiment_identifiers().keys()) + 1
+    refl_new['id'] = flex.int(len(refl_new), unused_id)
+    refl_new.clean_experiment_identifiers_map()
+    refl_all.extend(refl_new)
+  return refl_all
+
+
 def run(parameters) -> None:
   expt_path = get_expt_path(parameters)
   detector = ExperimentList.from_file(expt_path, check_format=False)[0].detector
@@ -246,9 +258,7 @@ def run(parameters) -> None:
   refl_paths = glob.glob(refl_glob)
   print0(f'#refl files: {len(refl_paths)}')
   refl_paths = refl_paths[COMM.rank::COMM.size]
-  refl = flex.reflection_table()
-  for rp in refl_paths:
-    refl.extend(flex.reflection_table.from_file(rp))
+  refl = load_refls(refl_paths)
   offsets = offsets_from_refl(refl, detector)
   offsets_gathered = COMM.gather(offsets)
   if COMM.rank != 0:
