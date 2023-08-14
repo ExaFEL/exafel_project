@@ -27,6 +27,7 @@ output {
   composite_output = True
   integration_pickle=None
   logging_dir=. # demangle by rank
+  logging_option=*suppressed disabled normal
 }
 dispatch {
   index=True
