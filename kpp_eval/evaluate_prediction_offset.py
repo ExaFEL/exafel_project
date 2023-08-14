@@ -244,7 +244,8 @@ def load_refls(refl_paths: List[str]) -> flex.reflection_table:
   for rp in refl_paths:
     refl_new = flex.reflection_table.from_file(rp)
     # this ugly piece of code is necessary to avoid id-identifier name conflict
-    unused_id = max(refl_new.experiment_identifiers().keys()) + 1
+    new_refl_keys = refl_new.experiment_identifiers().keys()
+    unused_id = max(new_refl_keys) + 1 if new_refl_keys else 0
     refl_new['id'] = flex.int(len(refl_new), unused_id)
     refl_new.clean_experiment_identifiers_map()
     refl_all.extend(refl_new)
