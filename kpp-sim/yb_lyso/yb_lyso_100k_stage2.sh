@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH -N 256            # Number of nodes
+#SBATCH -N 64            # Number of nodes
 #SBATCH --ntasks-per-node=16
 #SBATCH --gpus-per-node=4
 #SBATCH --cpus-per-gpu=4
@@ -9,10 +9,10 @@
 #SBATCH -A m2859_g       # allocation
 #SBATCH -C gpu
 #SBATCH -q regular
-#SBATCH -t 30
+#SBATCH -t 60
 #SBATCH -o %j.out
 #SBATCH -e %j.err
-SRUN="srun -N256 --ntasks-per-node=16 --gpus-per-node=4 --cpus-per-gpu=4 -c2"
+SRUN="srun -N64 --ntasks-per-node=16 --gpus-per-node=4 --cpus-per-gpu=4 -c2"
 
 export SCRATCH_FOLDER=$SCRATCH/yb_lyso/$SLURM_JOB_ID
 mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER
@@ -93,7 +93,7 @@ simulator {
 
 logging {
   rank0_level = low normal *high
-  logfiles = True
+  logfiles = True # True for memory troubleshooting but consumes 3 seconds of wall time
 }
 " > stage_two.phil
 
