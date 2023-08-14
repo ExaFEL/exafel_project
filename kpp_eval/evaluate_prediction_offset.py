@@ -264,8 +264,7 @@ def run(parameters) -> None:
   offsets_gathered = COMM.gather(offsets)
   if COMM.rank != 0:
     return
-  offsets_list = chain.from_iterable(offsets_gathered)
-  offsets = pd.concat(offsets_list, axis=0, ignore_index=True)
+  offsets = pd.concat(offsets_gathered, axis=0, ignore_index=True)
   bin_limits = BinLimits.from_params(offsets['resolution'], parameters)
   offsets['bin'] = np.digitize(offsets['resolution'], bin_limits) - 1
   stat_calc = stat_calculators[parameters.stat]
