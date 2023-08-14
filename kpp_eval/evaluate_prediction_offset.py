@@ -158,6 +158,7 @@ def xy_to_polar(refl, detector, dials=False):
 
 
 def offset_polar(refl, detector: Detector, cal_col_name: str) -> np.ndarray:
+  """Vectorized version of xy_to_polar, may work faster for many refl/panel"""
   xy_obs = flex.vec2_double(refl['xyzobs.px.value'].as_numpy_array()[:, :2])
   xy_cal = flex.vec2_double(refl[cal_col_name].as_numpy_array()[:, :2])
   rad_component = np.empty((len(refl), ), dtype=float)
@@ -169,10 +170,10 @@ def offset_polar(refl, detector: Detector, cal_col_name: str) -> np.ndarray:
     sel = refl['panel'] == panel_id
     xy_obs_sel = xy_obs.select(sel)
     xy_cal_sel = xy_cal.select(sel)
-    # xy_obs_sel = panel.pixel_to_millimeter(xy_obs_sel)  # in original script
-    # xy_cal_sel = panel.pixel_to_millimeter(xy_cal_sel)  # prob. by mistake?
-    xy_obs_lab = np.array(panel.get_lab_coord(xy_obs_sel))[:, :2]
-    xy_cal_lab = np.array(panel.get_lab_coord(xy_cal_sel))[:, :2]
+    xy_obs_mm = panel.pixel_to_millimeter(xy_obs_sel)
+    xy_cal_mm = panel.pixel_to_millimeter(xy_cal_sel)
+    xy_obs_lab = np.array(panel.get_lab_coord(xy_obs_mm))[:, :2]
+    xy_cal_lab = np.array(panel.get_lab_coord(xy_cal_mm))[:, :2]
     xy_delta = xy_obs_lab - xy_cal_lab
     rad_vectors = xy_obs_lab / np.linalg.norm(xy_obs_lab, axis=1)[:, None]
     tang_vectors = np.array([-rad_vectors[:, 1], rad_vectors[:, 0]]).T
@@ -181,10 +182,7 @@ def offset_polar(refl, detector: Detector, cal_col_name: str) -> np.ndarray:
   return np.vstack([rad_component, tang_component])
 
 
-def offsets_from_refl(refl_path: str, detector) -> pd.DataFrame:
-  refl = flex.reflection_table.from_file(refl_path)
-  if len(refl) == 0:
-    return None
+def offsets_from_refl(refl: flex.reflection_table, detector) -> pd.DataFrame:
   r = {}
   xy_obs = refl['xyzobs.px.value'].as_numpy_array()[:, :2]
   xy_cal1 = refl['xyzcal.px'].as_numpy_array()[:, :2]
@@ -248,8 +246,10 @@ def run(parameters) -> None:
   refl_paths = glob.glob(refl_glob)
   print0(f'#refl files: {len(refl_paths)}')
   refl_paths = refl_paths[COMM.rank::COMM.size]
-  offsets = [offset for rp in refl_paths
-             if (offset := offsets_from_refl(rp, detector)) is not None]
+  refl = flex.reflection_table()
+  for rp in refl_paths:
+    refl.extend(flex.reflection_table.from_file(rp))
+  offsets = offsets_from_refl(refl, detector)
   offsets_gathered = COMM.gather(offsets)
   if COMM.rank != 0:
     return
