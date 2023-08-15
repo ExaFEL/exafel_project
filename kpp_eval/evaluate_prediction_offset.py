@@ -158,7 +158,10 @@ def xy_to_polar(refl, detector, dials=False):
 
 
 
-def offsets_from_refl(refl: flex.reflection_table, detector) -> pd.DataFrame:
+def offsets_from_refl(refl_path : str, detector) -> pd.DataFrame:
+  refl = flex.reflection_table.from_file(refl_path)
+  if len(refl) == 0:
+    return None
   r = {}
   xy_obs = refl['xyzobs.px.value'].as_numpy_array()[:, :2]
   xy_cal1 = refl['xyzcal.px'].as_numpy_array()[:, :2]
@@ -220,10 +223,8 @@ def run(parameters) -> None:
   refl_paths = glob.glob(refl_glob)
   print0(f'#refl files: {len(refl_paths)}')
   refl_paths = refl_paths[COMM.rank::COMM.size]
-  refl = flex.reflection_table()
-  for rp in refl_paths:
-    refl.extend(flex.reflection_table.from_file(rp))
-  offsets = offsets_from_refl(refl, detector)
+  offsets = [o for rp in refl_paths
+             if (o := offsets_from_refl(rp, detector)) is not None]
   offsets_gathered = COMM.gather(offsets)
   if COMM.rank != 0:
     return
