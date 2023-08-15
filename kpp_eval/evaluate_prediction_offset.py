@@ -200,7 +200,7 @@ class OffsetArtist:
     fig, ax = plt.subplots()
     fig.set_size_inches((5, 4))
     ax.set_title(offset_kind.title)
-    x = list(range(len(self.data.index))) + 0.5
+    x = [i + 0.5 for i in range(len(self.data.index))]
     y1 = self.data[offset_kind.dB_col_name]
     y2 = self.data[offset_kind.DIALS_col_name]
     ax.plot(x, y1, color='chartreuse', marker='s', mec='k')
