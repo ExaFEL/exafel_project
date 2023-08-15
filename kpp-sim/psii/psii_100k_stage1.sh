@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH -N 128           # Number of nodes
-#SBATCH --ntasks-per-node=16
+#SBATCH --ntasks-per-node=32
 #SBATCH --gpus-per-node=4
 #SBATCH --cpus-per-gpu=4
 #SBATCH -J stage_1       # job name
@@ -12,7 +12,7 @@
 #SBATCH -t 02:00:00
 #SBATCH -o %j.out
 #SBATCH -e %j.err
-SRUN="srun -N128 --ntasks-per-node=16 --gpus-per-node=4 --cpus-per-gpu=4 -c2"
+SRUN="srun -N128 --ntasks-per-node=32 --gpus-per-node=4 --cpus-per-gpu=4 -c4"
 
 export SCRATCH_FOLDER=$SCRATCH/psii/$SLURM_JOB_ID
 mkdir -p "$SCRATCH_FOLDER"; cd "$SCRATCH_FOLDER" || exit
@@ -60,7 +60,7 @@ fix {
 }
 
 sigmas {
-  ucell = .1 .1
+  ucell = .1 .1 .1
   RotXYZ = 0.01 0.01 0.01
   G = 1
   Nabc = 1 1 1
