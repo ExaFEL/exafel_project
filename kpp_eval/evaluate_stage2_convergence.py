@@ -3,7 +3,6 @@ Convert the .npz output of simtbx.diffBragg.stage_two to .mtz and plot
 the evolution of Pearson's R or CC of F or anom as a function of stage2 step.
 """
 from enum import Enum
-from functools import wraps
 import glob
 import os
 from typing import Callable, List, Sequence, Tuple
@@ -21,6 +20,7 @@ from libtbx import Auto
 from simtbx.diffBragg.utils import get_complex_fcalc_from_pdb
 
 from exafel_project.kpp_eval.phil import parse_phil
+from exafel_project.kpp_eval.util import set_default_return
 from exafel_project.kpp_eval.evaluate_cc12 import CrossCorrelationSums
 
 
@@ -41,16 +41,16 @@ stat = *PearsonR_F PearsonR_anom cc_F cc_anom Rwork_F Rwork_anom significance_F 
   .help = The type of statistic to be calculated
 d_min = 1.9
   .type = float
-  .help = If given, lower bound of data resolution to be investigated
+  .help = Lower bound of data resolution to be investigated, in Angstrom
 d_max = 9999.
   .type = float
-  .help = If given, upper bound of data resolution to be investigated
+  .help = Upper bound of data resolution to be investigated
 wavelength = 1.3
   .type = float
   .help = Radiation wavelength used to generate ground-truth data, in Angstrom
 n_bins = 1
   .type = int
-  .help = Data will be divided into `bins` resolution ranges for evaluation
+  .help = Data will be divided into `n_bins` resolution ranges for evaluation
 scatter_ranges = None
   .type = str
   .help = DiffBragg step ranges (in Python convention) to plot ground truth vs
@@ -63,17 +63,6 @@ show = True
 
 
 bin_colors = []  # global list of colors used for plotting bins, filled later
-
-
-def set_default_return(default_path: str) -> Callable:
-  """Decorate func so that None return is replaced with default_path instead"""
-  def decorator(func: Callable) -> Callable:
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-      result = func(*args, **kwargs)
-      return os.path.expandvars(default_path) if result is None else result
-    return wrapper
-  return decorator
 
 
 @set_default_return('$MODULES/ls49_big_data/1m2a.pdb')
