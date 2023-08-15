@@ -52,6 +52,8 @@ stat = *median average rms
 
 NJ = 1
 COMM = MPI.COMM_WORLD
+pd.set_option('display.max_columns', None)
+pd.set_option('display.max_rows', None)
 
 
 def print0(*args: str, **kwargs):
