@@ -206,7 +206,7 @@ class OffsetArtist:
     ax.plot(x, y1, color='chartreuse', marker='s', mec='k')
     ax.plot(x, y2, color='tomato', marker='o', mec='k')
     ax.set_xticks(list(range(len(self.data.index) + 1)))
-    x_labels = ['inf'] + [i.rsplit('-', 1)[1] for i in self.data.index]
+    x_labels = ['inf'] + [i.rsplit('-', 1)[1][:4] for i in self.data.index]
     ax.set_xticklabels(x_labels)
     ax.tick_params(labelsize=10, length=0)
     ax.grid(visible=True, color="#777777", ls="--", lw=0.5)
