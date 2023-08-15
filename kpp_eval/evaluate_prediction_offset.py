@@ -157,30 +157,6 @@ def xy_to_polar(refl, detector, dials=False):
   return rad_component / pxsize, tang_component / pxsize
 
 
-def offset_polar(refl, detector: Detector, cal_col_name: str) -> np.ndarray:
-  """Vectorized version of xy_to_polar, may work faster for many refl/panel"""
-  xy_obs = flex.vec2_double(refl['xyzobs.px.value'].as_numpy_array()[:, :2])
-  xy_cal = flex.vec2_double(refl[cal_col_name].as_numpy_array()[:, :2])
-  rad_component = np.empty((len(refl), ), dtype=float)
-  tang_component = np.empty((len(refl), ), dtype=float)
-
-  panel_id_used = list(set(refl['panel']))
-  for panel_id in panel_id_used:
-    panel = detector[panel_id]
-    sel = refl['panel'] == panel_id
-    xy_obs_sel = xy_obs.select(sel)
-    xy_cal_sel = xy_cal.select(sel)
-    xy_obs_mm = panel.pixel_to_millimeter(xy_obs_sel)
-    xy_cal_mm = panel.pixel_to_millimeter(xy_cal_sel)
-    xy_obs_lab = np.array(panel.get_lab_coord(xy_obs_mm))[:, :2]
-    xy_cal_lab = np.array(panel.get_lab_coord(xy_cal_mm))[:, :2]
-    xy_delta = xy_obs_lab - xy_cal_lab
-    rad_vectors = xy_obs_lab / np.linalg.norm(xy_obs_lab, axis=1)[:, None]
-    tang_vectors = np.array([-rad_vectors[:, 1], rad_vectors[:, 0]]).T
-    rad_component[sel] = np.abs(np.sum(xy_delta * rad_vectors, axis=1))
-    tang_component[sel] = np.abs(np.sum(xy_delta * tang_vectors, axis=1))
-  return np.vstack([rad_component, tang_component])
-
 
 def offsets_from_refl(refl: flex.reflection_table, detector) -> pd.DataFrame:
   r = {}
@@ -190,14 +166,12 @@ def offsets_from_refl(refl: flex.reflection_table, detector) -> pd.DataFrame:
   r['dB_offset'] = np.sqrt(np.sum((xy_obs - xy_cal1) ** 2, axis=1))
   r['DIALS_offset'] = np.sqrt(np.sum((xy_obs - xy_cal2) ** 2, axis=1))
   r['resolution'] = list(1. / np.linalg.norm(refl['rlp'], axis=1))
-  # r['dB_rad'], r['dB_tang'] = zip(
-  #   *[xy_to_polar(refl[i_r], detector, dials=False)
-  #     for i_r in range(len(refl))])
-  # r['DIALS_rad'], r['DIALS_tang'] = zip(
-  #   *[xy_to_polar(refl[i_r], detector, dials=True)
-  #     for i_r in range(len(refl))])
-  r['dB_rad'], r['dB_tang'] = offset_polar(refl, detector, 'xyzcal.px')
-  r['DIALS_rad'], r['DIALS_tang'] = offset_polar(refl, detector, 'dials.xyzcal.px')
+  r['dB_rad'], r['dB_tang'] = zip(
+    *[xy_to_polar(refl[i_r], detector, dials=False)
+      for i_r in range(len(refl))])
+  r['DIALS_rad'], r['DIALS_tang'] = zip(
+    *[xy_to_polar(refl[i_r], detector, dials=True)
+      for i_r in range(len(refl))])
   return pd.DataFrame.from_records(r)
 
 
@@ -239,19 +213,6 @@ class OffsetArtist:
     legend_frame.set_alpha(1)
 
 
-def load_refls(refl_paths: List[str]) -> flex.reflection_table:
-  refl_all = flex.reflection_table()
-  for rp in refl_paths:
-    refl_new = flex.reflection_table.from_file(rp)
-    # this ugly piece of code is necessary to avoid id-identifier name conflict
-    new_refl_keys = refl_new.experiment_identifiers().keys()
-    unused_id = max(new_refl_keys) + 1 if new_refl_keys else 0
-    refl_new['id'] = flex.int(len(refl_new), unused_id)
-    refl_new.clean_experiment_identifiers_map()
-    refl_all.extend(refl_new)
-  return refl_all
-
-
 def run(parameters) -> None:
   expt_path = get_expt_path(parameters)
   detector = ExperimentList.from_file(expt_path, check_format=False)[0].detector
@@ -259,12 +220,15 @@ def run(parameters) -> None:
   refl_paths = glob.glob(refl_glob)
   print0(f'#refl files: {len(refl_paths)}')
   refl_paths = refl_paths[COMM.rank::COMM.size]
-  refl = load_refls(refl_paths)
+  refl = flex.reflection_table()
+  for rp in refl_paths:
+    refl.extend(flex.reflection_table.from_file(rp))
   offsets = offsets_from_refl(refl, detector)
   offsets_gathered = COMM.gather(offsets)
   if COMM.rank != 0:
     return
-  offsets = pd.concat(offsets_gathered, axis=0, ignore_index=True)
+  offsets_list = chain.from_iterable(offsets_gathered)
+  offsets = pd.concat(offsets_list, axis=0, ignore_index=True)
   bin_limits = BinLimits.from_params(offsets['resolution'], parameters)
   offsets['bin'] = np.digitize(offsets['resolution'], bin_limits) - 1
   stat_calc = stat_calculators[parameters.stat]
