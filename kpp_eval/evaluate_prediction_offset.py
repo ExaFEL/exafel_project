@@ -200,12 +200,14 @@ class OffsetArtist:
     fig, ax = plt.subplots()
     fig.set_size_inches((5, 4))
     ax.set_title(offset_kind.title)
+    x = list(range(len(self.data.index))) + 0.5
     y1 = self.data[offset_kind.dB_col_name]
     y2 = self.data[offset_kind.DIALS_col_name]
-    ax.plot(y1, color='chartreuse', marker='s', mec='k')
-    ax.plot(y2, color='tomato', marker='o', mec='k')
-    ax.set_xticks(list(range(len(self.data.index))))
-    ax.set_xticklabels([i.replace('-', '\n-\n') for i in self.data.index])
+    ax.plot(x, y1, color='chartreuse', marker='s', mec='k')
+    ax.plot(x, y2, color='tomato', marker='o', mec='k')
+    ax.set_xticks(list(range(len(self.data.index) + 1)))
+    x_labels = ['inf'] + [i.rsplit('-', 1)[1] for i in self.data.index]
+    ax.set_xticklabels(x_labels)
     ax.tick_params(labelsize=10, length=0)
     ax.grid(visible=True, color="#777777", ls="--", lw=0.5)
     ax.set_xlabel("resolution ($\AA$)", fontsize=11, labelpad=5)
