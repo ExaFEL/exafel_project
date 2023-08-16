@@ -4,7 +4,6 @@
 #SBATCH -A CHM137       # allocation
 #SBATCH -p batch       # regular or special queue
 #SBATCH -t 120
-#SBATCH --gpus-per-node 4
 #SBATCH -o %j.out
 #SBATCH -e %j.err
 

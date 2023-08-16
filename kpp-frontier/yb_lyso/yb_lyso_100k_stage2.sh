@@ -1,16 +1,13 @@
 #!/bin/bash
 
 #SBATCH -N 256            # Number of nodes
-##SBATCH --ntasks-per-node=16
-##SBATCH --gpus-per-node=8
-##SBATCH --cpus-per-gpu=4
 #SBATCH -J stage2        # job name
 #SBATCH -A CHM137       # allocation
 #SBATCH -p batch
 #SBATCH -t 00:30:00
 #SBATCH -o %j.out
 #SBATCH -e %j.err
-SRUN="srun -n4096 -c3"
+SRUN="srun -n4096 -c2"
 
 export SCRATCH_FOLDER=$SCRATCH/yb_lyso/$SLURM_JOB_ID
 mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER

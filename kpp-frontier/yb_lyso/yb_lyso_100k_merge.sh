@@ -52,5 +52,5 @@ mkdir -p ${OUT_DIR}/${TRIAL}/out
 mkdir -p ${OUT_DIR}/${TRIAL}/tmp
 
 echo "jobstart $(date)";pwd
-srun -n 64 -c 4 cctbx.xfel.merge merge.phil
+srun -n 256 -c 4 cctbx.xfel.merge merge.phil
 echo "jobend $(date)";pwd

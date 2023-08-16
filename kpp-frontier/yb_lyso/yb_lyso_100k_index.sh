@@ -6,6 +6,7 @@
 #SBATCH -t 01:00:00
 #SBATCH -o %j.out
 #SBATCH -e %j.err
+SRUN="srun -n1280 -c2"
 
 export JOB_ID_SIM=$1
 
@@ -76,7 +77,7 @@ indexing.stills.nv_reject_outliers=False
 ">index.phil
 
 echo "jobstart $(date)";pwd
-srun -n 320 -c 4 dials.stills_process index.phil input.glob=$H5_SIM_PATH/image_rank_*.h5
+$SRUN dials.stills_process index.phil input.glob=$H5_SIM_PATH/image_rank_*.h5
 echo "jobend $(date)";pwd
 export TRIAL=tdata
 export OUT_DIR=.
@@ -100,5 +101,5 @@ mkdir -p ${OUT_DIR}/${TRIAL}/out
 mkdir -p ${OUT_DIR}/${TRIAL}/tmp
 
 echo "jobstart $(date)";pwd
-srun -n 320 -c 4 cctbx.xfel.merge tdata.phil
+$SRUN cctbx.xfel.merge tdata.phil
 echo "jobend $(date)";pwd
