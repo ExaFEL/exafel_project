@@ -31,7 +31,10 @@ if __name__=="__main__":
     for label in times:
         times[label]['points'] = np.array(times[label]['points']) / 60
         max_time = max(max_time, max(times[label]['points']))
-        plt.plot(times[label]["points"], times[label]["ranks"], 'o', label=label)
+        print_label = label
+        while len(print_label)>0 and print_label[0] == "_":
+            print_label = print_label[1:]
+        plt.plot(times[label]["points"], times[label]["ranks"], 'o', label=print_label)
 
     plt.yticks(range(len(slurm_ids)), slurm_ids)
     plt.ylabel("Slurm ID")
