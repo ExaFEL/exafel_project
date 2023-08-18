@@ -1,11 +1,11 @@
 #!/bin/bash -l
-#SBATCH -N 8                # Number of nodes
+#SBATCH -N 64                # Number of nodes
 #SBATCH -J stills_proc
 #SBATCH -L SCRATCH          # job requires SCRATCH files
 #SBATCH -A m2859          # allocation
 #SBATCH -C cpu
 #SBATCH -q regular    # regular queue
-#SBATCH -t 01:00:00
+#SBATCH -t 00:15:00
 #SBATCH -o %j.out
 #SBATCH -e %j.err
 
@@ -78,7 +78,7 @@ indexing.stills.nv_reject_outliers=False
 ">index.phil
 
 echo "jobstart $(date)";pwd
-srun -n 256 -c 2 dials.stills_process index.phil input.glob=$H5_SIM_PATH/image_rank_*.h5
+srun -n 2048 -c 2 dials.stills_process index.phil input.glob=$H5_SIM_PATH/image_rank_*.h5
 echo "jobend $(date)";pwd
 export TRIAL=tdata
 export OUT_DIR=.
@@ -102,5 +102,5 @@ mkdir -p ${OUT_DIR}/${TRIAL}/out
 mkdir -p ${OUT_DIR}/${TRIAL}/tmp
 
 echo "jobstart $(date)";pwd
-srun -n 256 -c 2 cctbx.xfel.merge tdata.phil
+srun -n 2048 -c 2 cctbx.xfel.merge tdata.phil
 echo "jobend $(date)";pwd
