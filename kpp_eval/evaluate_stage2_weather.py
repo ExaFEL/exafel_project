@@ -143,7 +143,7 @@ class Stage2Job:
       with open(out_path, 'r') as out_file:
         lines = out_file.readlines()
         jobstart_line = [x for x in lines if 'jobstart' in x][0]
-        jobend_line = [x for x in lines if 'jobstart' in x][0]
+        jobend_line = [x for x in lines if 'jobend' in x][0]
         fmt = ' %a %d %b %Y %I:%M:%S %p %Z\n'
         start_date = datetime.strptime(jobstart_line, 'jobstart' + fmt)
         end_date = datetime.strptime(jobend_line, 'jobend' + fmt)
