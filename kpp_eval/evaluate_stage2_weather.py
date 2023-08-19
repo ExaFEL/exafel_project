@@ -77,9 +77,9 @@ class Event:
     kind_str = d.partition(' >>  ')[2] if '>>' in (d := details_str) else d
     kind = event_kind_registry[kind_str]
     date = datetime.strptime(time_str, "%Y-%m-%d %H:%M:%S,%f")
-    rank = int(rank_str[4:]) if rank_str else 0
     node = int(node_str[3:]) if node_str else 0
-    return cls(kind, date, rank, node)
+    rank = int(rank_str[4:]) if rank_str else 0
+    return cls(kind, date, node, rank)
 
 
 class Stage2Job:
