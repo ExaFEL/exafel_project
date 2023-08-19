@@ -70,7 +70,7 @@ class Event:
 
   @classmethod
   def from_log_line(cls, line: str) -> 'Event':
-    origin_str, time_str, details_str = line.split(' | ')
+    origin_str, time_str, details_str = line.strip().split(' | ')
     rank_str, _, node_str = origin_str.partition(':')
     kind_str = d.partition(' >>  ')[2] if '>>' in (d := details_str) else d
     kind = event_kind_registry[kind_str]
