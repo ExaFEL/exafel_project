@@ -6,7 +6,7 @@ from datetime import datetime
 from dataclasses import dataclass
 from itertools import chain
 from pathlib import Path
-from typing import Iterable, List, NamedTuple, Tuple
+from typing import Iterable, List, NamedTuple, Tuple, Union
 
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
@@ -112,6 +112,29 @@ class Stage2Job:
       return Path(err_path).parts[-2]
 
   @staticmethod
+  def collect_paths(stage2_params) -> Tuple[Union[Path, None], List[Path]]:
+    out_path = sorted(Path().glob(o))[0] if (o := stage2_params.out) else None
+    err_paths_all = sorted(Path().glob(e if (e := stage2_params.err) else '*'))
+    err_paths_valid = []
+    for err_path in err_paths_all:
+      try:
+        err_file = open(err_path)
+      except (FileNotFoundError, IsADirectoryError):
+        pass
+      else:
+        err_paths_valid.append(err_path)
+        err_file.close()
+    if out_glob := stage2_params.out:
+      out_path = sorted(Path().glob(out_glob))[0]
+    elif len(err_paths_valid) == 1:
+      err_path = err_paths_valid[0]
+      if err_path.suffix == '.err' and err_path.with_suffix('.out').exists():
+        out_path = err_path.with_suffix('.out')
+    else:
+      out_path = None
+    return out_path, err_paths_valid
+
+  @staticmethod
   def collect_start_end(out_path) -> Tuple[datetime, datetime]:
     """Collect date of "jobstart" and "jobend" from out file, if present"""
     try:
@@ -128,9 +151,8 @@ class Stage2Job:
 
   @classmethod
   def from_params(cls, stage2_params):
-    out_path = sorted(Path().glob(o))[0] if (o := stage2_params.out) else None
+    out_path, err_paths = cls.collect_paths(stage2_params)
     start, end = cls.collect_start_end(out_path)
-    err_paths = sorted(Path().glob(stage2_params.err))
     name = cls.collect_job_name(out_path, err_paths[0])
     event_lists = [cls.collect_events(ep) for ep in err_paths]
     events = list(chain.from_iterable(event_lists))
@@ -154,7 +176,7 @@ def plot_stage2_jobs_weather_plot(jobs: Iterable[Stage2Job]) -> None:
         xs = np.array([timedelta_in_minutes(e.date, job.start)
                        for e in job.events if e.kind is ek])
         ys = np.repeat(y, len(xs))
-        ax.plot(xs, ys, color=ek.color, marker='o', linestyle=None)
+        ax.plot(xs, ys, color=ek.color, marker='o', linestyle=' ')
     x0s = np.repeat(0, len(y_space))
     x1s = np.repeat(timedelta_in_minutes(job.end, job.start), len(y_space))
     ax.plot(x0s, y_space, color='gray')
