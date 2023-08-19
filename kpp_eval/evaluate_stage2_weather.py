@@ -127,7 +127,7 @@ class Stage2Job:
 
   @classmethod
   def from_params(cls, stage2_params):
-    out_path = sorted(Path().glob(stage2_params.out))[0]
+    out_path = sorted(Path().glob(o))[0] if (o := stage2_params.out) else None
     start, end = cls.collect_start_end(out_path)
     err_paths = sorted(Path().glob(stage2_params.err))
     name = cls.collect_job_name(out_path, err_paths[0])
