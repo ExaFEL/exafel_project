@@ -191,11 +191,6 @@ def plot_stage2_jobs_weather_plot(jobs: Iterable[Stage2Job]) -> None:
   plt.show()
 
 
-
-void_job_params = SimpleNamespace(out=None, err=None)
-
-
-
 def run(parameters) -> None:
   stage2_jobs = []
   jobs_params = p if (p := parameters.stage2) else [SimpleNamespace(out=None, err=None)]
