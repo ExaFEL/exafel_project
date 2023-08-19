@@ -26,8 +26,8 @@ stage2
     .help = directory will be read.
   out = None
     .type = str
-    .type = Glob to JOB_ID.out containing "jobstart" and "jobend" timestamps.
-    .type = If None, first/last event time will be used as start/end date.
+    .help = Glob to JOB_ID.out containing "jobstart" and "jobend" timestamps.
+    .help = If None, first/last event time will be used as start/end date.
 }
 """
 
