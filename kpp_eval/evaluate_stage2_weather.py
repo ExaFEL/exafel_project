@@ -120,7 +120,8 @@ class Stage2Job:
     for err_path in err_paths_all:
       try:
         err_file = open(err_path)
-      except (FileNotFoundError, IsADirectoryError):
+        err_file.readline()
+      except (FileNotFoundError, IsADirectoryError, UnicodeDecodeError):
         pass
       else:
         err_paths_valid.append(err_path)
