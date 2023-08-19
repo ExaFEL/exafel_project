@@ -110,7 +110,7 @@ class Stage2Job:
     elif Path(err_path).suffix == '.err':
       return Path(err_path).stem
     else:  # if neither global .out nor .err are specified, use directory name
-      return Path(err_path).parts[-2]
+      return Path(err_path).absolute().parts[-2]
 
   @staticmethod
   def collect_paths(stage2_params) -> Tuple[Union[Path, None], List[Path]]:
