@@ -41,7 +41,8 @@ class EventKind(NamedTuple):
 
   @property
   def handle(self):
-    return Line2D([], [], color=self.color, marker='o', label=self.log_string)
+    return Line2D([], [], color=self.color, marker='o',
+                  label=self.log_string.lstrip('_'))
 
 event_kinds = [
   EventKind('EVENT: read input pickle', 0),
@@ -137,7 +138,7 @@ class Stage2Job:
 
   @property
   def ranks(self) -> List[int]:
-    return sorted(event.rank for event in self.events)
+    return sorted({event.rank for event in self.events})
 
 
 def timedelta_in_minutes(start: datetime, end: datetime) -> float:
@@ -153,7 +154,7 @@ def plot_stage2_jobs_weather_plot(jobs: Iterable[Stage2Job]) -> None:
         xs = np.array([timedelta_in_minutes(e.date, job.start)
                        for e in job.events if e.kind is ek])
         ys = np.repeat(y, len(xs))
-        ax.plot(xs, ys, color=ek.color, marker='o')
+        ax.plot(xs, ys, color=ek.color, marker='o', linestyle=None)
     x0s = np.repeat(0, len(y_space))
     x1s = np.repeat(timedelta_in_minutes(job.end, job.start), len(y_space))
     ax.plot(x0s, y_space, color='gray')
