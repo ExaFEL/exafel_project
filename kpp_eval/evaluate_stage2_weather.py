@@ -75,8 +75,8 @@ class Event:
     kind_str = d.partition(' >>  ')[2] if '>>' in (d := details_str) else d
     kind = event_kind_registry[kind_str]
     date = datetime.strptime(time_str, "%Y-%m-%d %H:%M:%S,%f")
-    rank = int(rank_str[:4]) if rank_str else 0
-    node = int(node_str[:3]) if node_str else 0
+    rank = int(rank_str[4:]) if rank_str else 0
+    node = int(node_str[3:]) if node_str else 0
     return cls(kind, date, rank, node)
 
 
@@ -150,11 +150,14 @@ def plot_stage2_jobs_weather_plot(jobs: Iterable[Stage2Job]) -> None:
     y_space = np.linspace(job_idx - .5, job_idx + .5, len(job.ranks) + 2)[1:-1]
     for rank, y in zip(job.ranks, y_space):
       for ek in event_kinds:
-        x = np.array([timedelta_in_minutes(e.date, job.start)
-                      for e in job.events if e.kind is ek])
-        ax.plot(x, y, color=ek.color, marker='o')
-    ax.plot(0, y_space, color='k')
-    ax.plot(timedelta_in_minutes(job.end, job.start), y_space, color='k')
+        xs = np.array([timedelta_in_minutes(e.date, job.start)
+                       for e in job.events if e.kind is ek])
+        ys = np.repeat(y, len(xs))
+        ax.plot(xs, ys, color=ek.color, marker='o')
+    x0s = np.repeat(0, len(y_space))
+    x1s = np.repeat(timedelta_in_minutes(job.end, job.start), len(y_space))
+    ax.plot(x0s, y_space, color='k--')
+    ax.plot(x1s, y_space, color='k--')
   ax.title('diffBragg stage2 weather plot')
   ax.xlabel('Time since job start [min]')
   ax.ylabel('Slurm ID')
