@@ -6,6 +6,7 @@ from datetime import datetime
 from dataclasses import dataclass
 from itertools import chain
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Iterable, List, NamedTuple, Tuple, Union
 
 import matplotlib.pyplot as plt
@@ -191,9 +192,14 @@ def plot_stage2_jobs_weather_plot(jobs: Iterable[Stage2Job]) -> None:
 
 
 
+void_job_params = SimpleNamespace(out=None, err=None)
+
+
+
 def run(parameters) -> None:
   stage2_jobs = []
-  for stage2_params in parameters.stage2:
+  jobs_params = p if (p := parameters.stage2) else [SimpleNamespace(out=None, err=None)]
+  for stage2_params in jobs_params:
     stage2_jobs.append(Stage2Job.from_params(stage2_params))
   plot_stage2_jobs_weather_plot(stage2_jobs)
 
