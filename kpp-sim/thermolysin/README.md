@@ -1,29 +1,44 @@
-<h2>This directory presents the processing case of 130,000 diffraction patterns from Yb-Lysozyme, on Perlmutter. 08/01/2023.</h2>
+<h2>This directory presents the processing case of 130,000 diffraction patterns from thermolysin, on Perlmutter. 08/01/2023.</h2>
 
 Github branch pre-requisites:<br>
 cctbx_project/nxmx_writer_experimental<br>
 dxtbx/nxmx_writer<br>
-dials/dsp_nv_outlier_disable
+dials/dsp_disable_nv_outlier
 
-Batch jobs are submitted from the user's choice directory ${WORK}.  However, it is assumed there is a directory, ${SCRATCH}/yb_lyso, available for fast I/O.
+Batch jobs are submitted from the user's choice directory ${WORK}.  However, it is assumed there is a directory, ${SCRATCH}/thermolysin, available for fast I/O.
 The JOB_ID for each step is saved in an environment variable so it can be used to locate files for subsequent steps.
 
 Simulation step:
 
 ```
-export JOB_ID_SIM=`sbatch $MODULES/exafel_project/kpp-sim/yb_lyso/yb_lyso_100k_sim.sh|awk '{print $4}'`
+cd $WORK
+export JOB_ID_SIM=`sbatch $MODULES/exafel_project/kpp-sim/thermolysin/thermolysin_100k_sim.sh|awk '{print $4}'`
 echo SIM $JOB_ID_SIM
 ```
+SIM 13719137
+export JOB_ID_SIM=13719137
 
 Cctbx: dials.stills_process:
 ```
-export JOB_ID_INDEX=`sbatch $MODULES/exafel_project/kpp-sim/yb_lyso/yb_lyso_100k_index.sh $JOB_ID_SIM|awk '{print $4}'`
+export JOB_ID_SIM=13719137
+export JOB_ID_INDEX=`sbatch $MODULES/exafel_project/kpp-sim/thermolysin/thermolysin_100k_index.sh $JOB_ID_SIM|awk '{print $4}'`
 echo INDEX $JOB_ID_INDEX
 ```
+INDEX 14199866
+
+/pscratch/sd/v/vidyagan/thermolysin/14199866> dials.image_viewer idx-0083_refined.expt idx-0083_indexed.refl
+
+```
+export JOB_ID_INDEX=14199866
+cd $MODULES/exafel_project/kpp-sim/thermolysin
+uc_metrics.dbscan file_name=$SCRATCH/thermolysin/$JOB_ID_INDEX/tdata_cells.tdata space_group=P6122 feature_vector=a,b,c eps=0.20 write_covariance=True metric=L2norm show_plot=True 
+```
+
+STOPPED HERE 8/21/2023
 
 Cctbx.xfel.merge:
 ```
-export JOB_ID_MERGE=`sbatch $MODULES/exafel_project/kpp-sim/yb_lyso/yb_lyso_100k_merge.sh $JOB_ID_INDEX|awk '{print $4}'`
+export JOB_ID_MERGE=`sbatch $MODULES/exafel_project/kpp-sim/thermolysin/thermolysin_100k_merge.sh $JOB_ID_INDEX|awk '{print $4}'`
 echo MERGE $JOB_ID_MERGE
 ```
 

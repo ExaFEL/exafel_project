@@ -10,7 +10,7 @@
 #SBATCH -o %j.out
 #SBATCH -e %j.err
 
-export SCRATCH_FOLDER=$SCRATCH/yb_lyso/$SLURM_JOB_ID
+export SCRATCH_FOLDER=$SCRATCH/thermolysin/$SLURM_JOB_ID
 mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER
 
 export CCTBX_DEVICE_PER_NODE=1
@@ -59,18 +59,18 @@ spectrum {
 crystal {
   # Perlmutter OK-download in job from PDB
   # structure=pdb
-  # pdb.code=4bs7 # Yb lysozyme, Celia Sauter(no relation), 1.7 Angstrom
+  # pdb.code=4tnl # thermolysin
   # Frontier OK-take PDB file from github
   structure=pdb
   pdb.code=None
   pdb.source=file
-  pdb.file=${MODULES}/cxid9114/sim/4bs7.pdb
+  pdb.file=${MODULES}/exafel_project/kpp-sim/thermolysin/4tnl.pdb
   length_um=0.5 # increase crystal path length
 }
 detector {
   tiles=multipanel
   reference=$MODULES/exafel_project/kpp-sim/t000_rg002_chunk000_reintegrated_000000.expt
-  offset_mm=80.0 # desired 1.7 somewhere between inscribed and circumscribed.
+  offset_mm=80.0 # desired 1.8 somewhere between inscribed and circumscribed.
 }
 output {
   format=h5
