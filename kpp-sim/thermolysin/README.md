@@ -31,16 +31,19 @@ INDEX 14199866
 ```
 export JOB_ID_INDEX=14199866
 cd $MODULES/exafel_project/kpp-sim/thermolysin
-uc_metrics.dbscan file_name=$SCRATCH/thermolysin/$JOB_ID_INDEX/tdata_cells.tdata space_group=P6122 feature_vector=a,b,c eps=0.20 write_covariance=True metric=L2norm show_plot=True 
+uc_metrics.dbscan file_name=$SCRATCH/thermolysin/$JOB_ID_INDEX/tdata_cells_cropped.tdata space_group=P6/mmm feature_vector=a,c eps=0.20 write_covariance=True metric=L2norm show_plot=True 
 ```
-
-STOPPED HERE 8/21/2023
 
 Cctbx.xfel.merge:
 ```
+cd $WORK
+export JOB_ID_INDEX=14199866
 export JOB_ID_MERGE=`sbatch $MODULES/exafel_project/kpp-sim/thermolysin/thermolysin_100k_merge.sh $JOB_ID_INDEX|awk '{print $4}'`
 echo MERGE $JOB_ID_MERGE
 ```
+MERGE 14270206 - RUNNING
+
+STOPPED HERE
 
 Make input step, splits files:
 
