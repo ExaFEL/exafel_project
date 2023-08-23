@@ -2,7 +2,7 @@
 
 Github branch pre-requisites:<br>
 cctbx_project/nxmx_writer_experimental<br>
-dxtbx/nxmx_writer<br>
+dxtbx/main<br>
 dials/dsp_disable_nv_outlier
 
 Batch jobs are submitted from the user's choice directory ${WORK}.  However, it is assumed there is a directory, ${SCRATCH}/thermolysin, available for fast I/O.
