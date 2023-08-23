@@ -67,7 +67,7 @@ init {
 }
 
 refiner {
-  num_devices=4
+  num_devices=8
   verbose = 0
   sigma_r = 3
   adu_per_photon = 1

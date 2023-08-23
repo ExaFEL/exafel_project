@@ -1,13 +1,13 @@
 #!/bin/bash
 
-#SBATCH -N 64            # Number of nodes
+#SBATCH -N 128            # Number of nodes
 #SBATCH -J predict       # job name
 #SBATCH -A CHM137       # allocation
 #SBATCH -p batch
-#SBATCH -t 2:00:00
+#SBATCH -t 1:45:00
 #SBATCH -o %j.out
 #SBATCH -e %j.err
-SRUN="srun -n1024 -c2"
+SRUN="srun -n2048 -c2"
 
 export SCRATCH_FOLDER=$SCRATCH/yb_lyso/$SLURM_JOB_ID
 mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER
@@ -85,6 +85,6 @@ $SCRATCH/yb_lyso/$JOB_ID_HOPPER/stage1 \
 predict \
 --cmdlinePhil oversample_override=1 \
 Nabc_override=[52,52,52] threshold=1 label_weak_col=rlp \
---numdev 4
+--numdev 8
 libtbx.python -c "import pandas; df = pandas.read_pickle('predict/preds_for_hopper.pkl'); print('pickled',len(df))"
 echo "jobend $(date)";pwd
