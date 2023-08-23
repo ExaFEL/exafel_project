@@ -1,4 +1,3 @@
-import sys
 import pickle
 from matplotlib import pyplot as plt
 from datetime import datetime
@@ -76,7 +75,10 @@ def get_timestamps(filename):
 
 
 if __name__=="__main__":
+    import sys, os
     filename = sys.argv[1]
     timestamps = get_timestamps(filename)
-    with open(f"timestamps_{filename}.pkl", 'wb') as F:
+    if not os.path.exists("timestamps"):
+        os.mkdir("timestamps")
+    with open(f"timestamps/{filename}.pkl", 'wb') as F:
         pickle.dump(timestamps, F)

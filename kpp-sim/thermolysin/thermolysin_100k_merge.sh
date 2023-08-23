@@ -10,9 +10,9 @@
 #SBATCH -e %j.err
 
 export JOB_ID_INDEX=$1
-export DIALS_OUTPUT=${SCRATCH}/yb_lyso/$JOB_ID_INDEX
+export DIALS_OUTPUT=${SCRATCH}/thermolysin/$JOB_ID_INDEX
 
-export SCRATCH_FOLDER=$SCRATCH/yb_lyso/$SLURM_JOB_ID
+export SCRATCH_FOLDER=$SCRATCH/thermolysin/$SLURM_JOB_ID
 mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER
 
 export TRIAL=ly99sim
@@ -24,13 +24,13 @@ input.reflections_suffix=_integrated.refl
 input.parallel_file_load.method=uniform
 filter.algorithm=unit_cell
 filter.unit_cell.algorithm=cluster
-filter.unit_cell.cluster.covariance.file=${MODULES}/exafel_project/kpp-sim/yb_lyso/covariance_tdata_cells.pickle
+filter.unit_cell.cluster.covariance.file=${MODULES}/exafel_project/kpp-sim/thermolysin/covariance_tdata_cells_cropped.pickle
 filter.unit_cell.cluster.covariance.component=0
 filter.unit_cell.cluster.covariance.mahalanobis=5.0
 filter.outlier.min_corr=-1.0
 select.algorithm=significance_filter
 select.significance_filter.sigma=-0.5
-scaling.model=${MODULES}/cxid9114/sim/4bs7.pdb
+scaling.model=${MODULES}/exafel_project/kpp-sim/thermolysin/4tnl.pdb
 scaling.resolution_scalar=0.993420862158964
 postrefinement.enable=True
 postrefinement.algorithm=rs

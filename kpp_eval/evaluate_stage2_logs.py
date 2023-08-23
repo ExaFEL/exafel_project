@@ -6,7 +6,7 @@ from matplotlib import pyplot as plt
 plt.rcParams["axes.prop_cycle"] = plt.cycler("color", plt.cm.tab20.colors)
 
 def load_pickle(slurm_id, rank):
-    with open(f"timestamps_{slurm_id}.pkl", 'rb') as F:
+    with open(f"timestamps/{slurm_id}.pkl", 'rb') as F:
         times = pickle.load(F)
 
     for label in times:
@@ -14,10 +14,8 @@ def load_pickle(slurm_id, rank):
         times[label] = {"points":timepoints, "ranks":len(timepoints)*[rank]}
     return times
 
-if __name__=="__main__":
+def gather_timedata(slurm_ids):
     times = {}
-    slurm_ids = [int(s) for s in sys.argv[1:]]
-    slurm_ids = sorted(slurm_ids)
     for i,slurm_id in enumerate(slurm_ids):
         timepoints = load_pickle(slurm_id, i)
         for label in timepoints:
@@ -25,9 +23,12 @@ if __name__=="__main__":
                 times[label] = {"points":[], "ranks":[]}
             for sublabel in timepoints[label]:
                 times[label][sublabel] += timepoints[label][sublabel]
+    return times
 
+def plot_timedata(times, slurm_ids):
     max_time = 0
-
+    plt.rcParams["axes.prop_cycle"] = plt.cycler("color",
+        plt.cm.gist_ncar(np.linspace(.95, .05, len(times))))
     for label in times:
         times[label]['points'] = np.array(times[label]['points']) / 60
         max_time = max(max_time, max(times[label]['points']))
@@ -43,3 +44,8 @@ if __name__=="__main__":
     plt.xlim(0, max_time)
     plt.legend()
     plt.show()
+
+if __name__=="__main__":
+    slurm_ids = sorted([int(s) for s in sys.argv[1:]])
+    times = gather_timedata(slurm_ids)
+    plot_timedata(times, slurm_ids)

@@ -1,11 +1,11 @@
 #!/bin/bash -l
-#SBATCH -N 8                # Number of nodes
+#SBATCH -N 16                # Number of nodes
 #SBATCH -J stills_proc
 #SBATCH -L SCRATCH          # job requires SCRATCH files
 #SBATCH -A m2859          # allocation
 #SBATCH -C cpu
 #SBATCH -q regular    # regular queue
-#SBATCH -t 01:00:00
+#SBATCH -t 00:05:00         # wall clock time limit
 #SBATCH -o %j.out
 #SBATCH -e %j.err
 
@@ -17,9 +17,10 @@ export OMP_PROC_BIND=spread
 export OMP_PLACES=threads
 export XFEL_CUSTOM_WORKER_PATH=$MODULES/psii_spread/merging/application # User must export $MODULES path
 
-export H5_SIM_PATH=$SCRATCH/yb_lyso/$JOB_ID_SIM
+export H5_SIM_PATH=$SCRATCH/cosym/$1
+#export H5_SIM_PATH=$SCRATCH/yb_lyso/12904448
 
-export SCRATCH_FOLDER=$SCRATCH/yb_lyso/$SLURM_JOB_ID
+export SCRATCH_FOLDER=$SCRATCH/cosym/$SLURM_JOB_ID
 mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER
 
 echo "
@@ -27,6 +28,7 @@ output {
   composite_output = True
   integration_pickle=None
   logging_dir=. # demangle by rank
+  logging_option=suppressed disabled *normal
 }
 dispatch {
   index=True
@@ -53,8 +55,8 @@ spotfinder {
 indexing {
   stills.refine_candidates_with_known_symmetry=True
   known_symmetry {
-    space_group = 'P43212'
-    unit_cell = 79.1 79.1 38.4 90 90 90
+    space_group = 'P32'
+    unit_cell = 106.14 106.14 100.98 90 90 120
   }
 }
 integration {
@@ -77,7 +79,7 @@ indexing.stills.nv_reject_outliers=False
 ">index.phil
 
 echo "jobstart $(date)";pwd
-srun -n 256 -c 2 dials.stills_process index.phil input.glob=$H5_SIM_PATH/image_rank_*.h5
+srun -n 512 -c 2 dials.stills_process index.phil input.glob=$H5_SIM_PATH/image_rank_*.h5
 echo "jobend $(date)";pwd
 export TRIAL=tdata
 export OUT_DIR=.
@@ -101,5 +103,5 @@ mkdir -p ${OUT_DIR}/${TRIAL}/out
 mkdir -p ${OUT_DIR}/${TRIAL}/tmp
 
 echo "jobstart $(date)";pwd
-srun -n 256 -c 2 cctbx.xfel.merge tdata.phil
+srun -n 512 -c 2 cctbx.xfel.merge tdata.phil
 echo "jobend $(date)";pwd
