@@ -1,23 +1,23 @@
 #!/bin/bash
 
-#SBATCH -N 256            # Number of nodes
+#SBATCH -N 512            # Number of nodes
 #SBATCH -J stage2        # job name
 #SBATCH -A CHM137       # allocation
 #SBATCH -p batch
-#SBATCH -t 1:30:00
+#SBATCH -t 01:00:00
 #SBATCH -o %j.out
 #SBATCH -e %j.err
-SRUN="srun -n4096 -c2"
+SRUN="srun -n8192 -c2"
 
-export SCRATCH_FOLDER=$SCRATCH/psii/$SLURM_JOB_ID
-mkdir -p "$SCRATCH_FOLDER"; cd "$SCRATCH_FOLDER" || exit
+export SCRATCH_FOLDER=$SCRATCH/yb_lyso/$SLURM_JOB_ID
+mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER
 
 export JOB_ID_INDEX=${1}
 export JOB_ID_MERGE=${2}
 export JOB_ID_PREDICT=${3}
 
 export PERL_NDEV=8  # number GPU per node
-export PANDA=$SCRATCH/psii/${JOB_ID_PREDICT}/predict/preds_for_hopper.pkl
+export PANDA=$SCRATCH/yb_lyso/${JOB_ID_PREDICT}/predict/preds_for_hopper.pkl
 export GEOM=$MODULES/exafel_project/kpp-sim/t000_rg002_chunk000_reintegrated_000000.expt
 
 export CCTBX_DEVICE_PER_NODE=8
@@ -53,7 +53,7 @@ roi {
   reject_edge_reflections = True
   pad_shoebox_for_background_estimation = 0
 }
-space_group=P212121
+space_group=P43212
 
 sigmas {
   G = 1
@@ -71,7 +71,7 @@ refiner {
   sigma_r = 3
   num_devices = 4
   adu_per_photon = 1
-  res_ranges='2.5-3'
+  res_ranges='1.75-999'
   stage_two.save_model_freq=None
   stage_two.save_Z_freq=None
 }
@@ -88,7 +88,7 @@ simulator {
 
 logging {
   rank0_level = low normal *high
-  logfiles = False
+  logfiles = False # True for memory troubleshooting but consumes 3 seconds of wall time
 }
 " > stage_two.phil
 
@@ -96,6 +96,6 @@ echo "jobstart $(date)";pwd
 $SRUN simtbx.diffBragg.stage_two stage_two.phil \
 io.output_dir=${SLURM_JOB_ID} \
 pandas_table=${PANDA} num_devices=$PERL_NDEV \
-simulator.structure_factors.mtz_name=${SCRATCH}/psii/${JOB_ID_MERGE}/out/ly99sim_all.mtz \
+simulator.structure_factors.mtz_name=${SCRATCH}/yb_lyso/${JOB_ID_MERGE}/out/ly99sim_all.mtz \
 
 echo "jobend $(date)";pwd
