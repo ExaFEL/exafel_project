@@ -8,6 +8,7 @@
 #SBATCH -e %j.err
 export NTASKS=$((SLURM_JOB_NUM_NODES*28))
 export SRUN="srun -n $NTASKS --gpus-per-node=8 --cpus-per-gpu=7 --cpu-bind=cores"
+echo "running diffBragg stage 2 on $SLURM_JOB_NUM_NODES nodes with $SRUN"
 
 export JOB_ID_INDEX=$1
 export JOB_ID_MERGE=$2

@@ -8,12 +8,13 @@
 #SBATCH -e %j.err
 export NTASKS=$((SLURM_JOB_NUM_NODES*28))
 export SRUN="srun -n $NTASKS --gpus-per-node=8 --cpus-per-gpu=7 --cpu-bind=cores"
+export N_SIM=1000 # total number of images to simulate
+echo "simulating $N_SIM images on $SLURM_JOB_NUM_NODES nodes with $SRUN"
 
 export CCTBX_DEVICE_PER_NODE=8
 export N_START=0
 export LOG_BY_RANK=1 # Use Aaron's rank logger
 export RANK_PROFILE=0 # 0 or 1 Use cProfiler, default 1
-export N_SIM=1000 # total number of images to simulate
 #export ADD_BACKGROUND_ALGORITHM=cuda
 export DEVICES_PER_NODE=8
 export MOS_DOM=25

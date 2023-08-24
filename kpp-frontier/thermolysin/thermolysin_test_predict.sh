@@ -8,6 +8,7 @@
 #SBATCH -e %j.err
 export NTASKS=$((SLURM_JOB_NUM_NODES*28))
 export SRUN="srun -n $NTASKS --gpus-per-node=8 --cpus-per-gpu=7 --cpu-bind=cores"
+echo "predicting/integrating on $SLURM_JOB_NUM_NODES nodes with $SRUN"
 
 export JOB_ID_HOPPER=$1
 
