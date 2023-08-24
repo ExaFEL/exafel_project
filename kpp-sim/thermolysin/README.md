@@ -26,8 +26,6 @@ echo INDEX $JOB_ID_INDEX
 ```
 INDEX 14199866
 
-/pscratch/sd/v/vidyagan/thermolysin/14199866> dials.image_viewer idx-0083_refined.expt idx-0083_indexed.refl
-
 ```
 export JOB_ID_INDEX=14199866
 cd $MODULES/exafel_project/kpp-sim/thermolysin
@@ -41,42 +39,65 @@ export JOB_ID_INDEX=14199866
 export JOB_ID_MERGE=`sbatch $MODULES/exafel_project/kpp-sim/thermolysin/thermolysin_100k_merge.sh $JOB_ID_INDEX|awk '{print $4}'`
 echo MERGE $JOB_ID_MERGE
 ```
-MERGE 14270206 - RUNNING
+MERGE 14297594 - SUCCESS
 
-STOPPED HERE
+
 
 Make input step, splits files:
-
 ```
-export JOB_ID_SPLIT=`sbatch $MODULES/exafel_project/kpp-sim/yb_lyso/yb_lyso_100k_split.sh $JOB_ID_INDEX|awk '{print $4}'`
+cd $WORK
+export JOB_ID_INDEX=14199866
+export JOB_ID_SPLIT=`sbatch $MODULES/exafel_project/kpp-sim/thermolysin/thermolysin_100k_split.sh $JOB_ID_INDEX|awk '{print $4}'`
 echo SPLIT $JOB_ID_SPLIT
 ```
+SPLIT 14310365 - SUCCESS
 
 Stage 1, hopper:
 
 ```
-export JOB_ID_HOPPER=`sbatch $MODULES/exafel_project/kpp-sim/yb_lyso/yb_lyso_100k_stage1.sh $SCRATCH/yb_lyso/${JOB_ID_MERGE}/out/ly99sim_all.mtz $SCRATCH/yb_lyso/${JOB_ID_SPLIT}_integ_exp_ref.txt|awk '{print $4}'`
+cd $WORK
+export JOB_ID_MERGE=14297594
+export JOB_ID_SPLIT=14310365
+export JOB_ID_HOPPER=`sbatch $MODULES/exafel_project/kpp-sim/thermolysin/thermolysin_100k_stage1.sh $SCRATCH/thermolysin/${JOB_ID_MERGE}/out/ly99sim_all.mtz $SCRATCH/thermolysin/${JOB_ID_SPLIT}_integ_exp_ref.txt|awk '{print $4}'`
 echo HOPPER ${JOB_ID_HOPPER}
 ```
+HOPPER 14310798
 
 Integrate and predict step:
 ```
-export JOB_ID_INTEGRATE=`sbatch $MODULES/exafel_project/kpp-sim/yb_lyso/yb_lyso_100k_predict.sh ${JOB_ID_HOPPER} | awk '{print $4}'`
+cd $WORK
+export JOB_ID_HOPPER=14310798
+export JOB_ID_INTEGRATE=`sbatch $MODULES/exafel_project/kpp-sim/thermolysin/thermolysin_100k_predict.sh ${JOB_ID_HOPPER} | awk '{print $4}'`
 echo INTEGRATE ${JOB_ID_INTEGRATE}
 ```
+INTEGRATE 14314404
+
+
 
 Double check that the Pandas pickle table has one row for each image (about 130,000):
 ```
+export JOB_ID_INTEGRATE=14314404
+cd $SCRATCH/thermolysin
 libtbx.python
 import pandas
-df = pandas.read_pickle("${JOB_ID_INTEGRATE}/predict/preds_for_hopper.pkl")
+import os
+JOB_ID_INTEGRATE = os.getenv('JOB_ID_INTEGRATE')
+df = pandas.read_pickle(JOB_ID_INTEGRATE + "/predict/preds_for_hopper.pkl")
 len(df)
 ```
 DiffBragg stage 2:
 ```
-export JOB_ID_STAGE2=`sbatch $MODULES/exafel_project/kpp-sim/yb_lyso/yb_lyso_100k_stage2.sh ${JOB_ID_INDEX} ${JOB_ID_MERGE} ${JOB_ID_INTEGRATE} | awk '{print $4}'`
+cd $WORK
+export JOB_ID_INDEX=14199866
+export JOB_ID_MERGE=14297594
+export JOB_ID_INTEGRATE=14314404
+export JOB_ID_STAGE2=`sbatch $MODULES/exafel_project/kpp-sim/thermolysin/thermolysin_100k_stage2.sh ${JOB_ID_INDEX} ${JOB_ID_MERGE} ${JOB_ID_INTEGRATE} | awk '{print $4}'`
 echo STAGE2 ${JOB_ID_STAGE2}
 ```
+STAGE2 14349584
+
+STOPPED HERE
+
 Elementary check on structure factor convergence over 450 iterations:
 ```
 libtbx.ipython $MODULES/exafel_project/kpp_eval/evaluate_stage2_convergence.py mtz=$SCRATCH/yb_lyso/${JOB_ID_MERGE}/out/ly99sim_all.mtz stage2=$SCRATCH/yb_lyso/${JOB_ID_STAGE2}/${JOB_ID_STAGE2} pdb=${MODULES}/cxid9114/sim/4bs7.pdb n_bins=8 d_min=2.3

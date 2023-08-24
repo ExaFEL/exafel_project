@@ -9,12 +9,12 @@
 #SBATCH -A m2859_g       # allocation
 #SBATCH -C gpu
 #SBATCH -q regular
-#SBATCH -t 40
+#SBATCH -t 60
 #SBATCH -o %j.out
 #SBATCH -e %j.err
 SRUN="srun -N64 --ntasks-per-node=16 --gpus-per-node=4 --cpus-per-gpu=4 -c2"
 
-export SCRATCH_FOLDER=$SCRATCH/yb_lyso/$SLURM_JOB_ID
+export SCRATCH_FOLDER=$SCRATCH/thermolysin/$SLURM_JOB_ID
 mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER
 
 export CCTBX_DEVICE_PER_NODE=1
@@ -58,7 +58,7 @@ predictions {
   pink_stride_override = 10
   default_Famplitude = 1e3
   resolution_range = [1.7,999]
-  symbol_override = P43212
+  symbol_override = P6122
   method = *diffbragg exascale
   use_peak_detection = False
 }
@@ -74,8 +74,8 @@ spotfinder.threshold.dispersion.sigma_background=6
 spotfinder.filter.min_spot_size=2
 
 indexing.method=fft1d
-indexing.known_symmetry.unit_cell=79.1,79.1,38.4,90,90,90
-indexing.known_symmetry.space_group=P43212
+indexing.known_symmetry.unit_cell=93.0407,93.0407,130.41,90,90,120
+indexing.known_symmetry.space_group=P6122
 indexing.stills.set_domain_size_ang_value=500
 
 integration.summation.detector_gain=1
@@ -86,7 +86,7 @@ integration.summation.detector_gain=1
 echo "jobstart $(date)";pwd
 
 $SRUN diffBragg.integrate pred.phil predict_stage1_kokkos.phil \
-$SCRATCH/yb_lyso/$JOB_ID_HOPPER/stage1 \
+$SCRATCH/thermolysin/$JOB_ID_HOPPER/stage1 \
 predict \
 --cmdlinePhil oversample_override=1 \
 Nabc_override=[52,52,52] threshold=1 label_weak_col=rlp \

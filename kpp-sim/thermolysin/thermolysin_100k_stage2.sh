@@ -9,12 +9,12 @@
 #SBATCH -A m2859_g       # allocation
 #SBATCH -C gpu
 #SBATCH -q regular
-#SBATCH -t 30
+#SBATCH -t 50
 #SBATCH -o %j.out
 #SBATCH -e %j.err
 SRUN="srun -N256 --ntasks-per-node=16 --gpus-per-node=4 --cpus-per-gpu=4 -c2"
 
-export SCRATCH_FOLDER=$SCRATCH/yb_lyso/$SLURM_JOB_ID
+export SCRATCH_FOLDER=$SCRATCH/thermolysin/$SLURM_JOB_ID
 mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER
 
 export JOB_ID_INDEX=${1}
@@ -22,7 +22,7 @@ export JOB_ID_MERGE=${2}
 export JOB_ID_PREDICT=${3}
 
 export PERL_NDEV=4  # number GPU per node
-export PANDA=$SCRATCH/yb_lyso/${JOB_ID_PREDICT}/predict/preds_for_hopper.pkl
+export PANDA=$SCRATCH/thermolysin/${JOB_ID_PREDICT}/predict/preds_for_hopper.pkl
 export GEOM=$MODULES/exafel_project/kpp-sim/t000_rg002_chunk000_reintegrated_000000.expt
 
 export CCTBX_DEVICE_PER_NODE=1
@@ -58,7 +58,7 @@ roi {
   reject_edge_reflections = True
   pad_shoebox_for_background_estimation = 0
 }
-space_group=P43212
+space_group=P6122
 
 sigmas {
   G = 1
@@ -101,6 +101,6 @@ echo "jobstart $(date)";pwd
 $SRUN simtbx.diffBragg.stage_two stage_two.phil \
 io.output_dir=${SLURM_JOB_ID} \
 pandas_table=${PANDA} num_devices=$PERL_NDEV \
-simulator.structure_factors.mtz_name=${SCRATCH}/yb_lyso/${JOB_ID_MERGE}/out/ly99sim_all.mtz \
+simulator.structure_factors.mtz_name=${SCRATCH}/thermolysin/${JOB_ID_MERGE}/out/ly99sim_all.mtz \
 
 echo "jobend $(date)";pwd

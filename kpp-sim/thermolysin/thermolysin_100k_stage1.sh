@@ -9,12 +9,12 @@
 #SBATCH -A m2859_g       # allocation
 #SBATCH -C gpu
 #SBATCH -q regular
-#SBATCH -t 01:00:00
+#SBATCH -t 02:00:00
 #SBATCH -o %j.out
 #SBATCH -e %j.err
 SRUN="srun -N64 --ntasks-per-node=16 --gpus-per-node=4 --cpus-per-gpu=4 -c2"
 
-export SCRATCH_FOLDER=$SCRATCH/yb_lyso/$SLURM_JOB_ID
+export SCRATCH_FOLDER=$SCRATCH/thermolysin/$SLURM_JOB_ID
 mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER
 
 export CCTBX_DEVICE_PER_NODE=1
@@ -104,7 +104,7 @@ maxs {
 }
 ucell_edge_perc = 15
 ucell_ang_abs = 1
-space_group = P43212
+space_group = P6122
 use_restraints = False
 logging {
   rank0_level = low normal *high
