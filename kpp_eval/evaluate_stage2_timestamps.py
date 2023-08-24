@@ -76,9 +76,12 @@ def get_timestamps(filename):
 
 if __name__=="__main__":
     import sys, os
-    filename = sys.argv[1]
-    timestamps = get_timestamps(filename)
     if not os.path.exists("timestamps"):
         os.mkdir("timestamps")
-    with open(f"timestamps/{filename}.pkl", 'wb') as F:
-        pickle.dump(timestamps, F)
+    for filename in sys.argv[1:]:
+        try:
+            timestamps = get_timestamps(filename)
+            with open(f"timestamps/{filename}.pkl", 'wb') as F:
+                pickle.dump(timestamps, F)
+        except Exception:
+            pass
