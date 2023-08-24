@@ -1,40 +1,37 @@
-#!/bin/bash
-
-#SBATCH -N 64            # Number of nodes
-#SBATCH --ntasks-per-node=16
-#SBATCH --gpus-per-node=4
-#SBATCH --cpus-per-gpu=4
-#SBATCH -J stage_1       # job name
-#SBATCH -L SCRATCH       # job requires SCRATCH files
-#SBATCH -A m2859_g       # allocation
-#SBATCH -C gpu
-#SBATCH -q regular
-#SBATCH -t 02:00:00
+#!/bin/bash -l
+#SBATCH -N 4
+#SBATCH -J stage1
+#SBATCH -A CHM137
+#SBATCH -p batch
+#SBATCH -t 15
 #SBATCH -o %j.out
 #SBATCH -e %j.err
-SRUN="srun -N64 --ntasks-per-node=16 --gpus-per-node=4 --cpus-per-gpu=4 -c2"
+export NTASKS=$((SLURM_JOB_NUM_NODES*28))
+export SRUN="srun -n $NTASKS --gpus-per-node=8 --cpus-per-gpu=7 --cpu-bind=cores"
 
-export SCRATCH_FOLDER=$SCRATCH/thermolysin/$SLURM_JOB_ID
-mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER
+export JOB_ID_SPLIT=$1
+export JOB_ID_MERGE=$2
 
-export CCTBX_DEVICE_PER_NODE=1
-export N_START=0
+export SCRATCH=/lustre/orion/chm137/proj-shared/cctbx
+export MTZ=$SCRATCH/thermolysin/${JOB_ID_MERGE}/out/ly99sim_all.mtz
+export SPEC=$SCRATCH/thermolysin/${JOB_ID_SPLIT}_integ_exp_ref.txt
+
+export CCTBX_DEVICE_PER_NODE=8
 export LOG_BY_RANK=1 # Use Aaron's rank logger
 export RANK_PROFILE=0 # 0 or 1 Use cProfiler, default 1
-export ADD_BACKGROUND_ALGORITHM=cuda
-export DEVICES_PER_NODE=1
-export MOS_DOM=25
+export DEVICES_PER_NODE=8
 
-export CCTBX_NO_UUID=1
 export DIFFBRAGG_USE_KOKKOS=1
-export CUDA_LAUNCH_BLOCKING=1
-export NUMEXPR_MAX_THREADS=128
+export HIP_LAUNCH_BLOCKING=1
+export NUMEXPR_MAX_THREADS=56
 export SLURM_CPU_BIND=cores # critical to force ranks onto different cores. verify with ps -o psr <pid>
 export OMP_PROC_BIND=spread
 export OMP_PLACES=threads
-export SIT_PSDM_DATA=/global/cfs/cdirs/lcls/psdm-sauter
-export CCTBX_GPUS_PER_NODE=1
-export XFEL_CUSTOM_WORKER_PATH=$MODULES/psii_spread/merging/application # User must export $MODULES path
+export CCTBX_GPUS_PER_NODE=8
+
+export SCRATCH_FOLDER=$SCRATCH/thermolysin/$SLURM_JOB_ID
+mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER
+env > env.out
 
 echo "
 spectrum_from_imageset = True
@@ -104,7 +101,7 @@ maxs {
 }
 ucell_edge_perc = 15
 ucell_ang_abs = 1
-space_group = P6122
+space_group = P43212
 use_restraints = False
 logging {
   rank0_level = low normal *high
@@ -115,5 +112,5 @@ downsamp_spec {
 " > stage1.phil
 
 echo "jobstart $(date)";pwd
-$SRUN hopper stage1.phil structure_factors.mtz_name=$1 exp_ref_spec_file=$2
+$SRUN hopper stage1.phil structure_factors.mtz_name=$MTZ exp_ref_spec_file=$SPEC
 echo "jobend $(date)";pwd

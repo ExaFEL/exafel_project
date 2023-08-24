@@ -1,22 +1,27 @@
 #!/bin/bash -l
-#SBATCH -N 16              # Number of nodes
+#SBATCH -N 4
 #SBATCH -J merge
-#SBATCH -L SCRATCH        # job requires SCRATCH files
-#SBATCH -A m2859          # allocation
-#SBATCH -C cpu
-#SBATCH -q regular        # regular queue
-#SBATCH -t 00:05:00       # wall clock time limit
+#SBATCH -A CHM137
+#SBATCH -p batch
+#SBATCH -t 5
 #SBATCH -o %j.out
 #SBATCH -e %j.err
+export NTASKS=$((SLURM_JOB_NUM_NODES*28))
+export SRUN="srun -n $NTASKS --gpus-per-node=8 --cpus-per-gpu=7 --cpu-bind=cores"
 
 export JOB_ID_INDEX=$1
-export DIALS_OUTPUT=${SCRATCH}/yb_lyso/$JOB_ID_INDEX
 
-export SCRATCH_FOLDER=$SCRATCH/yb_lyso/$SLURM_JOB_ID
-mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER
+export SCRATCH=/lustre/orion/chm137/proj-shared/cctbx
+export DIALS_OUTPUT=$SCRATCH/thermolysin/$JOB_ID_INDEX
 
 export TRIAL=ly99sim
-export OUT_DIR=${PWD}
+export OUT_DIR=$SCRATCH/thermolysin/$SLURM_JOB_ID
+
+export SCRATCH_FOLDER=$SCRATCH/thermolysin/$SLURM_JOB_ID
+mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER
+mkdir -p ${OUT_DIR}/${TRIAL}/out
+mkdir -p ${OUT_DIR}/${TRIAL}/tmp
+env > env.out
 
 echo "input.path=${DIALS_OUTPUT}
 input.experiments_suffix=_integrated.expt
@@ -24,13 +29,13 @@ input.reflections_suffix=_integrated.refl
 input.parallel_file_load.method=uniform
 filter.algorithm=unit_cell
 filter.unit_cell.algorithm=cluster
-filter.unit_cell.cluster.covariance.file=${MODULES}/exafel_project/kpp-sim/yb_lyso/covariance_tdata_cells.pickle
+filter.unit_cell.cluster.covariance.file=${MODULES}/exafel_project/kpp-sim/thermolysin/covariance_tdata_cells_cropped.pickle
 filter.unit_cell.cluster.covariance.component=0
 filter.unit_cell.cluster.covariance.mahalanobis=5.0
 filter.outlier.min_corr=-1.0
 select.algorithm=significance_filter
 select.significance_filter.sigma=-0.5
-scaling.model=${MODULES}/exafel_project/kpp-frontier/yb_lyso/4bs7.pdb
+scaling.model=${MODULES}/exafel_project/kpp-sim/thermolysin/4tnl.pdb
 scaling.resolution_scalar=0.993420862158964
 postrefinement.enable=True
 postrefinement.algorithm=rs
@@ -50,9 +55,6 @@ output.save_experiments_and_reflections=True
 parallel.a2a=1
 " > merge.phil
 
-mkdir -p ${OUT_DIR}/${TRIAL}/out
-mkdir -p ${OUT_DIR}/${TRIAL}/tmp
-
 echo "jobstart $(date)";pwd
-srun -n 512 -c 8 cctbx.xfel.merge merge.phil
+$SRUN cctbx.xfel.merge merge.phil
 echo "jobend $(date)";pwd

@@ -11,8 +11,8 @@
 
 export JOB_ID_INDEX=$1
 
-export SCRATCH_FOLDER=$SCRATCH/yb_lyso/$SLURM_JOB_ID
-mkdir -p $SCRATCH_FOLDER; cd $SCRATCH/yb_lyso
+export SCRATCH_FOLDER=$SCRATCH/thermolysin/$SLURM_JOB_ID
+mkdir -p $SCRATCH_FOLDER; cd $SCRATCH/thermolysin
 
 echo "jobstart $(date)";pwd
 
