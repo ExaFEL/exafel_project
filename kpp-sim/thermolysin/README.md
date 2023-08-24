@@ -100,7 +100,10 @@ STOPPED HERE
 
 Elementary check on structure factor convergence over 450 iterations:
 ```
-libtbx.ipython $MODULES/exafel_project/kpp_eval/evaluate_stage2_convergence.py mtz=$SCRATCH/yb_lyso/${JOB_ID_MERGE}/out/ly99sim_all.mtz stage2=$SCRATCH/yb_lyso/${JOB_ID_STAGE2}/${JOB_ID_STAGE2} pdb=${MODULES}/cxid9114/sim/4bs7.pdb n_bins=8 d_min=2.3
+cd $WORK
+export JOB_ID_MERGE=14297594
+export JOB_ID_STAGE2=14349584
+libtbx.ipython $MODULES/exafel_project/kpp_eval/evaluate_stage2_convergence.py mtz=$SCRATCH/thermolysin/${JOB_ID_MERGE}/out/ly99sim_all.mtz stage2=$SCRATCH/thermolysin/${JOB_ID_STAGE2}/${JOB_ID_STAGE2} pdb=${MODULES}/cxid9114/sim/4bs7.pdb n_bins=8 d_min=2.3
 ```
 If you are confident all the steps will run without failure you can submit them in a single
 block with SLURM dependencies:
