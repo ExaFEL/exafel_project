@@ -94,17 +94,18 @@ export JOB_ID_INTEGRATE=14314404
 export JOB_ID_STAGE2=`sbatch $MODULES/exafel_project/kpp-sim/thermolysin/thermolysin_100k_stage2.sh ${JOB_ID_INDEX} ${JOB_ID_MERGE} ${JOB_ID_INTEGRATE} | awk '{print $4}'`
 echo STAGE2 ${JOB_ID_STAGE2}
 ```
-STAGE2 14349584
-
-STOPPED HERE
+STAGE2 14349584 - SUCCESS
 
 Elementary check on structure factor convergence over 450 iterations:
 ```
 cd $WORK
 export JOB_ID_MERGE=14297594
 export JOB_ID_STAGE2=14349584
-libtbx.ipython $MODULES/exafel_project/kpp_eval/evaluate_stage2_convergence.py mtz=$SCRATCH/thermolysin/${JOB_ID_MERGE}/out/ly99sim_all.mtz stage2=$SCRATCH/thermolysin/${JOB_ID_STAGE2}/${JOB_ID_STAGE2} pdb=${MODULES}/cxid9114/sim/4bs7.pdb n_bins=8 d_min=2.3
+libtbx.ipython $MODULES/exafel_project/kpp_eval/evaluate_stage2_convergence.py mtz=$SCRATCH/thermolysin/${JOB_ID_MERGE}/out/ly99sim_all.mtz stage2=$SCRATCH/thermolysin/${JOB_ID_STAGE2}/${JOB_ID_STAGE2} pdb=${MODULES}/exafel_project/kpp-sim/thermolysin/4tnl.pdb n_bins=8 d_min=2.3
 ```
+
+ALL STEPS ABOVE WORKED ON PERLMUTTER
+
 If you are confident all the steps will run without failure you can submit them in a single
 block with SLURM dependencies:
 ```
@@ -130,7 +131,7 @@ export JOB_ID_STAGE2=`sbatch --dependency=afterok:${JOB_ID_INTEGRATE} $MODULES/e
 echo STAGE2 ${JOB_ID_STAGE2}
 
 ```
-<h3>Frequently asked questoins</h3>
+<h3>Frequently asked questions</h3>
 Q. The simulation script does not work on Frontier, because the compute nodes cannot download the PDB file from the internet.
 
 A. Replace the crystal section of the phil string as follows:
