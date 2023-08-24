@@ -15,7 +15,7 @@ export CCTBX_DEVICE_PER_NODE=8
 export N_START=0
 export LOG_BY_RANK=1 # Use Aaron's rank logger
 export RANK_PROFILE=0 # 0 or 1 Use cProfiler, default 1
-#export ADD_BACKGROUND_ALGORITHM=cuda
+export ADD_BACKGROUND_ALGORITHM=cuda
 export DEVICES_PER_NODE=8
 export MOS_DOM=25
 
