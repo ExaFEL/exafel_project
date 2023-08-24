@@ -64,7 +64,7 @@ crystal {
   structure=pdb
   pdb.code=None
   pdb.source=file
-  pdb.file=${MODULES}/cxid9114/sim/4bs7.pdb
+  pdb.file=${MODULES}/exafel_project/kpp-frontier/yb_lyso/4bs7.pdb
   length_um=0.5 # increase crystal path length
 }
 detector {
