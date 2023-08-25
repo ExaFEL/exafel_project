@@ -2,7 +2,7 @@
 
 | step                       | walltime | nodes | ranks | node type | inodes | disk space | JOB ID   |
 | -------------------------- | -------- | ----- | ----- | --------- | ------ | ---------- |----------|
-| Image creation             | 09:52    | 64    | 2048  | gpu       | 6146   | 2.3T       | 13719137 |
+| Image creation             | 59:51    | 64    | 2048  | gpu       | 6146   | 2.3T       | 13719137 |
 | DIALS indexing/integration | 53:37    | 8     | 256   | cpu       | 3072   | 431G       | 14199866 |
 | DIALS merging              | 11:12    | 16    | 512   | cpu       | 2565   | 4.3G       | 14297594 |
 | diffBragg hopper           | 48:08    | 64    | 1024  | gpu       | 1027   | 105M       | 14310798 |

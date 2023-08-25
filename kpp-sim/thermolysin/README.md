@@ -99,10 +99,18 @@ STAGE2 14349584 - SUCCESS
 
 Evaluation of stage 2 convergence:
 ```
-cd $WORK
+cd $WORK/thermolysin
 export JOB_ID_MERGE=14297594
 export JOB_ID_STAGE2=14349584
 libtbx.ipython $MODULES/exafel_project/kpp_eval/evaluate_stage2_convergence.py mtz=$SCRATCH/thermolysin/${JOB_ID_MERGE}/out/ly99sim_all.mtz stage2=$SCRATCH/thermolysin/${JOB_ID_STAGE2}/${JOB_ID_STAGE2} pdb=${MODULES}/exafel_project/kpp-sim/thermolysin/4tnl.pdb n_bins=10 d_min=1.75 stat=cc_anom scatter_ranges='-1:5,50:500:50' show=True
+```
+
+cc_F plot:
+```
+cd $WORK/thermolysin/cc_F
+export JOB_ID_MERGE=14297594
+export JOB_ID_STAGE2=14349584
+libtbx.ipython $MODULES/exafel_project/kpp_eval/evaluate_stage2_convergence.py mtz=$SCRATCH/thermolysin/${JOB_ID_MERGE}/out/ly99sim_all.mtz stage2=$SCRATCH/thermolysin/${JOB_ID_STAGE2}/${JOB_ID_STAGE2} pdb=${MODULES}/exafel_project/kpp-sim/thermolysin/4tnl.pdb n_bins=10 d_min=1.75 stat=cc_F scatter_ranges='-1:5,50:500:50' show=True
 ```
 
 ALL STEPS ABOVE WORKED ON PERLMUTTER
