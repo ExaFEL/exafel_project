@@ -97,12 +97,12 @@ echo STAGE2 ${JOB_ID_STAGE2}
 ```
 STAGE2 14349584 - SUCCESS
 
-Elementary check on structure factor convergence over 450 iterations:
+Evaluation of stage 2 convergence:
 ```
 cd $WORK
 export JOB_ID_MERGE=14297594
 export JOB_ID_STAGE2=14349584
-libtbx.ipython $MODULES/exafel_project/kpp_eval/evaluate_stage2_convergence.py mtz=$SCRATCH/thermolysin/${JOB_ID_MERGE}/out/ly99sim_all.mtz stage2=$SCRATCH/thermolysin/${JOB_ID_STAGE2}/${JOB_ID_STAGE2} pdb=${MODULES}/exafel_project/kpp-sim/thermolysin/4tnl.pdb n_bins=8 d_min=2.3
+libtbx.ipython $MODULES/exafel_project/kpp_eval/evaluate_stage2_convergence.py mtz=$SCRATCH/thermolysin/${JOB_ID_MERGE}/out/ly99sim_all.mtz stage2=$SCRATCH/thermolysin/${JOB_ID_STAGE2}/${JOB_ID_STAGE2} pdb=${MODULES}/exafel_project/kpp-sim/thermolysin/4tnl.pdb n_bins=10 d_min=1.75 stat=cc_anom scatter_ranges='-1:5,50:500:50' show=True
 ```
 
 ALL STEPS ABOVE WORKED ON PERLMUTTER
