@@ -72,7 +72,8 @@ echo INTEGRATE ${JOB_ID_INTEGRATE}
 ```
 INTEGRATE 14314404
 
-
+jobstart Wed 23 Aug 2023 07:10:22 PM PDT
+jobend Wed 23 Aug 2023 07:56:21 PM PDT
 
 Double check that the Pandas pickle table has one row for each image (about 130,000):
 ```
@@ -105,6 +106,7 @@ libtbx.ipython $MODULES/exafel_project/kpp_eval/evaluate_stage2_convergence.py m
 ```
 
 ALL STEPS ABOVE WORKED ON PERLMUTTER
+
 
 If you are confident all the steps will run without failure you can submit them in a single
 block with SLURM dependencies:
