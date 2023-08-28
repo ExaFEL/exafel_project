@@ -29,7 +29,7 @@ Running all ExaFEL evaluation scripts presented in this directory
 requires a cctbx installation with the following modules and branches:
 
 - `cctbx_project` – any recent branch
-- `dials` – any recent branch
+- `dials` – any recent branch (`dsp_oldstriping` suggested for processing)
 - `exafel_project` – this branch (the instructions may differ between branches)
 - `LS49` – any recent branch
 - `ls49_big_data` – any recent branch
@@ -78,14 +78,38 @@ so the cctbx does not need to be rebuilt after introducing the patch.
 
 
 ## Tools
+### Analysing offsets using diffBragg benchmark
+*Associated goals*: **A**; *files:*
+[evaluate_prediction_offset.py](evaluate_prediction_offset.py)
+
+In order to evaluate the difference between reflection position offsets
+calculated by diffBragg versus DIALS, the expanded diffBragg benchmark script
+[evaluate_prediction_offset.py](evaluate_prediction_offset.py) can be used.
+This code was originally introduced by Derek Mendez and further adapted
+by Daniel Tchoń. It uses the information stored in .refl files after stage 1
+to calculate radial, transverse, and overall offset across resolution bins.
+
+```shell
+libtbx.python $MODULES/exafel_project/kpp_eval/evaluate_prediction_offset.py \
+stage1=$SCRATCH/yb_lyso/13296752/stage1 d_min=2.0
+```
+
+By default, all data stored in `stage1/refls` between `d_min` and `d_max`
+will be grouped into `n_bins` and `stat=median` for each bin as well as
+the entire range will be reported. Calculated statistic can be also set
+to `average` (arithmetic mean) or `rms` (matches the annulus approach).
+While ill-advised, `bins` can be made `same_count` to reflect the original
+behavior of the script. Usually, only `stage1` and `d_min` will be set.
+
 ### Analysing offsets using annulus worker
 *Associated goals*: **A**; *files:*
 [step_A1.sh](step_A1.sh), [step_A1.sh](step_A1.sh), 
 [step_A1.sh](step_A3.sh), [step_A1.sh](step_A4.sh),
 [fixup_hopper_identifiers.py](fixup_hopper_identifiers.py).
 
-Analysis of offset can be performed to fulfil the kpp **A** requirement.
-It can be performed by copying and filling the environment variables
+Other than using the dedicated script, offset rms can be also calculated
+using the annulus worker deliverables code. This should be considered a backup
+method. It can be achieved by copying and filling the environment variables
 in shell scripts `step_A#.sh`, where # can be 1, 2, 3 or 4.
 Steps 1 and 2 run the annulus worker on the common set of indexed DIALS (1)
 and diffBragg (2) reflections. They collect information from the offset columns
@@ -113,7 +137,7 @@ one can `cp`, edit and `source` steps 3 and 4 in a similar fashion.
 Precision of intensities modeling has been proposed to utilise a difference
 between "odd" and "even" half-sets of intensities refined by diffBragg.
 Since stage 2 can produce an `.mtz` file, this can be easily done by calling
-stage 2 refinement of half-datasets followed by a script which calculates
+stage 2 refinement of half-datasets followed by a script that calculates
 a cross-correlation coefficient between two such files,
 called here `evaluate_cc12.py`. The python script can be called directly,
 by providing mtz paths as arguments, or by calling a modified shell script:
@@ -167,20 +191,20 @@ mtz=/path/to/dials/merged.mtz stage2=/path/to/stage2/directory/
 pdb=/path/to/reference.pdb n_bins=10 d_min=1.9
 stat=cc_anom scatter_ranges='-1:2,100:500:100,450' show=True`
 
-
-
-
+The script was initially not intended to be used as a stand-alone evaluation
+tool, but it might prove useful as one, as it allows to calculate
+statistics that are not yielded by other code, for example CC coefficient
+between anomalous signals of the Friedel pairs.
 
 
 ## Results
 
 ### **A** – Geometrical fit between model and experiment
-Currently, the overall offset RMSD appears to be better (smaller)
-after DIALS compared to the diffBragg stage 1. DiffBragg appears to give
-slightly tighter distribution for low-resolution, but significantly larger
-scatter at high resolutions. Unless some part of indexing is not performed
-or analyzed correctly, this remains true even  after the mosaic outliers
-have been preserved. The following tables come from the offset analysis:
+The overall offset RMS is smaller after DIALS compared to the stage 1.
+DiffBragg gives tighter distribution at low-resolution, but due to the presence
+of divereged outliers, the RMS is significantly larger at high resolutions.
+This remains true even after the mosaic outliers have been preserved.
+The following tables come from the offset analysis:
 
 **DIALS spotfinding, no outliers**:
 
@@ -217,6 +241,31 @@ have been preserved. The following tables come from the offset analysis:
 
 -1.0000 -  1.8000   16338     942621  0.87px       0.84px              0.20px           37.4%        -4.7%
 ```
+
+If we were to actively reject outliers, diffBragg reflection positions
+match the experiment better. This can be observed by investigating median
+of distribution instead of RMS. The following tables, generated using 
+[evaluate_prediction_offset.py](evaluate_prediction_offset.py) show,
+that stage 1 outperforms DIALS if we exclude outliers from the analysis.
+The following table was made using another, yet roughly equivalent dataset:
+
+```text
+               DIALS_offset  DIALS_rad  DIALS_tang  dB_offset    dB_rad   dB_tang  resolution
+bin                                                                                          
+9999.0-4.3088      0.247351   0.152383    0.120455   0.118860  0.072417  0.061575    6.062287
+4.3088-3.4199      0.284406   0.200665    0.124694   0.198407  0.139666  0.091892    3.832891
+3.4199-2.9876      0.301684   0.212777    0.134396   0.261555  0.197081  0.110027    3.205908
+2.9876-2.7144      0.311426   0.215461    0.145152   0.299245  0.223339  0.124630    2.862027
+2.7144-2.5198      0.331634   0.226399    0.160510   0.327941  0.237944  0.141626    2.645762
+2.5198-2.3712      0.346003   0.230592    0.170970   0.362277  0.251113  0.170580    2.471097
+2.3712-2.2524      0.330443   0.211573    0.172685   0.371709  0.245431  0.175785    2.347139
+2.2524-2.1544      0.330210   0.204265    0.171586   0.380250  0.236399  0.175685    2.228373
+2.1544-2.0714      0.408785   0.386731    0.132046   0.303067  0.200925  0.221527    2.147640
+2.0714-2.0000           NaN        NaN         NaN        NaN       NaN       NaN         NaN
+9999.0-2.0000      0.269951   0.176113    0.125548   0.161654  0.104286  0.077835    4.429696
+```
+
+
 
 ### **C** – The precision of modeling intensities
 
@@ -351,3 +400,8 @@ Based on the evidence provided by Vidya's and Derek's pipelines,
 diffBragg models low-resolution much better due to its higher intensity,
 which improves R-work, improves offset on low resolution but worsens it
 at high resolution, and does not significantly affect the anomalous signal.
+However, these are only based on preliminary evaluations – evaluations
+performed on 130k and 500k image datasets in August have already shown,
+that the convergence of statistics such as R-factor and CC_anom can differ
+quite significantly between individual cases, as discussed in the google space.
+
