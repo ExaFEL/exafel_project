@@ -70,7 +70,7 @@ refiner {
   sigma_r = 3
   num_devices = 4
   adu_per_photon = 1
-  res_ranges='1.4-999'
+  res_ranges='1.5-999'
   stage_two.save_model_freq=None
   stage_two.save_Z_freq=None
 }

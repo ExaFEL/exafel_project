@@ -51,7 +51,7 @@ predictions {
   Nabc_override = None
   pink_stride_override = 10
   default_Famplitude = 1e3
-  resolution_range = [1.4,999]
+  resolution_range = [1.5,999]
   symbol_override = P6522
   method = *diffbragg exascale
   use_peak_detection = False

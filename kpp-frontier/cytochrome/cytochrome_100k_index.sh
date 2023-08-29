@@ -48,7 +48,7 @@ spotfinder {
     }
   }
   filter.min_spot_size=3
-  filter.d_min=1.4
+  filter.d_min=1.5
 }
 indexing {
   stills.refine_candidates_with_known_symmetry=True
