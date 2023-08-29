@@ -3,7 +3,7 @@
 #SBATCH -J cyto_sim
 #SBATCH -A CHM137       # allocation
 #SBATCH -p batch       # regular or special queue
-#SBATCH -t 120
+#SBATCH -t 30
 #SBATCH -o %j.out
 #SBATCH -e %j.err
 SRUN="srun -n 4096 -c 1"
@@ -50,12 +50,12 @@ crystal {
   pdb.code=None
   pdb.source=file
   pdb.file=${MODULES}/exafel_project/kpp-frontier/cytochrome/5wp2.pdb
-  length_um=1.0 # increase crystal path length
+  length_um=40.0  # increase crystal path length
 }
 detector {
   tiles=multipanel
   reference=$MODULES/exafel_project/kpp-sim/t000_rg002_chunk000_reintegrated_000000.expt
-  offset_mm=40.0 # desired 1.5 somewhere between inscribed and circumscribed.
+  offset_mm=30.0  # desired 1.5 somewhere between inscribed and circumscribed.
 }
 output {
   format=h5
