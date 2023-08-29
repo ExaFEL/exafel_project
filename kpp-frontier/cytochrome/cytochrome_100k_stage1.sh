@@ -1,29 +1,28 @@
 #!/bin/bash
-
-#SBATCH -N 128           # Number of nodes
-#SBATCH -J stage_1       # job name
-#SBATCH -A CHM137       # allocation
-#SBATCH -p batch
-#SBATCH -t 02:00:00
+#SBATCH -N 128             # Number of nodes
+#SBATCH -J stage1          # job name
+#SBATCH -A CHM137          # allocation
+#SBATCH -p batch           # regular queue
+#SBATCH -t 02:00:00        # wall clock time limit
 #SBATCH -o %j.out
 #SBATCH -e %j.err
-SRUN="srun -n2048 -c2"
+SRUN="srun -n 2048 -c 3"
 
-export SCRATCH_FOLDER=$SCRATCH/psii/$SLURM_JOB_ID
+export SCRATCH_FOLDER=$SCRATCH/cytochrome/$SLURM_JOB_ID
 mkdir -p "$SCRATCH_FOLDER"; cd "$SCRATCH_FOLDER" || exit
 
-export CCTBX_DEVICE_PER_NODE=8
+export CCTBX_DEVICE_PER_NODE=1
 export N_START=0
 export LOG_BY_RANK=1 # Use Aaron's rank logger
 export RANK_PROFILE=0 # 0 or 1 Use cProfiler, default 1
 export ADD_BACKGROUND_ALGORITHM=cuda
-export DEVICES_PER_NODE=8
+export DEVICES_PER_NODE=1
 export MOS_DOM=25
 
 export CCTBX_NO_UUID=1
 export DIFFBRAGG_USE_KOKKOS=1
 export CUDA_LAUNCH_BLOCKING=1
-export NUMEXPR_MAX_THREADS=56
+export NUMEXPR_MAX_THREADS=128
 export SLURM_CPU_BIND=cores # critical to force ranks onto different cores. verify with ps -o psr <pid>
 export OMP_PROC_BIND=spread
 export OMP_PLACES=threads
@@ -55,14 +54,14 @@ fix {
 }
 
 sigmas {
-  ucell = .1 .1 .1
+  ucell = .1 .1
   RotXYZ = 0.01 0.01 0.01
   G = 1
   Nabc = 1 1 1
 }
 
 init {
-  Nabc = 52 52 52
+  Nabc = 29 29 29
   G = 1e5
 }
 
@@ -71,7 +70,6 @@ refiner {
   verbose = 0
   sigma_r = 3
   adu_per_photon = 1
-  res_ranges='2.5-3'
   #reference_geom = '${MODULES}/exafel_project/kpp-sim/t000_rg002_chunk000_reintegrated_000000.expt'
 }
 
@@ -100,7 +98,7 @@ maxs {
 }
 ucell_edge_perc = 15
 ucell_ang_abs = 1
-space_group = P212121
+space_group = P6522
 use_restraints = False
 logging {
   rank0_level = low normal *high

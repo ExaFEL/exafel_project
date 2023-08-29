@@ -1,9 +1,9 @@
 #!/bin/bash -l
-#SBATCH -N 16           # Number of nodes
-#SBATCH -J cyto_sim
-#SBATCH -A CHM137       # allocation
-#SBATCH -p batch       # regular or special queue
-#SBATCH -t 10
+#SBATCH -N 16              # Number of nodes
+#SBATCH -J cyto_sim        # job name
+#SBATCH -A CHM137          # allocation
+#SBATCH -p batch           # regular queue
+#SBATCH -t 00:10:00        # wall clock time limit
 #SBATCH -o %j.out
 #SBATCH -e %j.err
 SRUN="srun -n 512 -c 1"
@@ -37,7 +37,7 @@ psf=False
 attenuation=True
 context=kokkos_gpu
 absorption=high_remote
-oversample=1
+oversample=2
 beam {
   mean_energy=9500.
 }
