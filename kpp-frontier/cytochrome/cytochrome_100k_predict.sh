@@ -47,7 +47,7 @@ predictions {
   label_weak_col = 'rlp'
   weak_fraction = 0.67
   threshold = 1
-  oversample_override = 2
+  oversample_override = 1
   Nabc_override = None
   pink_stride_override = 10
   default_Famplitude = 1e3
@@ -83,7 +83,7 @@ $SRUN diffBragg.integrate pred.phil predict_stage1_kokkos.phil \
 $SCRATCH/cytochrome/$JOB_ID_HOPPER/stage1 \
 predict \
 --cmdlinePhil oversample_override=1 \
-Nabc_override=[52,52,52] threshold=1 label_weak_col=rlp \
+Nabc_override=[29,29,29] threshold=1 label_weak_col=rlp \
 --numdev 8
 libtbx.python -c "import pandas; df = pandas.read_pickle('predict/preds_for_hopper.pkl'); print('pickled',len(df))"
 echo "jobend $(date)";pwd

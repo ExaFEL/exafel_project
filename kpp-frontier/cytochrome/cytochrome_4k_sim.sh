@@ -37,7 +37,7 @@ psf=False
 attenuation=True
 context=kokkos_gpu
 absorption=high_remote
-oversample=2
+oversample=1
 beam {
   mean_energy=9500.
 }
