@@ -11,6 +11,9 @@ SRUN="srun -n 2048 -c 3"
 export SCRATCH_FOLDER=$SCRATCH/cytochrome/$SLURM_JOB_ID
 mkdir -p "$SCRATCH_FOLDER"; cd "$SCRATCH_FOLDER" || exit
 
+export MTZ_PATH=$SCRATCH/cytochrome/${1}/out/ly99sim_all.mtz
+export SPEC_PATH=$SCRATCH/cytochrome/${2}_integ_exp_ref.txt
+
 export CCTBX_DEVICE_PER_NODE=1
 export N_START=0
 export LOG_BY_RANK=1 # Use Aaron's rank logger
@@ -109,5 +112,5 @@ downsamp_spec {
 " > stage1.phil
 
 echo "jobstart $(date)";pwd
-$SRUN hopper stage1.phil structure_factors.mtz_name=$1 exp_ref_spec_file=$2
+$SRUN hopper stage1.phil structure_factors.mtz_name="$MTZ_PATH" exp_ref_spec_file="$SPEC_PATH"
 echo "jobend $(date)";pwd

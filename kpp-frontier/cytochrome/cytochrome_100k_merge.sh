@@ -3,7 +3,7 @@
 #SBATCH -J merge           # job name
 #SBATCH -A CHM137          # allocation
 #SBATCH -p batch           # regular queue
-#SBATCH -t 00:15:00        # wall clock time limit
+#SBATCH -t 00:20:00        # wall clock time limit
 #SBATCH -o %j.out
 #SBATCH -e %j.err
 SRUN="srun -n 512 -c 3"
