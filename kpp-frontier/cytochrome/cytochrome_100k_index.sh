@@ -59,8 +59,6 @@ indexing {
 }
 integration {
   background.simple.outlier.plane.n_sigma=10
-  debug.output=True
-  debug.separate_files=False
   lookup {
     #mask = '/global/cfs/cdirs/m3562/dwpaley/masks/4more.mask'
   }
