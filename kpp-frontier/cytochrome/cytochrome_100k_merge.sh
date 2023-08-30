@@ -12,7 +12,7 @@ export JOB_ID_INDEX=$1
 export DIALS_OUTPUT=${SCRATCH}/cytochrome/$JOB_ID_INDEX
 
 export SCRATCH_FOLDER=$SCRATCH/cytochrome/$SLURM_JOB_ID
-mmkdir -p "$SCRATCH_FOLDER"; cd "$SCRATCH_FOLDER" || exit
+mkdir -p "$SCRATCH_FOLDER"; cd "$SCRATCH_FOLDER" || exit
 
 export TRIAL=ly99sim
 export OUT_DIR=${PWD}
