@@ -1,12 +1,12 @@
 #!/bin/bash -l
-#SBATCH -N 128             # Number of nodes
+#SBATCH -N 64              # Number of nodes
 #SBATCH -J stills_proc     # job name
 #SBATCH -A CHM137          # allocation
 #SBATCH -p batch           # regular queue
-#SBATCH -t 01:00:00        # wall clock time limit
+#SBATCH -t 00:30:00        # wall clock time limit
 #SBATCH -o %j.out
 #SBATCH -e %j.err
-SRUN="srun -n 2048 -c 2"
+SRUN="srun -n 1024 -c 2"
 
 export JOB_ID_SIM=$1
 
