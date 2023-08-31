@@ -3,10 +3,10 @@
 #SBATCH -J merge           # job name
 #SBATCH -A CHM137          # allocation
 #SBATCH -p batch           # regular queue
-#SBATCH -t 00:30:00        # wall clock time limit
+#SBATCH -t 01:00:00        # wall clock time limit
 #SBATCH -o %j.out
 #SBATCH -e %j.err
-SRUN="srun -n 1536 -c 2"
+SRUN="srun -n 512 -c 7"
 
 export JOB_ID_INDEX=$1
 export DIALS_OUTPUT=${SCRATCH}/cytochrome/$JOB_ID_INDEX
