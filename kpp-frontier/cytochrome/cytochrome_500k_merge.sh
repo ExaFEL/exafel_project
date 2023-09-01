@@ -1,12 +1,12 @@
 #!/bin/bash -l
-#SBATCH -N 64              # Number of nodes
+#SBATCH -N 96              # Number of nodes
 #SBATCH -J merge           # job name
 #SBATCH -A CHM137          # allocation
 #SBATCH -p batch           # regular queue
 #SBATCH -t 03:00:00        # wall clock time limit
 #SBATCH -o %j.out
 #SBATCH -e %j.err
-SRUN="srun -n 512 -c 7"
+SRUN="srun -n 768 -c 7"
 
 export JOB_ID_INDEX=$1
 export DIALS_OUTPUT=${SCRATCH}/cytochrome/$JOB_ID_INDEX
