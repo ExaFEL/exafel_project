@@ -12,6 +12,7 @@
 export SCRATCH_FOLDER=$SCRATCH/yb_lyso/$SLURM_JOB_ID
 mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER
 
+export LENGTH=${1}
 export CCTBX_DEVICE_PER_NODE=1
 export N_START=0
 export LOG_BY_RANK=1 # Use Aaron's rank logger
@@ -64,7 +65,7 @@ crystal {
   pdb.code=None
   pdb.source=file
   pdb.file=${MODULES}/cxid9114/sim/4bs7.pdb
-  length_um=0.5 # increase crystal path length
+  length_um=${LENGTH} # X-ray path through the crystal in microns
 }
 detector {
   tiles=multipanel
