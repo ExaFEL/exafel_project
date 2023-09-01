@@ -3,7 +3,7 @@
 #SBATCH -J stage2          # job name
 #SBATCH -A CHM137          # allocation
 #SBATCH -p batch           # regular queue
-#SBATCH -t 02:00:00        # wall clock time limit
+#SBATCH -t 04:00:00        # wall clock time limit
 #SBATCH -o %j.out
 #SBATCH -e %j.err
 SRUN="srun -n 4096 -c 3"
