@@ -18,7 +18,7 @@ export TRIAL=ly99sim
 export OUT_DIR=${PWD}
 
 echo "
-dispatch.step_list=input balance model_scaling modify filter scale postrefine statistics_unitcell statistics_beam model_statistics statistics_resolution group errors_merge merge
+dispatch.step_list=input balance model_scaling modify filter scale postrefine statistics_unitcell statistics_beam model_statistics statistics_resolution group errors_merge merge statistics_intensity_cxi
 input.path=${DIALS_OUTPUT}
 input.experiments_suffix=_integrated.expt
 input.reflections_suffix=_integrated.refl
@@ -30,7 +30,7 @@ filter.unit_cell.cluster.covariance.component=0
 filter.unit_cell.cluster.covariance.mahalanobis=5.0
 filter.outlier.min_corr=-1.0
 select.algorithm=significance_filter
-select.significance_filter.sigma=-0.5
+select.significance_filter.sigma=0.1
 scaling.model=${MODULES}/exafel_project/kpp-frontier/cytochrome/5wp2.pdb
 scaling.resolution_scalar=0.993420862158964
 postrefinement.enable=True

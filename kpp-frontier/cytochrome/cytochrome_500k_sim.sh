@@ -11,6 +11,7 @@ SRUN="srun -n 8192 -c 1"
 export SCRATCH_FOLDER=$SCRATCH/cytochrome/$SLURM_JOB_ID
 mkdir -p "$SCRATCH_FOLDER"; cd "$SCRATCH_FOLDER" || exit
 
+export LENGTH=${1}
 export CCTBX_DEVICE_PER_NODE=1
 export N_START=0
 export LOG_BY_RANK=1 # Use Aaron's rank logger
@@ -50,7 +51,7 @@ crystal {
   pdb.code=None
   pdb.source=file
   pdb.file=${MODULES}/exafel_project/kpp-frontier/cytochrome/5wp2.pdb
-  length_um=40.0  # increase crystal path length – scan 5 / 10 / 20 / 30 / 40
+  length_um=${LENGTH}  # X-ray path thru crystal in microns – scan 40/30/20/10/5
 }
 detector {
   tiles=multipanel
