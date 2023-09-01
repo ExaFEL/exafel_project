@@ -17,9 +17,7 @@ mkdir -p "$SCRATCH_FOLDER"; cd "$SCRATCH_FOLDER" || exit
 export TRIAL=ly99sim
 export OUT_DIR=${PWD}
 
-echo "
-dispatch.step_list=input balance model_scaling modify filter scale postrefine statistics_unitcell statistics_beam model_statistics statistics_resolution group errors_merge merge
-input.path=${DIALS_OUTPUT}
+echo "input.path=${DIALS_OUTPUT}
 input.experiments_suffix=_integrated.expt
 input.reflections_suffix=_integrated.refl
 input.parallel_file_load.method=uniform
@@ -40,7 +38,7 @@ merging.merge_anomalous=False
 merging.set_average_unit_cell=True
 merging.error.model=ev11
 #merging.error.model=errors_from_sample_residuals
-statistics.n_bins=20
+statistics.n_bins=100
 statistics.report_ML=True
 output.prefix=${TRIAL}
 output.output_dir=${OUT_DIR}/out
