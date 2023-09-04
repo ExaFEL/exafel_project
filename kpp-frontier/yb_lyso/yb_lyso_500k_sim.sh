@@ -4,8 +4,6 @@
 #SBATCH -A CHM137       # allocation
 #SBATCH -p batch       # regular or special queue
 #SBATCH -t 120
-#SBATCH --mail-type=ALL
-#SBATCH --mail-user=fwittwer@lbl.gov
 #SBATCH -o %j.out
 #SBATCH -e %j.err
 
