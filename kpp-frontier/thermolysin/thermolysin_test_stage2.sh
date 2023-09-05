@@ -85,7 +85,7 @@ simulator {
 
 logging {
   rank0_level = low normal *high
-  logfiles = True
+  logfiles = False
 }
 " > stage_two.phil
 
