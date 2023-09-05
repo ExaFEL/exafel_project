@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#SBATCH -N 40
+#SBATCH -N 30
 #SBATCH -J merge
 #SBATCH -A CHM137
 #SBATCH -p batch

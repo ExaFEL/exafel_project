@@ -1,9 +1,9 @@
 #!/bin/bash -l
-#SBATCH -N 1
+#SBATCH -N 10
 #SBATCH -J split
 #SBATCH -A CHM137
 #SBATCH -p batch
-#SBATCH -t 60
+#SBATCH -t 10
 #SBATCH -o %j.out
 #SBATCH -e %j.err
 export NTASKS=$((SLURM_JOB_NUM_NODES*56))
