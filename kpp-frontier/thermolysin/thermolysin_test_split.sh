@@ -14,6 +14,7 @@ export JOB_ID_INDEX=$1
 
 export SCRATCH=/lustre/orion/chm137/proj-shared/cctbx
 export SCRATCH_FOLDER=$SCRATCH/thermolysin/$SLURM_JOB_ID
+export MPI4PY_RC_RECV_MPROBE='False'
 
 echo "jobstart $(date)";pwd
 

@@ -17,6 +17,7 @@ export DIALS_OUTPUT=$SCRATCH/thermolysin/$JOB_ID_INDEX
 
 export TRIAL=ly99sim
 export OUT_DIR=$SCRATCH/thermolysin/$SLURM_JOB_ID
+export MPI4PY_RC_RECV_MPROBE='False'
 
 export SCRATCH_FOLDER=$SCRATCH/thermolysin/$SLURM_JOB_ID
 mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER

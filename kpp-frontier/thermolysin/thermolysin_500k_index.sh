@@ -19,6 +19,7 @@ export NUMEXPR_MAX_THREADS=56
 export SLURM_CPU_BIND=cores # critical to force ranks onto different cores. verify with ps -o psr <pid>
 export OMP_PROC_BIND=spread
 export OMP_PLACES=threads
+export MPI4PY_RC_RECV_MPROBE='False'
 
 export TRIAL=tdata
 export OUT_DIR=.

@@ -29,6 +29,7 @@ export NUMEXPR_MAX_THREADS=56
 export SLURM_CPU_BIND=cores # critical to force ranks onto different cores. verify with ps -o psr <pid>
 export OMP_PROC_BIND=spread
 export OMP_PLACES=threads
+export MPI4PY_RC_RECV_MPROBE='False'
 export CCTBX_GPUS_PER_NODE=8
 
 export SCRATCH_FOLDER=$SCRATCH/thermolysin/$SLURM_JOB_ID
