@@ -6,8 +6,8 @@
 #SBATCH -t 10
 #SBATCH -o %j.out
 #SBATCH -e %j.err
-export NTASKS=$((SLURM_JOB_NUM_NODES*28))
-export SRUN="srun -n $NTASKS --gpus-per-node=8 --cpus-per-gpu=7 --cpu-bind=cores"
+export NTASKS=$((SLURM_JOB_NUM_NODES*56))
+export SRUN="srun -n $NTASKS --gpus-per-node=8 --cpus-per-gpu=14 --cpu-bind=cores"
 export N_SIM=1000 # total number of images to simulate
 echo "simulating $N_SIM images on $SLURM_JOB_NUM_NODES nodes with $SRUN"
 

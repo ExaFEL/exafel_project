@@ -6,10 +6,11 @@
 #SBATCH -t 90
 #SBATCH -o %j.out
 #SBATCH -e %j.err
-export NTASKS=$((SLURM_JOB_NUM_NODES*28))
-export SRUN="srun -n $NTASKS --gpus-per-node=8 --cpus-per-gpu=7 --cpu-bind=cores"
-export N_SIM=100000 # total number of images to simulate
-echo "simulating $N_SIM images on $SLURM_JOB_NUM_NODES nodes with $SRUN"
+export NTASKS=$((SLURM_JOB_NUM_NODES*56))
+export SRUN="srun -n $NTASKS --gpus-per-node=8 --cpus-per-gpu=14 --cpu-bind=cores"
+export N_SIM=524288 # total number of images to simulate
+export LENGTH=$1
+echo "simulating $N_SIM images of xtal length $LENGTH um on $SLURM_JOB_NUM_NODES nodes with $SRUN"
 
 export CCTBX_DEVICE_PER_NODE=8
 export N_START=0
@@ -55,7 +56,7 @@ crystal {
   pdb.code=None
   pdb.source=file
   pdb.file=${MODULES}/exafel_project/kpp-sim/thermolysin/4tnl.pdb
-  length_um=0.5 # increase crystal path length # <-- change this to vary xtal size (depending on diffraction limit... increase if it's weak diffraction at detector edges, decr otherwise. probably a set of 5 xtal sizes between 10 and 0.2 um)
+  length_um=${LENGTH} # increase crystal path length # <-- change this to vary xtal size (depending on diffraction limit... increase if it's weak diffraction at detector edges, decr otherwise. probably a set of 5 xtal sizes between 10 and 0.2 um)
 }
 detector {
   tiles=multipanel
