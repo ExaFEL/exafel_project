@@ -88,6 +88,7 @@ indexing.stills.nv_reject_outliers=False
 echo "jobstart $(date)";pwd
 $SRUN dials.stills_process index.phil input.glob=$H5_SIM_PATH/image_rank_*.h5
 echo "jobend $(date)";pwd
+if [ "$(cat ${SLURM_JOB_ID}.err)" != "" ]; then exit; fi
 
 echo "dispatch.step_list=input tdata
 input.path=${DIALS_OUTPUT}
@@ -105,3 +106,4 @@ output.log_level=0
 echo "jobstart $(date)";pwd
 $SRUN cctbx.xfel.merge tdata.phil
 echo "jobend $(date)";pwd
+if [ "$(cat ${SLURM_JOB_ID}.err)" != "" ]; then exit; fi

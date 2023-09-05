@@ -22,3 +22,4 @@ $SRUN diffBragg.make_input_file ${JOB_ID_INDEX} ${SLURM_JOB_ID}_integ_exp_ref.tx
     --splitDir ${SLURM_JOB_ID}/splits
 
 echo "jobend $(date)";pwd
+if [ "$(cat ${SLURM_JOB_ID}.err)" != "" ]; then exit; fi
