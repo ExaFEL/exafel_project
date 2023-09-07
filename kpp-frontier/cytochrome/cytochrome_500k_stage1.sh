@@ -39,7 +39,7 @@ method = 'L-BFGS-B'
 outdir = 'stage1'
 debug_mode = False
 roi {
-  shoebox_size = 15
+  shoebox_size = 10
   fit_tilt = True
   reject_edge_reflections = False
   reject_roi_with_hotpix = False

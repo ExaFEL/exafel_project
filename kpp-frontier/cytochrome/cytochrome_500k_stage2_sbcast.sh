@@ -3,7 +3,7 @@
 #SBATCH -J stage2          # job name
 #SBATCH -A CHM137          # allocation
 #SBATCH -p batch           # regular queue
-#SBATCH -t 00:30:00        # wall clock time limit
+#SBATCH -t 00:35:00        # wall clock time limit
 #SBATCH -o %j.out
 #SBATCH -e %j.err
 SRUN="srun -n 4096 -c 3"
@@ -46,7 +46,7 @@ downsamp_spec {
 method = 'L-BFGS-B'
 debug_mode = False
 roi {
-  shoebox_size = 15
+  shoebox_size = 10
   fit_tilt = True
   fit_tilt_using_weights = False
   reject_edge_reflections = True
@@ -92,7 +92,7 @@ logging {
 " > stage_two.phil
 
 echo "start cctbx transfer $(date)"
-export CCTBX_ZIP_FILE=alcc-recipes1.tar.gz
+export CCTBX_ZIP_FILE=alcc-recipes2.tar.gz
 sbcast $SCRATCH/$CCTBX_ZIP_FILE /tmp/$CCTBX_ZIP_FILE
 srun -n $SLURM_NNODES -N $SLURM_NNODES tar -xf /tmp/$CCTBX_ZIP_FILE -C /tmp/
 . /tmp/alcc-recipes/cctbx/activate.sh

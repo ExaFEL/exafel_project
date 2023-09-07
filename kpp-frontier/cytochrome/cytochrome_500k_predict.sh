@@ -3,7 +3,7 @@
 #SBATCH -J predict         # job name
 #SBATCH -A CHM137          # allocation
 #SBATCH -p batch           # regular queue
-#SBATCH -t 1:00:00         # wall clock time limit
+#SBATCH -t 0:45:00         # wall clock time limit
 #SBATCH -o %j.out
 #SBATCH -e %j.err
 SRUN="srun -n 4096 -c 3"
@@ -45,8 +45,8 @@ predictions {
   laue_mode = False
   qcut = 0.0035
   label_weak_col = 'rlp'
-  weak_fraction = 0.67
-  threshold = 1
+  weak_fraction = 0.33
+  threshold = 10
   oversample_override = 1
   Nabc_override = None
   pink_stride_override = 10
