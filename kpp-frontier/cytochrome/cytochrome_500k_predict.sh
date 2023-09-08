@@ -1,12 +1,12 @@
 #!/bin/bash
-#SBATCH -N 256             # Number of nodes
+#SBATCH -N 512             # Number of nodes
 #SBATCH -J predict         # job name
 #SBATCH -A CHM137          # allocation
 #SBATCH -p batch           # regular queue
-#SBATCH -t 0:45:00         # wall clock time limit
+#SBATCH -t 0:30:00         # wall clock time limit
 #SBATCH -o %j.out
 #SBATCH -e %j.err
-SRUN="srun -n 4096 -c 3"
+SRUN="srun -n 8192 -c 3"
 
 export SCRATCH_FOLDER=$SCRATCH/cytochrome/$SLURM_JOB_ID
 mkdir -p "$SCRATCH_FOLDER"; cd "$SCRATCH_FOLDER" || exit
