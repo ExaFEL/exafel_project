@@ -111,6 +111,13 @@ downsamp_spec {
 }
 " > stage1.phil
 
+echo "start cctbx transfer $(date)"
+export CCTBX_ZIP_FILE=alcc-recipes2.tar.gz
+sbcast $SCRATCH/$CCTBX_ZIP_FILE /tmp/$CCTBX_ZIP_FILE
+srun -n $SLURM_NNODES -N $SLURM_NNODES tar -xf /tmp/$CCTBX_ZIP_FILE -C /tmp/
+. /tmp/alcc-recipes/cctbx/activate.sh
+echo "finish cctbx extraction $(date)"
+
 echo "jobstart $(date)";pwd
 $SRUN hopper stage1.phil structure_factors.mtz_name="$MTZ_PATH" exp_ref_spec_file="$SPEC_PATH"
 echo "jobend $(date)";pwd
