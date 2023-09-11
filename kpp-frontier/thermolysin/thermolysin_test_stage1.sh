@@ -103,7 +103,7 @@ maxs {
 }
 ucell_edge_perc = 15
 ucell_ang_abs = 1
-space_group = P43212
+space_group = P6122
 use_restraints = False
 logging {
   rank0_level = low normal *high

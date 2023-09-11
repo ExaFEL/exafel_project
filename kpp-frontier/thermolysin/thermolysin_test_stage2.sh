@@ -50,7 +50,7 @@ roi {
   reject_edge_reflections = True
   pad_shoebox_for_background_estimation = 0
 }
-space_group=P43212
+space_group=P6122
 
 sigmas {
   G = 1
