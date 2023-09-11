@@ -64,6 +64,12 @@ export MPI4PY_RC_RECV_MPROBE='False'
 export CCTBX_GPUS_PER_NODE=8
 
 mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER
+echo "start cctbx transfer $(date)"
+export CCTBX_ZIP_FILE=alcc-recipes2.tar.gz
+sbcast $SCRATCH/$CCTBX_ZIP_FILE /tmp/$CCTBX_ZIP_FILE
+srun -n $SLURM_NNODES -N $SLURM_NNODES tar -xf /tmp/$CCTBX_ZIP_FILE -C /tmp/
+. /tmp/alcc-recipes/cctbx/activate.sh
+echo "finish cctbx extraction $(date)"
 env > env.out
 
 echo "
