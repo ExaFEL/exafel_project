@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#SBATCH -N 200
+#SBATCH -N 512
 #SBATCH -J stage2
 #SBATCH -A CHM137
 #SBATCH -p batch

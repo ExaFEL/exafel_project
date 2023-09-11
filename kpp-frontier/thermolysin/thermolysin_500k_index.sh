@@ -1,9 +1,9 @@
 #!/bin/bash -l
-#SBATCH -N 256
+#SBATCH -N 512
 #SBATCH -J index
 #SBATCH -A CHM137
 #SBATCH -p batch
-#SBATCH -t 480
+#SBATCH -t 20
 #SBATCH -o %j.out
 #SBATCH -e %j.err
 export NTASKS_PER_NODE=56

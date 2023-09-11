@@ -1,9 +1,9 @@
 #!/bin/bash -l
-#SBATCH -N 50
+#SBATCH -N 512
 #SBATCH -J predict
 #SBATCH -A CHM137
 #SBATCH -p batch
-#SBATCH -t 180
+#SBATCH -t 15
 #SBATCH -o %j.out
 #SBATCH -e %j.err
 export NTASKS_PER_NODE=56

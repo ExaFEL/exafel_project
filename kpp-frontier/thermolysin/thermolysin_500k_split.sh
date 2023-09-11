@@ -1,13 +1,13 @@
 #!/bin/bash -l
-#SBATCH -N 10
+#SBATCH -N 32
 #SBATCH -J split
 #SBATCH -A CHM137
 #SBATCH -p batch
-#SBATCH -t 10
+#SBATCH -t 20
 #SBATCH -o %j.out
 #SBATCH -e %j.err
 export NTASKS=$((SLURM_JOB_NUM_NODES*56))
-export SRUN="srun -n $NTASKS --gpus-per-node=8 --cpus-per-gpu=14 --cpu-bind=cores"
+export SRUN="srun -n $NTASKS -c1 --cpu-bind=cores"
 echo "splitting on $SLURM_JOB_NUM_NODES nodes with $SRUN"
 
 export JOB_ID_INDEX=$1

@@ -1,9 +1,9 @@
 #!/bin/bash -l
-#SBATCH -N 128
+#SBATCH -N 256
 #SBATCH -J sim
 #SBATCH -A CHM137
 #SBATCH -p batch
-#SBATCH -t 20
+#SBATCH -t 60
 #SBATCH -o %j.out
 #SBATCH -e %j.err
 export NTASKS_PER_NODE=32
