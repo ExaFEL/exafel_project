@@ -116,3 +116,4 @@ downsamp_spec {
 echo "jobstart $(date)";pwd
 $SRUN hopper stage1.phil structure_factors.mtz_name=$MTZ exp_ref_spec_file=$SPEC
 echo "jobend $(date)";pwd
+if [ "$(cat ../${SLURM_JOB_ID}.err)" != "" ]; then exit; fi

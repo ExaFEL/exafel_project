@@ -81,4 +81,4 @@ $SRUN diffBragg.integrate pred.phil predict_stage1_kokkos.phil $HOPPER_RESULTS p
     --numdev $CCTBX_DEVICE_PER_NODE
 
 echo "jobend $(date)";pwd
-if [ "$(cat ${SLURM_JOB_ID}.err)" != "" ]; then exit; fi
+if [ "$(cat ../${SLURM_JOB_ID}.err)" != "" ]; then exit; fi

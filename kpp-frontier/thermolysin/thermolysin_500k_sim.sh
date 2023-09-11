@@ -73,4 +73,4 @@ output {
 echo "jobstart $(date)";pwd
 $SRUN libtbx.python $MODULES/exafel_project/kpp_utils/LY99_batch.py trial.phil
 echo "jobend $(date)";pwd
-if [ "$(cat ${SLURM_JOB_ID}.err)" != "" ]; then exit; fi
+if [ "$(cat ../${SLURM_JOB_ID}.err)" != "" ]; then exit; fi

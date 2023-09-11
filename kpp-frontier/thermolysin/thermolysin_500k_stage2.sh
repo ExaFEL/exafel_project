@@ -96,3 +96,4 @@ $SRUN simtbx.diffBragg.stage_two stage_two.phil \
     simulator.structure_factors.mtz_name=$MTZ
 
 echo "jobend $(date)";pwd
+if [ "$(cat ../${SLURM_JOB_ID}.err)" != "" ]; then exit; fi

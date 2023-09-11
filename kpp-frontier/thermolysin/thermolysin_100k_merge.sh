@@ -60,4 +60,4 @@ parallel.a2a=1
 echo "jobstart $(date)";pwd
 $SRUN cctbx.xfel.merge merge.phil
 echo "jobend $(date)";pwd
-if [ "$(cat ${SLURM_JOB_ID}.err)" != "" ]; then exit; fi
+if [ "$(cat ../${SLURM_JOB_ID}.err)" != "" ]; then exit; fi
