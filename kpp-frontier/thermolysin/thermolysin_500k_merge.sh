@@ -63,6 +63,7 @@ echo "finish cctbx extraction $(date)"
 env > env.out
 
 echo "input.path=${DIALS_OUTPUT}
+dispatch.step_list=input balance model_scaling modify filter scale postrefine statistics_unitcell statistics_beam model_statistics statistics_resolution group errors_merge merge statistics_intensity_cxi
 input.experiments_suffix=_integrated.expt
 input.reflections_suffix=_integrated.refl
 input.parallel_file_load.method=uniform
