@@ -6,13 +6,46 @@
 #SBATCH -t 180
 #SBATCH -o %j.out
 #SBATCH -e %j.err
-export NTASKS=$((SLURM_JOB_NUM_NODES*56))
-export SRUN="srun -n $NTASKS --gpus-per-node=8 --cpus-per-gpu=14 --cpu-bind=cores"
-echo "predicting/integrating on $SLURM_JOB_NUM_NODES nodes with $SRUN"
+export NTASKS_PER_NODE=56
+export NTASKS=$((SLURM_JOB_NUM_NODES * NTASKS_PER_NODE))
+export NODELIST=`scontrol show hostnames $SLURM_NODELIST`
+
+export SCRATCH=/lustre/orion/chm137/proj-shared/cctbx
+export SCRATCH_FOLDER=$SCRATCH/thermolysin/$SLURM_JOB_ID
+mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER
+echo "#! /bin/bash
+echo \"reporting from task \$SLURM_LOCALID of \$SLURM_NTASKS on node \$SLURM_NODEID of \$SLURM_NNODES running on \$SLURMD_NODENAME\"
+" > check_nodes.sh
+chmod +x check_nodes.sh
+
+srun -N $SLURM_NNODES -n${NTASKS} -c1 -t2 ./check_nodes.sh > node_report.out
+
+if [ -f "nodelist_ok" ]; then rm nodelist_ok; fi
+if [ -f "nodelist_exclude" ]; then rm nodelist_exclude; fi
+for nodename in $NODELIST; do
+        export count=`grep "running on $nodename" node_report.out | wc -l`
+        if [ ! "$count" == "$NTASKS_PER_NODE" ]
+                then
+                        echo "exclude node $nodename"
+                        echo -n "$nodename," >> nodelist_exclude
+                else
+                        echo "node $nodename OK"
+                        echo -n "$nodename," >> nodelist_ok
+        fi
+done
+
+#export SLURM_STEP_NODELIST=$(cat nodelist_ok)
+export STEP_NNODES=`sed "s:,: :g" nodelist_ok | wc -w`
+export NTASKS=$((STEP_NNODES * NTASKS_PER_NODE))
+if [ -f "nodelist_exclude" ]; then
+        export EXCLUDE="--exclude=$(cat nodelist_exclude)"
+fi
+
+export SRUN="srun -N$STEP_NNODES -n$NTASKS -c1 $EXCLUDE --cpu-bind=cores"
+echo "predicting/integrating on $STEP_NNODES nodes with $SRUN"
 
 export JOB_ID_HOPPER=$1
 
-export SCRATCH=/lustre/orion/chm137/proj-shared/cctbx
 export HOPPER_RESULTS=$SCRATCH/thermolysin/$JOB_ID_HOPPER/stage1
 
 export CCTBX_DEVICE_PER_NODE=8
@@ -26,8 +59,6 @@ export OMP_PLACES=threads
 export MPI4PY_RC_RECV_MPROBE='False'
 export CCTBX_GPUS_PER_NODE=8
 
-export SCRATCH_FOLDER=$SCRATCH/thermolysin/$SLURM_JOB_ID
-mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER
 env > env.out
 
 echo "
