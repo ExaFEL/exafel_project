@@ -3,7 +3,7 @@
 #SBATCH -J predict         # job name
 #SBATCH -A CHM137          # allocation
 #SBATCH -p batch           # regular queue
-#SBATCH -t 0:30:00         # wall clock time limit
+#SBATCH -t 0:40:00         # wall clock time limit
 #SBATCH -o %j.out
 #SBATCH -e %j.err
 SRUN="srun -n 8192 -c 3"
