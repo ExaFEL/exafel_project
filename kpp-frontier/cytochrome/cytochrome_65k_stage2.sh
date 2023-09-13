@@ -16,7 +16,7 @@ export JOB_ID_MERGE=${2}
 export JOB_ID_PREDICT=${3}
 
 export SCRATCH=/lustre/orion/chm137/proj-shared/cctbx/
-export MODULES=/lustre/orion/chm137/scratch/dtchon/alcc-recipes/cctbx/modules/
+export MODULES=/lustre/orion/chm137/scratch/vidyagan/
 
 export PERL_NDEV=8  # number GPU per node
 export PANDA=$SCRATCH/cytochrome/${JOB_ID_PREDICT}/predict/preds_for_hopper.pkl
