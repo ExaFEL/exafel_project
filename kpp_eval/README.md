@@ -11,9 +11,8 @@ of results is to be evaluated using the following five figures of merit:
 4) **D** – Physical accuracy of the measurements;
 5) **E** – Accuracy of the anomalous signal.
 
-Individual figures of merit can be calculated using the `step_$#.sh` shell
-files accessible in this directory. The steps are organised using letters
-`$` from A–E to mark individual metrics and numbers `#` for subsequent steps.
+Individual figures of merit can be calculated using appropriate `.py` and `.sh`
+scripts as discussed in section [Scripts](#scripts).
 Each of these figures of merit is described further in the KPP write-up,
 as well as in the [Google Docs file][link], accessible upon request.
 
@@ -30,14 +29,15 @@ requires a cctbx installation with the following modules and branches:
 
 - `cctbx_project` – any recent branch
 - `dials` – any recent branch (`dsp_oldstriping` suggested for processing)
-- `exafel_project` – this branch (the instructions may differ between branches)
+- `exafel_project` – this branch
 - `LS49` – any recent branch
 - `ls49_big_data` – any recent branch
-- `psii_spread` – any recent branch
+- `psii_spread` – any recent branch (optional)
 
-Additionally, the following git diff must be applied to the `cctbx_project`
-module, independent on the branch used. The cpp part is mostly irrelevant,
-so the cctbx does not need to be rebuilt after introducing the patch.
+If optional module `psii_spread` is used, the following git diff
+must be applied to the `cctbx_project` module, independent on the branch used.
+The cpp part is mostly irrelevant, so the cctbx does not need to be rebuilt
+after introducing the patch.
 
     diff --git a/simtbx/diffBragg/src/diffBragg.cpp b/simtbx/diffBragg/src/diffBragg.cpp
     index c7b1e08bc3..a893b423c7 100644
@@ -77,7 +77,7 @@ so the cctbx does not need to be rebuilt after introducing the patch.
 
 
 
-## Tools
+## Scripts
 ### Analysing offsets using diffBragg benchmark
 *Associated goals*: **A**; *files:*
 [evaluate_prediction_offset.py](evaluate_prediction_offset.py)
@@ -89,17 +89,41 @@ This code was originally introduced by Derek Mendez and further adapted
 by Daniel Tchoń. It uses the information stored in .refl files after stage 1
 to calculate radial, transverse, and overall offset across resolution bins.
 
+The script can accept two different types of offset. If stage 1 has been run
+in debug mode and produced expt/refl files, path to `stage1` output directory
+can be provided:
 ```shell
 libtbx.python $MODULES/exafel_project/kpp_eval/evaluate_prediction_offset.py \
-stage1=$SCRATCH/yb_lyso/13296752/stage1 d_min=2.0
+    stage1=$SCRATCH/yb_lyso/13296752/stage1 d_min=2.0
 ```
 
-By default, all data stored in `stage1/refls` between `d_min` and `d_max`
+If stage 1 expt/refls are not available, the information can be reconstructed
+using the pickle file produced by `predict` (`diffBragg.integrate`) step.
+In this case, the path to `predict` output directory must be specified:
+```shell
+libtbx.python $MODULES/exafel_project/kpp_eval/evaluate_prediction_offset.py \
+    predict=$SCRATCH/cytochrome/1435064/predict d_min=1.5
+```
+
+Reading and processing all refl files takes a long time - up to hour for
+1k events, depending on file sizes. It is advised to run the script using MPI
+on a small but representative fraction of data only. Since running via `srun`
+does not produce matplotlib interactive figures, the results can be pickled
+and restored by running the command twice with `cache=cache.pkl`:
+```shell
+srun -q debug -A CHM137 -t 5 -N 1 -n 56 \
+    libtbx.python $MODULES/exafel_project/kpp_eval/evaluate_prediction_offset.py \
+    predict=$SCRATCH/cytochrome/1435064/predict d_min=1.5 fraction=0.01 cache=cache.pkl
+libtbx.python $MODULES/exafel_project/kpp_eval/evaluate_prediction_offset.py cache=cache.pkl
+```
+
+
+By default, all data stored in read refls between `d_min` and `d_max`
 will be grouped into `n_bins` and `stat=median` for each bin as well as
 the entire range will be reported. Calculated statistic can be also set
 to `average` (arithmetic mean) or `rms` (matches the annulus approach).
 While ill-advised, `bins` can be made `same_count` to reflect the original
-behavior of the script. Usually, only `stage1` and `d_min` will be set.
+behavior of the script. In small cases, only `stage1` and `d_min` needs to be set.
 
 ### Analysing offsets using annulus worker
 *Associated goals*: **A**; *files:*
@@ -129,6 +153,12 @@ on just a small subset of data, e.g. 3000 experiments.
 In order to further analyse individual detector panels,
 one can `cp`, edit and `source` steps 3 and 4 in a similar fashion.
 
+This supplementary approach is available as a backup. It is slower
+and provides less information than `evaluate_prediction_offset.py`.
+Additionally, it relies on `psii_spread` module as dependency.
+However, it might be preferable when focusing strictly on RMS,
+scaling the evaluation to all data, or looking for more tested solution.
+
 ### Evaluating cross-correlation of odd and even intensities
 *Associated goals*: **C**; *files:*
 [evaluate_cc12.py](evaluate_cc12.py),
@@ -136,21 +166,40 @@ one can `cp`, edit and `source` steps 3 and 4 in a similar fashion.
 
 Precision of intensities modeling has been proposed to utilise a difference
 between "odd" and "even" half-sets of intensities refined by diffBragg.
-Since stage 2 can produce an `.mtz` file, this can be easily done by calling
+Since stage 2 can produce an `.mtz` file, this can be done by calling
 stage 2 refinement of half-datasets followed by a script that calculates
 a cross-correlation coefficient between two such files,
 called here `evaluate_cc12.py`. The python script can be called directly,
 by providing mtz paths as arguments, or by calling a modified shell script:
+```shell
+libtbx.python "$MODULES"/exafel_project/kpp_eval/evaluate_cc12.py \
+    mtz=path_to_stage2_odd.mtz \
+    mtz=path_to_stage2_even.mtz
+    
+```
+
+Alternatively, the same tool can be used via encapsulating script:
 ```shell
 cp $MODULES/exafel_project/kpp_eval/step_C.sh .
 vi step_C.sh  # to fill mtz paths
 source step_C.sh
 ```
 
+When evaluating simulated data, it is easier and scientifically
+more reasonable to cross-correlate the entire dataset against
+available reference data instead of comparing half-datasets.
+This can be achieved by providing paths to reference and post-stage-2
+mtz files instead of paths to half-dataset mtz files:
+```shell
+libtbx.python "$MODULES"/exafel_project/kpp_eval/evaluate_cc12.py \
+    mtz=path_to_stage2.mtz \
+    mtz=path_to_reference.mtz
+```
+
+
 ### Calculating ground-truth R-factor and strength of anomalous signal
 *Associated goals*: **D**, **E**;
 *files:*
-[evaluate_stage2_convergence.py](evaluate_stage2_convergence.py),
 [evaluate_anom.py](evaluate_anom.py),
 [step_DE.sh](step_DE.sh).
 
@@ -160,7 +209,14 @@ by loading reference `.pdb` and refined `.mtz` files using existing
 print the "R_work" value, which in this case can be better described as "R_gt".
 Anomalous map summary and peak heights for selected atoms will be then printed
 for selected atoms using modified `xfel.peak_height_at_atom` call.
+```shell
+libtbx.python "$MODULES"/exafel_project/kpp_eval/evaluate_anom.py \
+    path_to_reference.pdb \
+    path_to_evaluated.mtz \
+    selection="element Yb or element Fe or element Zn or element Ca"
+```
 
+Alternatively, the same tool can be used via encapsulating script:
 ```shell
 cp $MODULES/exafel_project/kpp_eval/step_DE.sh .
 vi step_DE.sh  # to fill pdb, mtz paths and anomalous element selection.
@@ -180,16 +236,19 @@ calling the dedicated `evaluate_anom_4bs7.py` script instead.
 Other than investigating the last step or output of diffBragg only,
 the progress of stage 2 can be traced as a function of iteration step
 using `evaluate_stage2_convergence.py`. This heavily modified version
-of previous Vidya's script can plot many aforementioned and other statistics,
+of Vidya Ganapati's script can plot many aforementioned and other statistics,
 as well as scatter refined vs reference data based on diffBragg `.npz` files.
 It can be called directly with either a large set of phil parameters
 (see example below and help message for full documentation) or by defining
 appropriate environmental variables (see [README.md](../kpp-docs/README.md)).
 
-`libtbx.ipython $MODULES/exafel_project/kpp_eval/evaluate_stage2_convergence.py
-mtz=/path/to/dials/merged.mtz stage2=/path/to/stage2/directory/
-pdb=/path/to/reference.pdb n_bins=10 d_min=1.9
-stat=cc_anom scatter_ranges='-1:2,100:500:100,450' show=True`
+```shell
+libtbx.ipython $MODULES/exafel_project/kpp_eval/evaluate_stage2_convergence.py \
+    mtz=$SCRATCH/cytochrome/1427767/out/ly99sim_all.mtz
+    stage2=$SCRATCH/cytochrome/1435064/1435064
+    pdb=$MODULES/exafel_project/kpp-frontier/cytochrome/5wp2.pdb
+    n_bins=10 d_min=1.5 stat=cc_anom scatter_ranges='-1:2,50:50:550' show=True
+```
 
 The script was initially not intended to be used as a stand-alone evaluation
 tool, but it might prove useful as one, as it allows to calculate
