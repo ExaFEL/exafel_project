@@ -8,15 +8,15 @@
 #SBATCH -e %j.err
 SRUN="srun -n 512 -c 3"
 
+export SCRATCH=/lustre/orion/chm137/proj-shared/cctbx/
+export MODULES=/lustre/orion/chm137/scratch/vidyagan/
+
 export SCRATCH_FOLDER=$SCRATCH/cytochrome/$SLURM_JOB_ID
 mkdir -p "$SCRATCH_FOLDER"; cd "$SCRATCH_FOLDER" || exit
 
 export JOB_ID_INDEX=${1}
 export JOB_ID_MERGE=${2}
 export JOB_ID_PREDICT=${3}
-
-export SCRATCH=/lustre/orion/chm137/proj-shared/cctbx/
-export MODULES=/lustre/orion/chm137/scratch/vidyagan/
 
 export PERL_NDEV=8  # number GPU per node
 export PANDA=$SCRATCH/cytochrome/${JOB_ID_PREDICT}/predict/preds_for_hopper.pkl
