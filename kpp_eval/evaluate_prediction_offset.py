@@ -1,13 +1,21 @@
 """
 Calculate, compare, and report the offset of observed vs predicted reflection
-position in DIALS' stills_process vs diffBragg's hopper (stage 1).
+position refined by DIALS' stills_process versus diffBragg's hopper (stage 1).
 
 This script can accept two input kinds. The first one is stage 1 refl files,
 containing columns `xyzobs.px.value`, `xyzcal.px`, and `dials.xyzcal.px`.
 produced whenever stage 1 is run in debug mode.
-The second accepted input is predict pickle and expt files. Using those,
+The second accepted input is predict pickle and expt files. Using these,
 the script can reconstruct all stage 1 information by matching experiments.
-The mode is selected automatically depending on which phil paths are specified.
+The input is chosen automatically depending on which phil paths are specified.
+If both stage1 and predict are specified, stage1 input is prioritised.
+
+The script produces two kinds of output: offsets table and plots.
+It can be significantly sped up by running it in parallel using `srun`,
+however in this configuration offset plots will not be produced.
+In order to run script using MPI and obtain plots, first run script using
+`srun` with `cache` specified, and then read in the `cache` and replot
+the figures without recalculating data by `source`ing the script without MPI.
 """
 from collections import OrderedDict, UserList
 from enum import Enum
@@ -17,7 +25,7 @@ from itertools import chain
 import math
 import pickle
 import random
-from typing import Callable, List, NamedTuple
+from typing import Callable, List, NamedTuple, Tuple
 import os
 
 import matplotlib.pyplot as plt
@@ -133,21 +141,22 @@ class Input(NamedTuple):
       raise ValueError(msg + ' '.join(globs))
 
   @property
-  def detector(self):
+  def detector(self) -> Detector:
     d = ExperimentList.from_file(self.expts[0], check_format=False)[0].detector \
       if COMM.rank == 0 else None
     return COMM.bcast(d, root=0)
 
   @property
-  def scattered(self):
+  def scattered(self) -> 'Input':
     expts = self.expts[COMM.rank::COMM.size]
     refls = self.refls[COMM.rank::COMM.size] if self.refls else []
     return Input(self.kind, expts, refls=refls, pickle=self.pickle)
 
 
 class OffsetDataFrames(UserList):
+  """Storage class w/ convenience methods for calculating offsets from input"""
   @classmethod
-  def from_input(cls, input_, fraction: float = 1.):
+  def from_input(cls, input_, fraction: float = 1.) -> 'OffsetDataFrames':
     if input_.kind is InputKind.stage1:
       return cls._from_stage1_input(input_, fraction)
     else:  # if input_.kind is InputKind.predict
@@ -203,7 +212,7 @@ class OffsetDataFrames(UserList):
 
 
 class BinLimits(UserList):
-  """Simple class to generate and store list of resolution bin limits"""
+  """Generate, store list of resolution bin limits, similar to miller.binner"""
   EPS = 1e-9
 
   @classmethod
@@ -235,7 +244,7 @@ class BinLimits(UserList):
     return [f'{b}-{e}' for b, e in zip(limits_str[:-1], limits_str[1:])]
 
   @property
-  def overall_header(self):
+  def overall_header(self) -> str:
     return '-'.join([f'{limit:.6f}'[:6] for limit in [self[0], self[-1]]])
 
 
@@ -261,7 +270,7 @@ def calculate_rms(data: np.ndarray) -> float:
   return np.sqrt(np.mean(data ** 2))
 
 
-def xy_to_polar(refl, detector, dials=False):
+def xy_to_polar(refl, detector: Detector, dials: bool = False) -> Tuple[float, float]:
   x, y, _ = refl["xyzobs.px.value"]
   if dials:
     xcal, ycal, _ = refl["dials.xyzcal.px"]
@@ -288,7 +297,7 @@ def xy_to_polar(refl, detector, dials=False):
   return rad_component / pxsize, tang_component / pxsize
 
 
-def offsets_from_path(refl_path: str, detector) -> pd.DataFrame:
+def offsets_from_path(refl_path: str, detector: Detector) -> pd.DataFrame:
   refl = flex.reflection_table.from_file(refl_path)
   return offsets_from_refl(refl, detector)
 
@@ -323,7 +332,7 @@ offset_kinds = [OffsetKind('Overall', 'dB_offset', 'DIALS_offset'),
 
 
 class OffsetArtist:
-  def __init__(self, offset_summary: pd.DataFrame, stat: str):
+  def __init__(self, offset_summary: pd.DataFrame, stat: str) -> None:
     self.data = offset_summary
     self.stat = stat
 
