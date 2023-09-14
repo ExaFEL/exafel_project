@@ -169,7 +169,8 @@ class OffsetDataFrames(UserList):
     detector = input_.detector
     useful_keys = ['stage1_refls', 'old_exp_idx', 'predictions', 'exp_idx']
     df = pd.read_pickle(input_.pickle)[useful_keys] if COMM.rank == 0 else None
-    print0(f'Total refl file count: {df["stage1_refls"].nunique()}')
+    if COMM.rank == 0:
+      print0(f'Total refl file count: {df["stage1_refls"].nunique()}')
     if COMM.rank == 0 and fraction != 1.0:
       df = df.sample(frac=fraction, random_state=RANDOM_SEED, axis=0)
     df = COMM.bcast(df, root=0)
