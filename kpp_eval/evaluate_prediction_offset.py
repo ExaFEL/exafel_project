@@ -129,9 +129,9 @@ class Input(NamedTuple):
 
   @property
   def detector(self):
-    expt0 = ExperimentList.from_file(self.expts[0], check_format=False)[0] \
+    d = ExperimentList.from_file(self.expts[0], check_format=False)[0].detector \
       if COMM.rank == 0 else None
-    return COMM.bcast(expt0.detector, root=0)
+    return COMM.bcast(d, root=0)
 
   @property
   def scattered(self):
