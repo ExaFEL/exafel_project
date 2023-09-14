@@ -15,6 +15,7 @@ from functools import lru_cache
 from glob import glob
 from itertools import chain
 import math
+import pickle
 import random
 from typing import Callable, List, NamedTuple
 import os
@@ -68,6 +69,10 @@ bins_type = same_count *same_volume
 stat = *median average rms
   .type = choice(multi=False)
   .help = Which statistic should be evaluated
+cache = None
+  .type = str
+  .help = If given & cache does not exist, write results to cache pickle.
+  .help = If given & cache exists, read and show results instead of calculating.
 """
 
 
@@ -347,23 +352,35 @@ class OffsetArtist:
 
 
 def run(parameters) -> None:
-  input_ = Input.from_params(parameters)
-  offsets = OffsetDataFrames.from_input(input_, fraction=parameters.fraction)
-  offsets_gathered = COMM.gather(offsets)
-  if COMM.rank != 0:
-    return
-  offsets_list = chain.from_iterable(offsets_gathered)
-  offsets = pd.concat(offsets_list, axis=0, ignore_index=True)
-  bin_limits = BinLimits.from_params(offsets['resolution'], parameters)
-  offsets['bin'] = np.digitize(offsets['resolution'], bin_limits) - 1
-  stat_calc = stat_calculators[parameters.stat]
-  offsets_total = offsets.apply(stat_calc, axis=0, raw=True)
-  offsets_binned = [offsets[offsets['bin'] == b].apply(stat_calc, axis=0, raw=True)
-                    for b in range(parameters.n_bins)]
-  offset_summary = pd.concat(offsets_binned + [offsets_total], axis=1).T
-  offset_summary['bin'] = bin_limits.bin_headers + [bin_limits.overall_header]
-  offset_summary.set_index('bin', inplace=True)
-  print0(offset_summary)
+  try:
+    with open(parameters.cache, 'rb') as cache:
+      if COMM.rank == 0:
+        offset_summary, parameters.stat = pickle.load(cache)
+  except (EOFError, FileNotFoundError, TypeError):
+    input_ = Input.from_params(parameters)
+    offsets = OffsetDataFrames.from_input(input_, fraction=parameters.fraction)
+    offsets_gathered = COMM.gather(offsets)
+    if COMM.rank != 0:
+      return
+    offsets_list = chain.from_iterable(offsets_gathered)
+    offsets = pd.concat(offsets_list, axis=0, ignore_index=True)
+    bin_limits = BinLimits.from_params(offsets['resolution'], parameters)
+    offsets['bin'] = np.digitize(offsets['resolution'], bin_limits) - 1
+    stat_calc = stat_calculators[parameters.stat]
+    offsets_total = offsets.apply(stat_calc, axis=0, raw=True)
+    offsets_binned = [offsets[offsets['bin'] == b].apply(stat_calc, axis=0, raw=True)
+                      for b in range(parameters.n_bins)]
+    offset_summary = pd.concat(offsets_binned + [offsets_total], axis=1).T
+    offset_summary['bin'] = bin_limits.bin_headers + [bin_limits.overall_header]
+    offset_summary.set_index('bin', inplace=True)
+    print0(offset_summary)
+    if parameters.cache:
+      with open(parameters.cache, 'wb') as cache:
+         pickle.dump((offset_summary, parameters.stat), cache)
+  else:
+    if COMM.rank != 0:
+      return
+    print0(offset_summary)
   oa = OffsetArtist(offset_summary[:-1], parameters.stat)  # no summary row
   for offset_kind in offset_kinds:
     oa.plot_offset(offset_kind)
