@@ -76,6 +76,7 @@ RANDOM_SEED = 1337
 random.seed(RANDOM_SEED)
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
+pd.set_option('display.width', None)
 
 
 def print0(*args: str, **kwargs):
@@ -107,18 +108,24 @@ class Input(NamedTuple):
   @classmethod
   def from_params(cls, params_) -> 'Input':
     stage1_path = get_stage1_path(params_)
-    stage1_expt_paths = glob(os.path.join(stage1_path, 'expers/rank*/*.expt'))
-    stage1_refl_paths = glob(os.path.join(stage1_path, 'refls/rank*/*.expt'))
+    stage1_expt_glob = os.path.join(stage1_path, 'expers/rank*/*.expt')
+    stage1_refl_glob = os.path.join(stage1_path, 'refls/rank*/*.refl')
+    stage1_expt_paths = glob(stage1_expt_glob)
+    stage1_refl_paths = glob(stage1_refl_glob)
 
     predict_path = get_predict_path(params_)
-    predict_expt_paths = glob(os.path.join(predict_path, 'expts_and_refls/*.expt'))
-    predict_pkl_path = glob(os.path.join(predict_path, 'preds_for_hopper.pkl'))[0]
+    predict_expt_glob = os.path.join(predict_path, 'expts_and_refls/*.expt')
+    predict_pkl_glob = os.path.join(predict_path, 'preds_for_hopper.pkl')
+    predict_expt_paths = glob(predict_expt_glob)
+    predict_pkl_paths = glob(predict_pkl_glob)
     if stage1_expt_paths and stage1_refl_paths:
       return Input(InputKind.stage1, stage1_expt_paths, refls=stage1_refl_paths)
-    elif predict_expt_paths and predict_pkl_path:
-      return Input(InputKind.predict, predict_expt_paths, pickle=predict_pkl_path)
+    elif predict_expt_paths and predict_pkl_paths:
+      return Input(InputKind.predict, predict_expt_paths, pickle=predict_pkl_paths[0])
     else:
-      raise ValueError('No stage1 or index+predict expts/refls were found')
+      msg = 'No stage1 expt/refls or predict expt/pickle were found at globs: '
+      globs = (stage1_expt_glob, stage1_refl_glob, predict_expt_glob, predict_pkl_glob)
+      raise ValueError(msg + ' '.join(globs))
 
   @property
   def detector(self):
@@ -139,11 +146,11 @@ class OffsetDataFrames(UserList):
     if input_.kind is InputKind.stage1:
       return cls._from_stage1_input(input_, fraction)
     else:  # if input_.kind is InputKind.predict
-      return cls._from_predict_input(input_)
+      return cls._from_predict_input(input_, fraction)
 
   @classmethod
   def _from_stage1_input(cls, input_: Input, fraction) -> 'OffsetDataFrames':
-    print0(f'#refl files: {len(input_.refls)}')
+    print0(f'Total refl file count: {len(input_.refls)}')
     detector = input_.detector
     refl_paths = input_.scattered.refls
     if fraction != 1.0:
@@ -162,9 +169,10 @@ class OffsetDataFrames(UserList):
     detector = input_.detector
     useful_keys = ['stage1_refls', 'old_exp_idx', 'predictions', 'exp_idx']
     df = pd.read_pickle(input_.pickle)[useful_keys] if COMM.rank == 0 else None
-    if fraction != 1.0:
+    print0(f'Total refl file count: {df["stage1_refls"].nunique()}')
+    if COMM.rank == 0 and fraction != 1.0:
       df = df.sample(frac=fraction, random_state=RANDOM_SEED, axis=0)
-    df = COMM.bcast(df)
+    df = COMM.bcast(df, root=0)
     df = pd.concat([d for i, (_, d) in enumerate(df.groupby('predictions'))
                     if i % COMM.size == COMM.rank])
     df.sort_values(by=['predictions', 'stage1_refls'], inplace=True)
@@ -175,8 +183,9 @@ class OffsetDataFrames(UserList):
       index_refl = index_refl.select(index_sel)
       index_refl.sort('miller_index')
       predict_refl = cls.get_refl(event['predictions'])
-      predict_sel = flex.bool(predict_refl['id'] == event['exp_idx'])
-      predict_refl = predict_refl.select(predict_sel)
+      predict_sel1 = flex.bool(predict_refl['id'] == event['exp_idx'])
+      predict_sel2 = predict_refl['is_strong']
+      predict_refl = predict_refl.select(predict_sel1 & predict_sel2)
       predict_refl.sort('miller_index')
       matches = match_indices(index_refl['miller_index'], predict_refl['miller_index'])
       index_refl = index_refl.select(matches.pairs().column(0))
@@ -338,7 +347,7 @@ class OffsetArtist:
 
 def run(parameters) -> None:
   input_ = Input.from_params(parameters)
-  offsets = OffsetDataFrames.from_input(input_)
+  offsets = OffsetDataFrames.from_input(input_, fraction=parameters.fraction)
   offsets_gathered = COMM.gather(offsets)
   if COMM.rank != 0:
     return
