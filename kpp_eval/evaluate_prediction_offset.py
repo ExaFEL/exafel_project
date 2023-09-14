@@ -1,10 +1,21 @@
 """
 Calculate, compare, and report the offset of observed vs predicted reflection
 position in DIALS' stills_process vs diffBragg's hopper (stage 1).
+
+This script can accept two input kinds. The first one is stage 1 refl files,
+containing columns `xyzobs.px.value`, `xyzcal.px`, and `dials.xyzcal.px`.
+produced whenever stage 1 is run in debug mode.
+The second accepted input is predict pickle and expt files. Using those,
+the script can reconstruct all stage 1 information by matching experiments.
+The mode is selected automatically depending on which phil paths are specified.
 """
 from collections import OrderedDict, UserList
+from enum import Enum
+from functools import lru_cache
+from glob import glob
 from itertools import chain
-import glob
+import math
+import random
 from typing import Callable, List, NamedTuple
 import os
 
@@ -12,6 +23,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+from cctbx.miller import match_indices
 from dials.array_family import flex
 from dxtbx.model import Detector, ExperimentList
 from libtbx.mpi4py import MPI
@@ -27,11 +39,20 @@ phil_scope_str = """
 stage1 = None
   .type = str
   .help = Directory with stage 1 results, the one containing folder refls.
-  .help = If None, $SCRATCH/psii/$JOB_ID_HOPPER/stage1 will be used.
+  .help = If None, ./$JOB_ID_HOPPER/stage1 will be used. (Input kind 1)
+predict = None
+  .type = str
+  .help = Directory with predict results containing `preds_for_hopper.pkl`
+  .help = and `expts_and_refls/` directory.
+  .help = If None, ./$JOB_ID_PREDICT/predict will be used. (Input kind 2)
 expt = None
   .type = str
   .help = Path to an expt files containing reference detector model. If None,
-  .help = the first expt file found in stage1/expers/rank0/ will be used.
+  .help = the first expt file found in stage1/ or predict/ will be used.
+fraction = 1.0
+  .type = float
+  .help = Investigate data from stage1/predict for fraction of data only.
+  .help = Set to lower value for testing or if high accuracy is not necessary.
 d_min = 1.9
   .type = float
   .help = Lower bound of data resolution to be investigated, in Angstrom
@@ -50,8 +71,9 @@ stat = *median average rms
 """
 
 
-NJ = 1
 COMM = MPI.COMM_WORLD
+RANDOM_SEED = 1337
+random.seed(RANDOM_SEED)
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 
@@ -61,16 +83,108 @@ def print0(*args: str, **kwargs):
     print(*args, **kwargs)
 
 
-@set_default_return('$SCRATCH/psii/$JOB_ID_HOPPER/stage1')
+@set_default_return('./$JOB_ID_HOPPER/stage1')
 def get_stage1_path(params_) -> str:
   return params_.stage1
 
 
-def get_expt_path(params_) -> str:
-  stage1_path = get_stage1_path(params_)
-  default_expt_glob = os.path.join(stage1_path, 'expers/rank0/*.expt')
-  default_expt_path = next(glob.iglob(default_expt_glob), None)
-  return p if (p := params.expt) else default_expt_path
+@set_default_return('./$JOB_ID_PREDICT/predict')
+def get_predict_path(params_) -> str:
+  return params_.predict
+
+
+class InputKind(Enum):
+  stage1 = 1
+  predict = 2
+
+
+class Input(NamedTuple):
+  kind: InputKind
+  expts: List[str]         # from stage1 or predict, for geometry and id match
+  refls: List[str] = None  # from stage1, for dials (& dB if kind 1) xyzcal.px
+  pickle: str = None   # from predict, for id map (for dB xyzcal.px if kind 2)
+
+  @classmethod
+  def from_params(cls, params_) -> 'Input':
+    stage1_path = get_stage1_path(params_)
+    stage1_expt_paths = glob(os.path.join(stage1_path, 'expers/rank*/*.expt'))
+    stage1_refl_paths = glob(os.path.join(stage1_path, 'refls/rank*/*.expt'))
+
+    predict_path = get_predict_path(params_)
+    predict_expt_paths = glob(os.path.join(predict_path, 'expts_and_refls/*.expt'))
+    predict_pkl_path = glob(os.path.join(predict_path, 'preds_for_hopper.pkl'))[0]
+    if stage1_expt_paths and stage1_refl_paths:
+      return Input(InputKind.stage1, stage1_expt_paths, refls=stage1_refl_paths)
+    elif predict_expt_paths and predict_pkl_path:
+      return Input(InputKind.predict, predict_expt_paths, pickle=predict_pkl_path)
+    else:
+      raise ValueError('No stage1 or index+predict expts/refls were found')
+
+  @property
+  def detector(self):
+    expt0 = ExperimentList.from_file(self.expts[0], check_format=False)[0] \
+      if COMM.rank == 0 else None
+    return COMM.bcast(expt0.detector, root=0)
+
+  @property
+  def scattered(self):
+    expts = self.expts[COMM.rank::COMM.size]
+    refls = self.refls[COMM.rank::COMM.size] if self.refls else []
+    return Input(self.kind, expts, refls=refls, pickle=self.pickle)
+
+
+class OffsetDataFrames(UserList):
+  @classmethod
+  def from_input(cls, input_, fraction: float = 1.):
+    if input_.kind is InputKind.stage1:
+      return cls._from_stage1_input(input_, fraction)
+    else:  # if input_.kind is InputKind.predict
+      return cls._from_predict_input(input_)
+
+  @classmethod
+  def _from_stage1_input(cls, input_: Input, fraction) -> 'OffsetDataFrames':
+    print0(f'#refl files: {len(input_.refls)}')
+    detector = input_.detector
+    refl_paths = input_.scattered.refls
+    if fraction != 1.0:
+      refl_paths_n = math.ceil(len(refl_paths) * fraction)
+      refl_paths = random.sample(refl_paths, refl_paths_n, )
+    return cls(o for rp in refl_paths
+               if (o := offsets_from_path(rp, detector)) is not None)
+
+  @staticmethod
+  @lru_cache(maxsize=2)
+  def get_refl(refl_path: str) -> flex.reflection_table:
+    return flex.reflection_table.from_file(refl_path)
+
+  @classmethod
+  def _from_predict_input(cls, input_: Input, fraction) -> 'OffsetDataFrames':
+    detector = input_.detector
+    useful_keys = ['stage1_refls', 'old_exp_idx', 'predictions', 'exp_idx']
+    df = pd.read_pickle(input_.pickle)[useful_keys] if COMM.rank == 0 else None
+    if fraction != 1.0:
+      df = df.sample(frac=fraction, random_state=RANDOM_SEED, axis=0)
+    df = COMM.bcast(df)
+    df = pd.concat([d for i, (_, d) in enumerate(df.groupby('predictions'))
+                    if i % COMM.size == COMM.rank])
+    df.sort_values(by=['predictions', 'stage1_refls'], inplace=True)
+    offsets = []
+    for _, event in df.iterrows():
+      index_refl = cls.get_refl(event['stage1_refls'])
+      index_sel = flex.bool(index_refl['id'] == event['old_exp_idx'])
+      index_refl = index_refl.select(index_sel)
+      index_refl.sort('miller_index')
+      predict_refl = cls.get_refl(event['predictions'])
+      predict_sel = flex.bool(predict_refl['id'] == event['exp_idx'])
+      predict_refl = predict_refl.select(predict_sel)
+      predict_refl.sort('miller_index')
+      matches = match_indices(index_refl['miller_index'], predict_refl['miller_index'])
+      index_refl = index_refl.select(matches.pairs().column(0))
+      predict_refl = predict_refl.select(matches.pairs().column(1))
+      predict_refl['xyzobs.px.value'] = index_refl['xyzobs.px.value']
+      predict_refl['dials.xyzcal.px'] = index_refl['xyzcal.px']
+      offsets.append(offsets_from_refl(predict_refl, detector))
+    return cls(offsets)
 
 
 class BinLimits(UserList):
@@ -159,9 +273,11 @@ def xy_to_polar(refl, detector, dials=False):
   return rad_component / pxsize, tang_component / pxsize
 
 
-
-def offsets_from_refl(refl_path : str, detector) -> pd.DataFrame:
+def offsets_from_path(refl_path: str, detector) -> pd.DataFrame:
   refl = flex.reflection_table.from_file(refl_path)
+  return offsets_from_refl(refl, detector)
+
+def offsets_from_refl(refl: flex.reflection_table, detector) -> pd.DataFrame:
   if len(refl) == 0:
     return None
   r = {}
@@ -221,14 +337,8 @@ class OffsetArtist:
 
 
 def run(parameters) -> None:
-  expt_path = get_expt_path(parameters)
-  detector = ExperimentList.from_file(expt_path, check_format=False)[0].detector
-  refl_glob = os.path.join(get_stage1_path(parameters), 'refls/rank*/*.refl')
-  refl_paths = glob.glob(refl_glob)
-  print0(f'#refl files: {len(refl_paths)}')
-  refl_paths = refl_paths[COMM.rank::COMM.size]
-  offsets = [o for rp in refl_paths
-             if (o := offsets_from_refl(rp, detector)) is not None]
+  input_ = Input.from_params(parameters)
+  offsets = OffsetDataFrames.from_input(input_)
   offsets_gathered = COMM.gather(offsets)
   if COMM.rank != 0:
     return
