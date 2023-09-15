@@ -88,14 +88,32 @@ simulator {
 
 logging {
   rank0_level = low normal *high
-  logfiles = False # True for memory troubleshooting but consumes 3 seconds of wall time
+  logfiles = True # True for memory troubleshooting but consumes 3 seconds of wall time
+  log_hostnames = False
 }
 " > stage_two.phil
 
+# copy program to nodes
+echo "start cctbx transfer $(date)"
+export CCTBX_ZIP_FILE=alcc-recipes3.tar.gz
+sbcast $SCRATCH/$CCTBX_ZIP_FILE /tmp/$CCTBX_ZIP_FILE
+srun -n $SLURM_NNODES -N $SLURM_NNODES tar -xf /tmp/$CCTBX_ZIP_FILE -C /tmp/
+. /tmp/alcc-recipes/cctbx/activate.sh
+echo "finish cctbx extraction $(date)"
+
+# create output directory
+srun -n $SLURM_NNODES -N $SLURM_NNODES mkdir -p /tmp/${SLURM_JOB_ID}
+
+# run program
 echo "jobstart $(date)";pwd
 $SRUN simtbx.diffBragg.stage_two stage_two.phil \
-io.output_dir=${SLURM_JOB_ID} \
+io.output_dir=/tmp/${SLURM_JOB_ID} \
 pandas_table=${PANDA} num_devices=$PERL_NDEV \
 simulator.structure_factors.mtz_name=${SCRATCH}/yb_lyso/${JOB_ID_MERGE}/out/ly99sim_all.mtz \
+
+# gather output
+sgather /tmp/${SLURM_JOB_ID}/lineProf lineProf
+sgather /tmp/${SLURM_JOB_ID}/mainLog mainLog
+cp /tmp/${SLURM_JOB_ID}/* ./
 
 echo "jobend $(date)";pwd
