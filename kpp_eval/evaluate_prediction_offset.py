@@ -353,7 +353,7 @@ class OffsetArtist:
     ax.set_xlabel("resolution ($\AA$)", fontsize=11, labelpad=5)
     ax.set_ylabel(self.stat + " of prediction offset (pixels)", fontsize=11)
     ax.set_facecolor('gainsboro')
-    plt.subplots_adjust(bottom=0.2, left=0.15, right=0.98, top=0.9)
+    plt.subplots_adjust(bottom=0.15, left=0.15, right=0.95, top=0.9)
     legend = ax.legend(("diffBragg", "DIALS"), prop={"size": 10})
     legend_frame = legend.get_frame()
     legend_frame.set_facecolor("bisque")
