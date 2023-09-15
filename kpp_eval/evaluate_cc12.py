@@ -8,7 +8,7 @@ files. It is based on many methods in `cctbx.xfel.merge` routine, see files:
 """
 
 import math
-from typing import Iterable, NamedTuple, List
+from typing import Dict, Iterable, NamedTuple, List
 
 import numpy as np
 from cctbx import miller
@@ -67,14 +67,14 @@ class CrossCorrelationSums(NamedTuple):
 
 class CrossCorrelationTable(object):
   """Represents a table of cross-correlations for resolution bins"""
-  def __init__(self, binner):
+  def __init__(self, binner) -> None:
     self.binner = binner
     self.cc_bins = []
     self.cumulative_observed_matching_asu_count = 0
     self.cumulative_theor_asu_count = 0
     self.cumulative_cross_correlation = 0.0
 
-  def __str__(self):
+  def __str__(self) -> str:
     cc_bins_iterator = iter(self.cc_bins)
     s = '    d_max     d_min  #obs_asu / #thr_asu     cc1/2\n'
     s += '-' * 50 + '\n'
@@ -94,7 +94,7 @@ class CrossCorrelationTable(object):
          f' {100 * self.cumulative_cross_correlation:8.4f}%\n'
     return s
 
-  def build(self, cross_correlation_sums_list: List[CrossCorrelationSums]):
+  def build(self, cross_correlation_sums_list: List[CrossCorrelationSums]) -> None:
     """Evaluate values in self based on binner and sums lists provided"""
     cum_cc_sums = CrossCorrelationSums()
     cumulative_theoretical_asu_count = 0
@@ -113,7 +113,7 @@ class CrossCorrelationTable(object):
     self.cumulative_cross_correlation = cum_cc_sums.parameter
 
 
-def generate_hkl_to_bin_map(binner, miller_set):
+def generate_hkl_to_bin_map(binner, miller_set) -> Dict:
   """Generate dict: hkl to bin number for input binner"""
   hkl_to_bin_map = {}  # hkl vs resolution bin number
   for i_bin in binner.range_used():
@@ -124,11 +124,12 @@ def generate_hkl_to_bin_map(binner, miller_set):
   return hkl_to_bin_map
 
 
-def calculate_cross_correlation(mtz1_path: str, mtz2_path: str, d_min: float = None):
+def calculate_cross_correlation(mtz1_path: str, mtz2_path: str,
+                                d_min: float = None) -> CrossCorrelationTable:
   """Calculate cc1/2 between two mtz files."""
   ma1 = refl_file_reader.any_reflection_file(mtz1_path).as_miller_arrays()[0]
   ma2 = refl_file_reader.any_reflection_file(mtz2_path).as_miller_arrays()[0]
-  d_min = d_min if d_min else min([ma1.d_min(), ma2.d_min()])
+  d_min = d_min if d_min else max([ma1.d_min(), ma2.d_min()])
   space_group_info = ma1.space_group().info()
   unit_cell = ma1.unit_cell()
   symm = symmetry(unit_cell=unit_cell, space_group_info=space_group_info)
@@ -155,7 +156,7 @@ def calculate_cross_correlation(mtz1_path: str, mtz2_path: str, d_min: float = N
   return cct
 
 
-def run(params_):
+def run(params_) -> None:
   assert len(params_.mtz) == 2, 'Exactly two mtz file paths must be provided'
   mtz_path1, mtz_path2 = params_.mtz[0:2]
   cct = calculate_cross_correlation(mtz_path1, mtz_path2, d_min=None)
