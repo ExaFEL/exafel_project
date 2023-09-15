@@ -23,6 +23,9 @@ mtz = None
   .type = str
   .multiple = True
   .help = Individual paths to the mtz files to be evaluated against each other.
+d_min = None
+  .type = float
+  .help = Lower bound of data resolution to be investigated, in Angstrom
 """
 
 
@@ -121,11 +124,11 @@ def generate_hkl_to_bin_map(binner, miller_set):
   return hkl_to_bin_map
 
 
-def calculate_cross_correlation(mtz1_path, mtz2_path):
+def calculate_cross_correlation(mtz1_path: str, mtz2_path: str, d_min: float = None):
   """Calculate cc1/2 between two mtz files."""
   ma1 = refl_file_reader.any_reflection_file(mtz1_path).as_miller_arrays()[0]
   ma2 = refl_file_reader.any_reflection_file(mtz2_path).as_miller_arrays()[0]
-  d_min = min([ma1.d_min(), ma2.d_min()])
+  d_min = d_min if d_min else min([ma1.d_min(), ma2.d_min()])
   space_group_info = ma1.space_group().info()
   unit_cell = ma1.unit_cell()
   symm = symmetry(unit_cell=unit_cell, space_group_info=space_group_info)
@@ -142,7 +145,6 @@ def calculate_cross_correlation(mtz1_path, mtz2_path):
   for pair in matching_indices.pairs():
     hkl = ma1.indices()[pair[0]]
     assert hkl == ma2.indices()[pair[1]]
-
     if hkl in hkl_map:
       i_bin = hkl_map[hkl]
       x = ma1.data()[pair[0]]
@@ -156,7 +158,7 @@ def calculate_cross_correlation(mtz1_path, mtz2_path):
 def run(params_):
   assert len(params_.mtz) == 2, 'Exactly two mtz file paths must be provided'
   mtz_path1, mtz_path2 = params_.mtz[0:2]
-  cct = calculate_cross_correlation(mtz_path1, mtz_path2)
+  cct = calculate_cross_correlation(mtz_path1, mtz_path2, d_min=None)
   print(str(cct))
 
 
