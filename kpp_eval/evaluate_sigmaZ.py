@@ -48,8 +48,8 @@ def run(parameters) -> None:
     ax.plot(job_id, data=sigma_z_means_df, label=job_id)
   if t := parameters.title:
     ax.set_title(t)
-  ax.set_xlabel('Mean sigma Z')
-  ax.set_ylabel('Stage 2 iteration')
+  ax.set_xlabel('Stage 2 iteration')
+  ax.set_ylabel('Mean sigma Z')
   ax.xaxis.get_major_locator().set_params(integer=True)
   if len(sigma_z_means_df.keys()) > 1:
     ax.legend()
