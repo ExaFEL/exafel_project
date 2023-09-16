@@ -24,6 +24,9 @@ labels = None
   .help = If given, split by commas and use to name plotted datasets;
   .help = For example `err=1.err, err=2.err, labels="A,B C"` will name
   .help = the datasets in table and on plot "A" & "B C" instead of "1" & "2".
+title = None
+  .type = str
+  .help = If given, use it as plot title.
 """
 
 SIGMA_Z_REGEX = re.compile(r'^.+sigmaZ: mean=(.+), median=(.+)$', flags=re.M)
@@ -43,6 +46,8 @@ def run(parameters) -> None:
   fig, ax = plt.subplots()
   for job_id in sigma_z_means_df:
     ax.plot(job_id, data=sigma_z_means_df, label=job_id)
+  if t := parameters.title:
+    ax.set_title(t)
   ax.set_xlabel('Mean sigma Z')
   ax.set_ylabel('Stage 2 iteration')
   ax.xaxis.get_major_locator().set_params(integer=True)
