@@ -21,9 +21,9 @@ err = None
 labels = None
   .type = str
   .multiple = False
-  .help = If given, split by spaces and use to name plotted datasets;
-  .help = For example `err=1.err, err=2.err, labels="A B"` will name
-  .help = the datasets in table and on plot "A" & "B" instead of "1" & "2".
+  .help = If given, split by commas and use to name plotted datasets;
+  .help = For example `err=1.err, err=2.err, labels="A,B C"` will name
+  .help = the datasets in table and on plot "A" & "B C" instead of "1" & "2".
 """
 
 SIGMA_Z_REGEX = re.compile(r'^.+sigmaZ: mean=(.+), median=(.+)$', flags=re.M)
@@ -37,7 +37,7 @@ def run(parameters) -> None:
       for line in err_file:
         if m := SIGMA_Z_REGEX.match(line):
           sigma_z_means[job_id].append(m.group(1))
-  keys = l.split() if (l := parameters.labels) else sigma_z_means.keys()
+  keys = l.split(',') if (l := parameters.labels) else sigma_z_means.keys()
   sigma_z_means_df = pd.DataFrame(sigma_z_means.values(), dtype=float, index=keys).T
   print(sigma_z_means_df)
   fig, ax = plt.subplots()
