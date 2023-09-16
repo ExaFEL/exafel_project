@@ -1,6 +1,6 @@
 """
-Extract information about sigmaZ mean and median from stage2 error file(s)
-and plot it as a function of iteration.
+Extract information about sigmaZ mean from stage2 error file/files
+and plot it/them as a function of iteration step number.
 """
 
 from collections import defaultdict

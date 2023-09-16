@@ -158,14 +158,23 @@ However, it might be preferable when focusing strictly on RMS,
 scaling the evaluation to all data, or looking for more tested solution.
 
 ### Evaluating internal self-consistency of the intensity profile
-*Associated goals*: **B**; *files:* None
+*Associated goals*: **B**; *files:*
+[evaluate_sigmaZ.py](evaluate_sigmaZ.py).
 
-Currently, there is no ready program to evaluate "sigz" or "zeta" across
-all individual pixels in diffBragg, as was initially planned.
-However, after each individual iteration stage 2 outputs to the `.err` file
-a line containing information about mean and median sigmaZ. Consequently,
-I suggest to report and plot these values as a function of iteration:
-`RANK0000 | 2023-09-12 04:30:38,932 | F=2.9371969e+11, sigmaZ: mean=1.138858, median=1.135402`
+The self-consistency is already investigated by diffBragg in the form of
+the uncertainty of the average Z-score for all modeled pixels.
+This information is being printed in the stage 2 error file as such:
+`RANK0000 | 2023-09-12 04:30:38,932 | F=2.9371969e+11, sigmaZ: mean=1.138858, median=1.135402`.
+
+For convenience, a script for collecting and plotting this information
+across multiple refinements as a function of stage 2 iteration is available
+and can be run as following:
+```shell
+libtbx.python $MODULES/exafel_project/kpp_eval/evaluate_sigmaZ.py \
+    err=job1.err err=job2.err err=job3.err err=job4.err err=job5.err
+    labels="X1 μm,X2 μm,X3 μm,X4 μm,X5 μm" title="Sample 500k datasets"
+```
+
 
 ### Evaluating cross-correlation of odd and even intensities
 *Associated goals*: **C**; *files:*
@@ -182,7 +191,8 @@ by providing mtz paths as arguments, or by calling a modified shell script:
 ```shell
 libtbx.python $MODULES/exafel_project/kpp_eval/evaluate_cc12.py \
     mtz=path_to_stage2_odd.mtz \
-    mtz=path_to_stage2_even.mtz
+    mtz=path_to_stage2_even.mtz \
+    d_min=1.5
 ```
 
 Alternatively, the same tool can be used via encapsulating script:
@@ -202,7 +212,7 @@ available reference data instead of comparing half-datasets.
 This can be achieved by providing paths to reference and post-stage-2
 mtz files instead of paths to half-dataset mtz files:
 ```shell
-libtbx.python $MODULES/exafel_project/kpp_eval/evaluate_cc12.py \
+libtbx.python $MODULES/exafel_project/kpp_eval/evaluate_cc12.py d_min=1.5 \
     mtz=path_to_stage2.mtz \
     mtz=path_to_reference.mtz
 ```
@@ -255,7 +265,7 @@ of Vidya Ganapati's script can plot many aforementioned and other statistics,
 as well as scatter refined vs reference data based on diffBragg `.npz` files.
 It can be called directly with either a large set of phil parameters
 (see example below and help message for full documentation) or by defining
-appropriate environmental variables (see [README.md](../kpp-docs/README.md)).
+appropriate environmental variables (see [kpp-docs/README.md](../kpp-docs/README.md)).
 
 ```shell
 libtbx.ipython $MODULES/exafel_project/kpp_eval/evaluate_stage2_convergence.py \
@@ -320,6 +330,44 @@ cytochrome_2um DIALS_offset  DIALS_rad  DIALS_tang  dB_offset    dB_rad   dB_tan
 
 ![Median of overall prediction offset for cytochrome 500k 2um](./image/cytochrome_2um_A.png)
 
+
+### **B** – Internal self-consistency of the intensity profile
+The quality of modelling individual pixels can be assessed
+by investigating the medium value of Z-score, i.e. the difference
+between observed and simulated intensity at each individual pixels.
+Should the model be able to perfectly describe the observation,
+the value of said mean should approach 1.0 during refinement.
+For cytochrome, the progress of mean Z-score refinement
+has been summarized using the following command:
+```shell
+libtbx.python $MODULES/exafel_project/kpp_eval/evaluate_sigmaZ.py \
+    err=1435087.err err=1434970.err err=1436811.err err=1435083.err err=1435719.err \
+    labels="40 μm,25 μm,10 μm,5 μm,2 μm" title="Cytochrome 500k datasets"
+```
+
+Collected values suggest that diffBragg has difficulties with accurately
+modelling particularly strong reflections (40 μm dataset). At the same time,
+the signal from smaller crystal (2 μm dataset) appears to be described very
+accurately, with mean uncertainty of Z-score reaching 1.13 during refinement.
+```text
+       40 μm     25 μm     10 μm      5 μm      2 μm
+0   4.108914  3.238881  2.072005  1.539917  1.156392
+1   4.047461  3.189280  2.041699  1.521272  1.148710
+2   4.017326  3.165620  2.028229  1.513507  1.145507
+3   3.989855  3.143123  2.014682  1.505691  1.143075
+4   3.982375  3.138076  2.011481  1.503003  1.141479
+5   3.973446  3.130381  2.007255  1.500919  1.140802
+6   3.969796  3.127524  2.005594  1.499938  1.140124
+7        NaN       NaN  2.003488  1.498627  1.139859
+8        NaN       NaN  2.001198  1.497327  1.139471
+9        NaN       NaN       NaN  1.497354  1.139276
+10       NaN       NaN       NaN       NaN  1.138963
+11       NaN       NaN       NaN       NaN  1.138858
+```
+
+![Z-score uncertainty as a function of cytochrome 500k iteration step](./image/cytochrome_B.png)
+
+
 ### **C** – The precision of modeling intensities
 The values of cross-correlation parameters between the reference
 and diffBragg- or DIALS-refined structure factors were calculated
@@ -327,20 +375,20 @@ for cytochrome 40 um and 2 um datasets using the following commands:
 
 ```shell
 # ground truth vs DIALS, 40 um dataset
-libtbx.python $MODULES/exafel_project/kpp_eval/evaluate_cc12.py \
+libtbx.python $MODULES/exafel_project/kpp_eval/evaluate_cc12.py d_min=1.5 \
     mtz=$SCRATCH/cytochrome/1425204/ground_truth.mtz \
     mtz=$SCRATCH/cytochrome/1427767/out/ly99sim_all.mtz
 # ground truth vs diffBragg, 40 um dataset
-libtbx.python $MODULES/exafel_project/kpp_eval/evaluate_cc12.py \
+libtbx.python $MODULES/exafel_project/kpp_eval/evaluate_cc12.py d_min=1.5 \
     mtz=$SCRATCH/cytochrome/1425204/ground_truth.mtz \
     mtz=$SCRATCH/cytochrome/1435087/1435087/_fcell_trial0_iter7.mtz
 # ground truth vs DIALS, 2 um dataset
-libtbx.python $MODULES/exafel_project/kpp_eval/evaluate_cc12.py \
+libtbx.python $MODULES/exafel_project/kpp_eval/evaluate_cc12.py d_min=1.5 \
     mtz=$SCRATCH/cytochrome/1429605/ground_truth.mtz \
     mtz=$SCRATCH/cytochrome/1429662/out/ly99sim_all.mtz
 # ground truth vs diffBragg, 2 um dataset
-libtbx.python $MODULES/exafel_project/kpp_eval/evaluate_cc12.py \
-    mtz=$SCRATCH/cytochrome/1429605/ground_truth.mtz
+libtbx.python $MODULES/exafel_project/kpp_eval/evaluate_cc12.py d_min=1.5 \
+    mtz=$SCRATCH/cytochrome/1429605/ground_truth.mtz \
     mtz=$SCRATCH/cytochrome/1435719/1435719/_fcell_trial0_iter12.mtz
 ```
 
@@ -350,64 +398,82 @@ between ground truth and diffBragg-refined cytochrome data
 remains excellent and drops monotonously across
 the whole resolution range suggests unparalleled quality of the refinement.
 
+
 ```text
                      | 40 um dataset - DIALS         | 40 um dataset - diffBragg
     d_max     d_min  | #obs_asu / #thr_asu     cc_gt | #obs_asu / #thr_asu     cc_gt
 ---------------------+-------------------------------+------------------------------
-( -1.0000,   2.9666) |    18535 /    18537  86.7542% |    18535 /    18537  99.7926%
-(  2.9666,   2.3546) |    18483 /    18483  94.6031% |    18483 /    18483  99.9576%
-(  2.3546,   2.0569) |    18510 /    18510  94.6890% |    18510 /    18510  99.9568%
-(  2.0569,   1.8688) |    18502 /    18502  94.3990% |    18502 /    18502  99.9323%
-(  1.8688,   1.7349) |    18493 /    18493  94.9005% |    18493 /    18493  99.9060%
-(  1.7349,   1.6326) |    18503 /    18503  94.4320% |    18503 /    18503  99.9101%
-(  1.6326,   1.5508) |    18493 /    18493  95.0528% |    18493 /    18493  99.8327%
-(  1.5508,   1.4833) |    13761 /    18549  93.7468% |    13669 /    18549  99.6518%
-(  1.4833,   1.4262) |        0 /    18508   0.0000% |        0 /    18508   0.0000%
-(  1.4262,   1.3770) |        0 /    18501   0.0000% |        0 /    18501   0.0000%
+( -1.0000,   3.2317) |    14311 /    14313  86.5356% |    14311 /    14313  99.7663%
+(  3.2317,   2.5650) |    14338 /    14338  94.3500% |    14338 /    14338  99.9581%
+(  2.5650,   2.2407) |    14312 /    14312  95.0250% |    14312 /    14312  99.9610%
+(  2.2407,   2.0358) |    14304 /    14304  94.9788% |    14304 /    14304  99.9494%
+(  2.0358,   1.8899) |    14314 /    14314  94.3438% |    14314 /    14314  99.9312%
+(  1.8899,   1.7784) |    14315 /    14315  95.0106% |    14315 /    14315  99.9034%
+(  1.7784,   1.6894) |    14311 /    14311  94.6722% |    14311 /    14311  99.9159%
+(  1.6894,   1.6158) |    14318 /    14318  95.3610% |    14318 /    14318  99.9007%
+(  1.6158,   1.5536) |    14319 /    14319  94.9524% |    14319 /    14319  99.8234%
+(  1.5536,   1.5000) |    14297 /    14297  93.8292% |    14297 /    14297  99.6490%
 ---------------------+-------------------------------+------------------------------
-( -1.0000,   1.3770) |   143280 /   185079  84.8909% |   143188 /   185079  99.9182%
+( -1.0000,   1.5000) |   143139 /   143141  84.8932% |   143139 /   143141  99.9182%
 ```
 
 ```text
                      | 2 um dataset - DIALS          | 2 um dataset - diffBragg
     d_max     d_min  | #obs_asu / #thr_asu     cc_gt | #obs_asu / #thr_asu     cc_gt
 ---------------------+-------------------------------+------------------------------
-( -1.0000,   2.9666) |    18535 /    18537  89.3294% |    18535 /    18537  99.6586%
-(  2.9666,   2.3546) |    18483 /    18483  93.6792% |    18483 /    18483  99.9160%
-(  2.3546,   2.0569) |    18510 /    18510  93.2434% |    18510 /    18510  99.7763%
-(  2.0569,   1.8688) |    18502 /    18502  92.6300% |    18502 /    18502  99.5346%
-(  1.8688,   1.7349) |    18493 /    18493  93.2436% |    18493 /    18493  98.0817%
-(  1.7349,   1.6326) |    18503 /    18503  88.2793% |    18503 /    18503  89.7601%
-(  1.6326,   1.5508) |    18489 /    18493  37.8544% |    18489 /    18493  39.0535%
-(  1.5508,   1.4833) |     9565 /    18549   9.4627% |     9543 /    18549   9.9247%
-(  1.4833,   1.4262) |        0 /    18508   0.0000% |        0 /    18508   0.0000%
-(  1.4262,   1.3770) |        0 /    18501   0.0000% |        0 /    18501   0.0000%
+( -1.0000,   2.9666) |    14311 /    14313  89.3930% |    14311 /    14313  99.6324%
+(  2.9666,   2.3546) |    14338 /    14338  93.7495% |    14338 /    14338  99.9072%
+(  2.3546,   2.0569) |    14312 /    14312  94.0065% |    14312 /    14312  99.8907%
+(  2.0569,   1.8688) |    14304 /    14304  93.6161% |    14304 /    14304  99.7294%
+(  1.8688,   1.7349) |    14314 /    14314  92.5871% |    14314 /    14314  99.5566%
+(  1.7349,   1.6326) |    14315 /    14315  93.5643% |    14315 /    14315  98.6939%
+(  1.6326,   1.5508) |    14311 /    14311  91.9421% |    14311 /    14311  96.2431%
+(  1.5508,   1.4833) |    14318 /    14318  83.9086% |    14318 /    14318  80.7115%
+(  1.4833,   1.4262) |    14318 /    14319  35.4283% |    14318 /    14319  35.7660%
+(  1.4262,   1.3770) |    10192 /    14297   9.5000% |    10192 /    14297  10.1651%
 ---------------------+-------------------------------+------------------------------
-( -1.0000,   1.3770) |   139080 /   185079  85.4450% |   139058 /   185079  98.9090%
+( -1.0000,   1.3770) |   139033 /   143141  85.4463% |   139033 /   143141  98.9107%
 ```
 
+*Note: these DIALS values seem surprisingly poor. I spent some
+time trying to find out the reason, especially since the same formula
+is used in the convergence script, but could not come to conclusion.
+Unless you can prove the DIALS results are correct, I would advise
+to use diffBragg results only. / Daniel*
 
 ### **D & E** – Accuracy of measurement and anomalous signal
 The following scripts were run in order to evaluate the values of R-factor
 and anomalous signal on iron and sulphur metals in DIALS- and diffBragg-
-refined mtz files:
+refined mtz files for datasets cytochrome 500k 40 um and 2 um:
 
 ```shell
-# DIALS-refined structure factors
+# DIALS-refined structure factors, cytochrome 500k 40 um
 libtbx.python $MODULES/exafel_project/kpp_eval/evaluate_anom.py \
     $MODULES/exafel_project/kpp-frontier/cytochrome/5wp2.pdb \
     $SCRATCH/cytochrome/1427767/out/ly99sim_all.mtz \
     selection="element Fe or element S"
-# diffBragg-refined factors
+# diffBragg-refined factors, cytochrome 500k 40 um
 libtbx.python $MODULES/exafel_project/kpp_eval/evaluate_anom.py \
     $MODULES/exafel_project/kpp-frontier/cytochrome/5wp2.pdb \
     $SCRATCH/cytochrome/1435087/1435087/_fcell_trial0_iter7.mtz \
     selection="element Fe or element S"
+# DIALS-refined structure factors, cytochrome 500k 2 um
+libtbx.python $MODULES/exafel_project/kpp_eval/evaluate_anom.py \
+    $MODULES/exafel_project/kpp-frontier/cytochrome/5wp2.pdb \
+    $SCRATCH/cytochrome/1429662/out/ly99sim_all.mtz \
+    selection="element Fe or element S"
+# diffBragg-refined factors, cytochrome 500k 2 um
+libtbx.python $MODULES/exafel_project/kpp_eval/evaluate_anom.py \
+    $MODULES/exafel_project/kpp-frontier/cytochrome/5wp2.pdb \
+    $SCRATCH/cytochrome/1435719/1435719/_fcell_trial0_iter12.mtz \
+    selection="element Fe or element S"
 ```
 
-The resulting values are very similar, suggesting both DIALS- and diffBragg-
-refined structure factors can be effectively used to solve phase problem and
-refine a final crystal structure:
+The resulting values for cytochrome 40 um dataset are very similar,
+suggesting both DIALS- and diffBragg- refined structure factors
+can be effectively used to solve phase problem and
+refine a final crystal structure. In the case of 2 um,
+diffBragg does not improve the results obtained initially by DIALS.
 
 ```text
 DIALS, cytochrome 40 um dataset
@@ -480,6 +546,83 @@ pdb=" S   SO4 A 405 ":  10.92σ
 pdb=" S   SO4 A 406 ":   6.12σ
 pdb=" S   SO4 A 407 ":   4.34σ
 ```
+
+```text
+DIALS, cytochrome 2 um dataset
+                   start: r(all,work,free)=0.1811 0.1811 0.1811 n_refl.: 138612
+       re-set all scales: r(all,work,free)=0.1811 0.1811 0.1811 n_refl.: 138612
+         remove outliers: r(all,work,free)=0.1806 0.1806 0.1806 n_refl.: 138605
+bulk-solvent and scaling: r(all,work,free)=0.0748 0.0748 0.0748 n_refl.: 138605
+         remove outliers: r(all,work,free)=0.0748 0.0748 0.0748 n_refl.: 138605
+|--(resolution: 1.50 - 60.05 A, n_refl.=138605 (all), 100.00% free)-----------|
+|                                                                             |
+| r_work= 0.0748 r_free= 0.0748 coordinate error (max.-lik. estimate): 0.19 A |
+|                                                                             |
+| normalized target function (ml) (work): 4.557598                            |
+| target function (ml) not normalized (work): 631705.898414                   |
+| target function (ml) not normalized (free):            None                 |
+|-----------------------------------------------------------------------------|
+
+pdb=" SG  CYS A  51 ":   8.26σ
+pdb=" SD AMET A  62 ":   5.52σ
+pdb=" SD BMET A  62 ":   1.20σ
+pdb=" SD AMET A  86 ":   2.66σ
+pdb=" SD BMET A  86 ":   2.71σ
+pdb=" SD AMET A  99 ":   2.41σ
+pdb=" SD BMET A  99 ":   0.93σ
+pdb=" SG  CYS A 147 ":   8.21σ
+pdb=" SD  MET A 169 ":   9.45σ
+pdb=" SD  MET A 189 ":   6.66σ
+pdb=" SD  MET A 203 ":   8.47σ
+pdb=" SG  CYS A 345 ":   8.58σ
+pdb=" SD  MET A 366 ":   9.28σ
+pdb="FE   HEM A 401 ":  63.77σ
+pdb=" S   SO4 A 404 ":   1.35σ
+pdb=" S   SO4 A 405 ":   3.60σ
+pdb=" S   SO4 A 406 ":   3.45σ
+pdb=" S   SO4 A 407 ":  -0.30σ
+```
+
+```text
+diffBragg, cytochrome 2 um dataset
+                   start: r(all,work,free)=0.1913 0.1913 0.1913 n_refl.: 139058
+       re-set all scales: r(all,work,free)=0.1913 0.1913 0.1913 n_refl.: 139058
+         remove outliers: r(all,work,free)=0.1902 0.1902 0.1902 n_refl.: 139046
+bulk-solvent and scaling: r(all,work,free)=0.0939 0.0939 0.0939 n_refl.: 139046
+         remove outliers: r(all,work,free)=0.0939 0.0939 0.0939 n_refl.: 139046
+|--(resolution: 1.50 - 60.03 A, n_refl.=139046 (all), 100.00% free)-----------|
+|                                                                             |
+| r_work= 0.0939 r_free= 0.0939 coordinate error (max.-lik. estimate): 0.25 A |
+|                                                                             |
+| normalized target function (ml) (work): 4.443050                            |
+| target function (ml) not normalized (work): 617788.378315                   |
+| target function (ml) not normalized (free):            None                 |
+|-----------------------------------------------------------------------------|
+
+pdb=" SG  CYS A  51 ":   3.06σ
+pdb=" SD AMET A  62 ":   1.74σ
+pdb=" SD BMET A  62 ":  -1.00σ
+pdb=" SD AMET A  86 ":   0.31σ
+pdb=" SD BMET A  86 ":   0.70σ
+pdb=" SD AMET A  99 ":   0.50σ
+pdb=" SD BMET A  99 ":   0.77σ
+pdb=" SG  CYS A 147 ":   2.58σ
+pdb=" SD  MET A 169 ":   3.38σ
+pdb=" SD  MET A 189 ":   2.50σ
+pdb=" SD  MET A 203 ":   2.95σ
+pdb=" SG  CYS A 345 ":   3.57σ
+pdb=" SD  MET A 366 ":   4.76σ
+pdb="FE   HEM A 401 ":  26.49σ
+pdb=" S   SO4 A 404 ":   0.58σ
+pdb=" S   SO4 A 405 ":   0.80σ
+pdb=" S   SO4 A 406 ":   1.86σ
+pdb=" S   SO4 A 407 ":  -1.23σ
+```
+
+*Note: Small sample might give worse results here because it uses
+relatively worse sigma Z cutoff. While the average Z score for 40 um
+is 4x larger than for 2 um dataset, the Z-score limit used in both refinements
+is the same, while it should probably be appropriately reduced. / Daniel*
 
 ### **C, D & E** – Tracing the evolution of agreement parameters
 DiffBragg utilizes DIALS as a starting point for its refinement.

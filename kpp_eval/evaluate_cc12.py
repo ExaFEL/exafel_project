@@ -159,7 +159,8 @@ def calculate_cross_correlation(mtz1_path: str, mtz2_path: str,
 def run(params_) -> None:
   assert len(params_.mtz) == 2, 'Exactly two mtz file paths must be provided'
   mtz_path1, mtz_path2 = params_.mtz[0:2]
-  cct = calculate_cross_correlation(mtz_path1, mtz_path2, d_min=None)
+  cct = calculate_cross_correlation(mtz_path1, mtz_path2,
+                                    d_min=params_.d_min)
   print(str(cct))
 
 
