@@ -66,7 +66,7 @@ refiner {
   refine_Fcell = [1]
   #refine_Nabc = [1]
   refine_spot_scale = [1]
-  max_calls = [450]
+  max_calls = [25]
   ncells_mask = 000
   tradeps = 1e-20
   verbose = 0
