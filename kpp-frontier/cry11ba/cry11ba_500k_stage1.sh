@@ -1,15 +1,14 @@
 #!/bin/bash
-
-#SBATCH -N 256            # Number of nodes
-#SBATCH -J stage_1       # job name
-#SBATCH -A CHM137       # allocation
-#SBATCH -p batch
-#SBATCH -t 05:00:00
+#SBATCH -N 256             # Number of nodes
+#SBATCH -J stage1          # job name
+#SBATCH -A CHM137          # allocation
+#SBATCH -p batch           # regular queue
+#SBATCH -t 02:00:00        # wall clock time limit
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=nksauter@lbl.gov
 #SBATCH -o %j.out
 #SBATCH -e %j.err
-SRUN="srun -n4096 -c2"
+SRUN="srun -n 4096 -c 3"
 
 export SCRATCH_FOLDER=$SCRATCH/cry11ba/$SLURM_JOB_ID
 mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER
@@ -39,7 +38,7 @@ method = 'L-BFGS-B'
 outdir = 'stage1'
 debug_mode = False
 roi {
-  shoebox_size = 15
+  shoebox_size = 10
   fit_tilt = True
   reject_edge_reflections = False
   reject_roi_with_hotpix = False
@@ -110,6 +109,13 @@ downsamp_spec {
   skip = True
 }
 " > stage1.phil
+
+echo "start cctbx transfer $(date)"
+export CCTBX_ZIP_FILE=alcc-recipes2.tar.gz
+sbcast $SCRATCH/$CCTBX_ZIP_FILE /tmp/$CCTBX_ZIP_FILE
+srun -n $SLURM_NNODES -N $SLURM_NNODES tar -xf /tmp/$CCTBX_ZIP_FILE -C /tmp/
+. /tmp/alcc-recipes/cctbx/activate.sh
+echo "finish cctbx extraction $(date)"
 
 echo "jobstart $(date)";pwd
 echo "with" ${SRUN}
