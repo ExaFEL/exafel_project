@@ -1,7 +1,6 @@
 #!/bin/bash
 #SBATCH -N 32              # Number of nodes
 #SBATCH -J stage2          # job name
-#SBATCH -A CHM137          # allocation
 #SBATCH -p batch           # regular queue
 #SBATCH -t 01:30:00        # wall clock time limit
 #SBATCH -o %j.out
