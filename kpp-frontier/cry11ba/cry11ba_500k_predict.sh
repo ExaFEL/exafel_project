@@ -4,7 +4,7 @@
 #SBATCH -J predict       # job name
 #SBATCH -A CHM137       # allocation
 #SBATCH -p batch
-#SBATCH -t 2:45:00
+#SBATCH -t 02:00:00
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=nksauter@lbl.gov
 #SBATCH -o %j.out
