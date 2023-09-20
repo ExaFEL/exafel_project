@@ -1,23 +1,22 @@
 #!/bin/bash
-#SBATCH -N 128             # Number of nodes
-#SBATCH -J stage2          # job name
-#SBATCH -A CHM137          # allocation
-#SBATCH -p batch           # regular partition
-#SBATCH --reservation=chm137
-#SBATCH -t 90              # wall clock time limit
+#SBATCH -N 64            # Number of nodes
+#SBATCH -J stage2        # job name
+#SBATCH -A CHM137        # allocation
+#SBATCH -p batch         # regular partition
+#SBATCH -t 120
 #SBATCH -o %j.out
 #SBATCH -e %j.err
-SRUN="srun -n 2048 -c 3"
+SRUN="srun -n 1024 -c 3"
 
 export SCRATCH_FOLDER=$SCRATCH/reservation02/$SLURM_JOB_ID
-mkdir -p "$SCRATCH_FOLDER"; cd "$SCRATCH_FOLDER" || exit
+mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER
 
 export JOB_ID_INDEX=${1}
 export JOB_ID_MERGE=${2}
 export JOB_ID_PREDICT=${3}
 
 export PERL_NDEV=8  # number GPU per node
-export PANDA=$SCRATCH/cytochrome/${JOB_ID_PREDICT}/predict/preds_for_hopper.pkl
+export PANDA=$SCRATCH/yb_lyso/${JOB_ID_PREDICT}/predict/preds_for_hopper.pkl
 export GEOM=$MODULES/exafel_project/kpp-sim/t000_rg002_chunk000_reintegrated_000000.expt
 
 export CCTBX_DEVICE_PER_NODE=8
@@ -40,6 +39,7 @@ export CCTBX_GPUS_PER_NODE=8
 export XFEL_CUSTOM_WORKER_PATH=$MODULES/psii_spread/merging/application # User must export $MODULES path
 
 echo "
+max_sigz=4.0
 spectrum_from_imageset = True
 downsamp_spec {
   skip = True
@@ -53,7 +53,7 @@ roi {
   reject_edge_reflections = True
   pad_shoebox_for_background_estimation = 0
 }
-space_group=P6522
+space_group=P43212
 
 sigmas {
   G = 1
@@ -71,7 +71,7 @@ refiner {
   sigma_r = 3
   num_devices = 4
   adu_per_photon = 1
-  res_ranges='1.5-999'
+  res_ranges='1.75-999'
   stage_two.save_model_freq=None
   stage_two.save_Z_freq=None
 }
@@ -89,9 +89,11 @@ simulator {
 logging {
   rank0_level = low normal *high
   logfiles = False # True for memory troubleshooting but consumes 3 seconds of wall time
+  log_hostnames = False
 }
 " > stage_two.phil
 
+# copy program to nodes
 echo "start cctbx transfer $(date)"
 export CCTBX_ZIP_FILE=alcc-recipes3.tar.gz
 sbcast $SCRATCH/$CCTBX_ZIP_FILE /tmp/$CCTBX_ZIP_FILE
@@ -99,9 +101,11 @@ srun -n $SLURM_NNODES -N $SLURM_NNODES tar -xf /tmp/$CCTBX_ZIP_FILE -C /tmp/
 . /tmp/alcc-recipes/cctbx/activate.sh
 echo "finish cctbx extraction $(date)"
 
+# run program
 echo "jobstart $(date)";pwd
 $SRUN simtbx.diffBragg.stage_two stage_two.phil \
 io.output_dir=${SLURM_JOB_ID} \
-pandas_table=${PANDA} num_devices=$PERL_NDEV \
-simulator.structure_factors.mtz_name=${SCRATCH}/cytochrome/${JOB_ID_MERGE}/out/ly99sim_all.mtz
+pandas_table=${PANDA} num_devices=$PERL_NDEV max_process=131072 \
+simulator.structure_factors.mtz_name=${SCRATCH}/yb_lyso/${JOB_ID_MERGE}/out/yb_lyso_500k_all.mtz \
+
 echo "jobend $(date)";pwd
