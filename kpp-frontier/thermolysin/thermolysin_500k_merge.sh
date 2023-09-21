@@ -6,21 +6,22 @@
 #SBATCH -t 60
 #SBATCH -o %j.out
 #SBATCH -e %j.err
-export NTASKS=$((SLURM_JOB_NUM_NODES*56))
-export SRUN="srun -n $NTASKS --gpus-per-node=8 --cpus-per-gpu=14 --cpu-bind=cores"
+export NTASKS_PER_NODE=56
+export NTASKS=$((SLURM_JOB_NUM_NODES * NTASKS_PER_NODE))
+export SRUN="srun -N$SLURM_JOB_NUM_NODES -n$NTASKS -c1 --cpu-bind=cores"
 echo "merging on $SLURM_JOB_NUM_NODES nodes with $SRUN"
+
+export SCRATCH=/lustre/orion/chm137/proj-shared/cctbx
+export SCRATCH_FOLDER=$SCRATCH/thermolysin/$SLURM_JOB_ID
+mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER
 
 export JOB_ID_INDEX=$1
 
-export SCRATCH=/lustre/orion/chm137/proj-shared/cctbx
 export DIALS_OUTPUT=$SCRATCH/thermolysin/$JOB_ID_INDEX
-
 export TRIAL=ly99sim
 export OUT_DIR=$SCRATCH/thermolysin/$SLURM_JOB_ID
 export MPI4PY_RC_RECV_MPROBE='False'
 
-export SCRATCH_FOLDER=$SCRATCH/thermolysin/$SLURM_JOB_ID
-mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER
 mkdir -p ${OUT_DIR}/${TRIAL}/out
 mkdir -p ${OUT_DIR}/${TRIAL}/tmp
 echo "start cctbx transfer $(date)"

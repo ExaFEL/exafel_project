@@ -6,27 +6,27 @@
 #SBATCH -t 20
 #SBATCH -o %j.out
 #SBATCH -e %j.err
-export NTASKS=$((SLURM_JOB_NUM_NODES*56))
-export SRUN="srun -n $NTASKS --gpus-per-node=8 --cpus-per-gpu=14 --cpu-bind=cores"
-echo "indexing on $SLURM_JOB_NUM_NODES nodes with $SRUN"
+export NTASKS_PER_NODE=56
+export NTASKS=$((SLURM_JOB_NUM_NODES * NTASKS_PER_NODE))
+export SRUN="srun -N$SLURM_JOB_NNODES -n$NTASKS -c1 --cpu-bind=cores"
+echo "indexing on $SLURM_JOB_NNODES nodes with $SRUN"
+
+export SCRATCH=/lustre/orion/chm137/proj-shared/cctbx
+export SCRATCH_FOLDER=$SCRATCH/thermolysin/$SLURM_JOB_ID
+mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER
 
 export JOB_ID_SIM=$1
 
-export SCRATCH=/lustre/orion/chm137/proj-shared/cctbx
 export H5_SIM_PATH=$SCRATCH/thermolysin/$JOB_ID_SIM
-
 export NUMEXPR_MAX_THREADS=56
 export SLURM_CPU_BIND=cores # critical to force ranks onto different cores. verify with ps -o psr <pid>
 export OMP_PROC_BIND=spread
 export OMP_PLACES=threads
 export MPI4PY_RC_RECV_MPROBE='False'
-
 export TRIAL=tdata
 export OUT_DIR=.
 export DIALS_OUTPUT=.
 
-export SCRATCH_FOLDER=$SCRATCH/thermolysin/$SLURM_JOB_ID
-mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER
 mkdir -p ${OUT_DIR}/${TRIAL}/out
 mkdir -p ${OUT_DIR}/${TRIAL}/tmp
 echo "start cctbx transfer $(date)"

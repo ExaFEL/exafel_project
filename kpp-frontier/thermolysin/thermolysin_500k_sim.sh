@@ -3,11 +3,16 @@
 #SBATCH -J sim
 #SBATCH -A CHM137
 #SBATCH -p batch
-#SBATCH -t 60
+#SBATCH -t 90
 #SBATCH -o %j.out
 #SBATCH -e %j.err
-export NTASKS=$((SLURM_JOB_NUM_NODES*56))
-export SRUN="srun -n $NTASKS --gpus-per-node=8 --cpus-per-gpu=14 --cpu-bind=cores"
+export NTASKS_PER_NODE=32
+export NTASKS=$((SLURM_JOB_NUM_NODES * NTASKS_PER_NODE))
+export SRUN="srun -N$SLURM_JOB_NUM_NODES -n$NTASKS -c1 --cpu-bind=cores"
+
+export SCRATCH=/lustre/orion/chm137/proj-shared/cctbx
+export SCRATCH_FOLDER=$SCRATCH/thermolysin/$SLURM_JOB_ID
+mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER
 export N_SIM=524288 # total number of images to simulate
 export LENGTH=$1
 echo "simulating $N_SIM images of xtal length $LENGTH um on $SLURM_JOB_NUM_NODES nodes with $SRUN"
@@ -19,7 +24,6 @@ export RANK_PROFILE=0 # 0 or 1 Use cProfiler, default 1
 export ADD_BACKGROUND_ALGORITHM=cuda
 export DEVICES_PER_NODE=8
 export MOS_DOM=25
-
 export DIFFBRAGG_USE_KOKKOS=1
 export HIP_LAUNCH_BLOCKING=1
 export NUMEXPR_MAX_THREADS=56
@@ -29,8 +33,6 @@ export OMP_PLACES=threads
 export MPI4PY_RC_RECV_MPROBE='False'
 export CCTBX_GPUS_PER_NODE=8
 
-export SCRATCH=/lustre/orion/chm137/proj-shared/cctbx
-export SCRATCH_FOLDER=$SCRATCH/thermolysin/$SLURM_JOB_ID
 mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER
 echo "start cctbx transfer $(date)"
 export CCTBX_ZIP_FILE=alcc-recipes2.tar.gz

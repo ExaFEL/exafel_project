@@ -3,20 +3,22 @@
 #SBATCH -J predict
 #SBATCH -A CHM137
 #SBATCH -p batch
-#SBATCH -t 15
+#SBATCH -t 20
 #SBATCH -o %j.out
 #SBATCH -e %j.err
-export NTASKS=$((SLURM_JOB_NUM_NODES*56))
-export SRUN="srun -n $NTASKS --gpus-per-node=8 --cpus-per-gpu=14 --cpu-bind=cores"
+export NTASKS_PER_NODE=32
+export NTASKS=$((SLURM_JOB_NUM_NODES * NTASKS_PER_NODE))
+export SRUN="srun -N$SLURM_JOB_NUM_NODES -n$NTASKS -c1 --cpu-bind=cores"
 echo "predicting/integrating on $SLURM_JOB_NUM_NODES nodes with $SRUN"
+
+export SCRATCH=/lustre/orion/chm137/proj-shared/cctbx
+export SCRATCH_FOLDER=$SCRATCH/thermolysin/$SLURM_JOB_ID
+mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER
 
 export JOB_ID_HOPPER=$1
 
-export SCRATCH=/lustre/orion/chm137/proj-shared/cctbx
 export HOPPER_RESULTS=$SCRATCH/thermolysin/$JOB_ID_HOPPER/stage1
-
 export CCTBX_DEVICE_PER_NODE=8
-
 export DIFFBRAGG_USE_KOKKOS=1
 export HIP_LAUNCH_BLOCKING=1
 export NUMEXPR_MAX_THREADS=56
@@ -32,8 +34,6 @@ sbcast $SCRATCH/$CCTBX_ZIP_FILE /tmp/$CCTBX_ZIP_FILE
 srun -n $SLURM_NNODES -N $SLURM_NNODES tar -xf /tmp/$CCTBX_ZIP_FILE -C /tmp/
 . /tmp/alcc-recipes/cctbx/activate.sh
 echo "finish cctbx extraction $(date)"
-export SCRATCH_FOLDER=$SCRATCH/thermolysin/$SLURM_JOB_ID
-mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER
 env > env.out
 
 echo "

@@ -1,27 +1,30 @@
 #!/bin/bash -l
-#SBATCH -N 512
+#SBATCH -N 256
 #SBATCH -J stage1
 #SBATCH -A CHM137
 #SBATCH -p batch
-#SBATCH -t 60
+#SBATCH -t 120
 #SBATCH -o %j.out
 #SBATCH -e %j.err
-export NTASKS=$((SLURM_JOB_NUM_NODES*56))
-export SRUN="srun -n $NTASKS --gpus-per-node=8 --cpus-per-gpu=14 --cpu-bind=cores"
+#export NTASKS_PER_NODE=32
+#export NTASKS=$((SLURM_JOB_NUM_NODES * NTASKS_PER_NODE))
+#export SRUN="srun -N$SLURM_JOB_NUM_NODES -n$NTASKS -c1 --cpu-bind=cores"
+export SRUN="srun -n 4096 -c 3"
 echo "running diffBragg stage 1 on $SLURM_JOB_NUM_NODES nodes with $SRUN"
+
+export SCRATCH=/lustre/orion/chm137/proj-shared/cctbx
+export SCRATCH_FOLDER=$SCRATCH/thermolysin/$SLURM_JOB_ID
+mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER
 
 export JOB_ID_SPLIT=$1
 export JOB_ID_MERGE=$2
 
-export SCRATCH=/lustre/orion/chm137/proj-shared/cctbx
 export MTZ=$SCRATCH/thermolysin/${JOB_ID_MERGE}/out/ly99sim_all.mtz
 export SPEC=$SCRATCH/thermolysin/${JOB_ID_SPLIT}_integ_exp_ref.txt
-
 export CCTBX_DEVICE_PER_NODE=8
 export LOG_BY_RANK=1 # Use Aaron's rank logger
 export RANK_PROFILE=0 # 0 or 1 Use cProfiler, default 1
 export DEVICES_PER_NODE=8
-
 export DIFFBRAGG_USE_KOKKOS=1
 export HIP_LAUNCH_BLOCKING=1
 export NUMEXPR_MAX_THREADS=56
@@ -37,8 +40,6 @@ sbcast $SCRATCH/$CCTBX_ZIP_FILE /tmp/$CCTBX_ZIP_FILE
 srun -n $SLURM_NNODES -N $SLURM_NNODES tar -xf /tmp/$CCTBX_ZIP_FILE -C /tmp/
 . /tmp/alcc-recipes/cctbx/activate.sh
 echo "finish cctbx extraction $(date)"
-export SCRATCH_FOLDER=$SCRATCH/thermolysin/$SLURM_JOB_ID
-mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER
 env > env.out
 
 echo "
@@ -47,7 +48,7 @@ method = 'L-BFGS-B'
 outdir = 'stage1'
 debug_mode = False
 roi {
-  shoebox_size = 15
+  shoebox_size = 10
   fit_tilt = True
   reject_edge_reflections = False
   reject_roi_with_hotpix = False
@@ -72,12 +73,12 @@ sigmas {
 }
 
 init {
-  Nabc = 52 52 52
+  Nabc = 32 32 32
   G = 1e5
 }
 
 refiner {
-  num_devices=4
+  num_devices=8
   verbose = 0
   sigma_r = 3
   adu_per_photon = 1
