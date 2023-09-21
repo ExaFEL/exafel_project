@@ -89,7 +89,6 @@ simulator {
 logging {
   rank0_level = low normal *high
   logfiles = False # True for memory troubleshooting but consumes 3 seconds of wall time
-  log_hostnames = False
 }
 " > stage_two.phil
 
