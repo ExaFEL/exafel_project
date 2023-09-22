@@ -43,6 +43,13 @@ For Cry11Ba, 16.0 micron:
 sbatch --reservation=$RESERVATION_NAME $MODULES/exafel_project/kpp-frontier/reservation02/cry11ba_500k_stage2.sh 1429675 1429811 1437715
 ```
 
+For thermolysin, 0.5 micron:
+```
+sbatch --reservation=$RESERVATION_NAME $MODULES/exafel_project/kpp-frontier/reservation02/thermolysin_500k_stage2.sh 1432661 1434903 1437231
+```
+
+
+
 ### Analysis, begin with c.c. plot
 ```
 S2JID=1439099; MRGJID=1429811; libtbx.python $MODULES/exafel_project/kpp_eval/evaluate_stage2_convergence.py mtz=$SCRATCH/cry11ba/${MRGJID}/out/cry11ba_500k_all.mtz stage2=$SCRATCH/cry11ba/${S2JID}/${S2JID} pdb=${MODULES}/exafel_project/kpp-sim/cry11ba/7qyd.pdb n_bins=10 stat=cc_anom
