@@ -1,12 +1,12 @@
 #!/bin/bash
-#SBATCH -N 80            # Number of nodes
-#SBATCH -J multisrun     # job name
+#SBATCH -N 10            # Number of nodes
+#SBATCH -J dummy         # job name
 #SBATCH -A CHM137        # allocation
 #SBATCH -p batch         # regular partition
-#SBATCH -t 120
+#SBATCH -t 2
 #SBATCH -o %j.out
 #SBATCH -e %j.err
-export SRUN="srun -N 16 -n 256 -c 3" # run five srun jobs at once
+export SRUN="srun -N 2 -n 56 -c 2" # run five srun jobs at once
 
 export SCRATCH=/lustre/orion/chm137/proj-shared/cctbx
 export SCRATCH_FOLDER=$SCRATCH/no_reservation/$SLURM_JOB_ID
@@ -84,17 +84,17 @@ simulator {
 
 logging {
   rank0_level = low normal *high
-  logfiles = False # True for memory troubleshooting but consumes 3 seconds of wall time
+  logfiles = True # True for memory troubleshooting but consumes 3 seconds of wall time
 }
 " > stage_two.phil
 
 # copy program to nodes
-echo "start cctbx transfer $(date)"
-export CCTBX_ZIP_FILE=alcc-recipes3.tar.gz
-sbcast $SCRATCH/$CCTBX_ZIP_FILE /tmp/$CCTBX_ZIP_FILE
-srun -n $SLURM_NNODES -N $SLURM_NNODES tar -xf /tmp/$CCTBX_ZIP_FILE -C /tmp/
-. /tmp/alcc-recipes/cctbx/activate.sh
-echo "finish cctbx extraction $(date)"
+#echo "start cctbx transfer $(date)"
+#export CCTBX_ZIP_FILE=alcc-recipes3.tar.gz
+#sbcast $SCRATCH/$CCTBX_ZIP_FILE /tmp/$CCTBX_ZIP_FILE
+#srun -n $SLURM_NNODES -N $SLURM_NNODES tar -xf /tmp/$CCTBX_ZIP_FILE -C /tmp/
+#. /tmp/alcc-recipes/cctbx/activate.sh
+#echo "finish cctbx extraction $(date)"
 
 # run program for each ordered set of job IDs matching one crystal size
 export job_ids_arr=(
@@ -113,10 +113,7 @@ for job in {0..4}; do
   echo "#! /bin/bash
 echo \"jobstart job \$(date)\" > job${job}.out 2> job${job}.err
 pwd >> job${job}.out 2>> job${job}.err
-$SRUN simtbx.diffBragg.stage_two stage_two.phil \
-io.output_dir=${SLURM_JOB_ID}_job${job} \
-pandas_table=$PANDA num_devices=$PERL_NDEV max_process=30000 \
-simulator.structure_factors.mtz_name=$MTZ >> job${job}.out 2>> job${job}.err
+$SRUN libtbx.python $MODULES/cctbx_project/simtbx/diffBragg/tests/tst_diffBragg_Fhkl_complex.py >> job${job}.out 2>> job${job}.err
 echo \"jobend \$(date)\" >> job${job}.out 2>> job${job}.err
 pwd >> job${job}.out 2>> job${job}.err
 " > job${job}.sh

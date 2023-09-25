@@ -10,9 +10,14 @@ export SRUN="srun -N 16 -n 256 -c 3" # run five srun jobs at once
 
 export SCRATCH=/lustre/orion/chm137/proj-shared/cctbx
 export SCRATCH_FOLDER=$SCRATCH/no_reservation/$SLURM_JOB_ID
-mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER
+mkdir -p "$SCRATCH_FOLDER"; cd "$SCRATCH_FOLDER" || exit
+
+export JOB_ID_INDEX=${1}
+export JOB_ID_MERGE=${2}
+export JOB_ID_PREDICT=${3}
 
 export PERL_NDEV=8  # number GPU per node
+export PANDA=$SCRATCH/cytochrome/${JOB_ID_PREDICT}/predict/preds_for_hopper.pkl
 export GEOM=$MODULES/exafel_project/kpp-sim/t000_rg002_chunk000_reintegrated_000000.expt
 
 export CCTBX_DEVICE_PER_NODE=8
@@ -49,7 +54,7 @@ roi {
   reject_edge_reflections = True
   pad_shoebox_for_background_estimation = 0
 }
-space_group=P43212
+space_group=P6522
 
 sigmas {
   G = 1
@@ -60,14 +65,14 @@ refiner {
   refine_Fcell = [1]
   #refine_Nabc = [1]
   refine_spot_scale = [1]
-  max_calls = [450]
+  max_calls = [30]
   ncells_mask = 000
   tradeps = 1e-20
   verbose = 0
   sigma_r = 3
   num_devices = 4
   adu_per_photon = 1
-  res_ranges='1.75-999'
+  res_ranges='1.5-999'
   stage_two.save_model_freq=None
   stage_two.save_Z_freq=None
 }
@@ -98,18 +103,18 @@ echo "finish cctbx extraction $(date)"
 
 # run program for each ordered set of job IDs matching one crystal size
 export job_ids_arr=(
-1427014 1427835 1428320
-1427017 1427900 1428322
-1411658 1427901 1428333
-1427020 1427902 1428365
-1427035 1427903 1428853)
+1426077 1427767 1435064
+1429648 1429661 1434948
+1427782 1427786 1435065
+1427783 1427787 1435069
+1429649 1429662 1435711)
 
 for job in {0..4}; do
   export JOB_ID_INDEX=${job_ids_arr[job*3]} # not used
   export JOB_ID_MERGE=${job_ids_arr[job*3+1]}
   export JOB_ID_PREDICT=${job_ids_arr[job*3+2]}
-  export MTZ=${SCRATCH}/yb_lyso/${JOB_ID_MERGE}/out/yb_lyso_500k_all.mtz
-  export PANDA=$SCRATCH/yb_lyso/${JOB_ID_PREDICT}/predict/preds_for_hopper.pkl
+  export MTZ=${SCRATCH}/cytochrome/${JOB_ID_MERGE}/out/ly99sim_all.mtz
+  export PANDA=$SCRATCH/cytochrome/${JOB_ID_PREDICT}/predict/preds_for_hopper.pkl
   echo "#! /bin/bash
 echo \"jobstart job \$(date)\" > job${job}.out 2> job${job}.err
 pwd >> job${job}.out 2>> job${job}.err
