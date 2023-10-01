@@ -1,12 +1,12 @@
 #!/bin/bash
-#SBATCH -N 10            # Number of nodes
-#SBATCH -J dummy         # job name
-#SBATCH -A CHM137        # allocation
-#SBATCH -p batch         # regular partition
-#SBATCH -t 2
+#SBATCH -N 1280            # Number of nodes
+#SBATCH -J stage2          # job name
+#SBATCH -A CHM137          # allocation
+#SBATCH -p batch
+#SBATCH -t 120
 #SBATCH -o %j.out
 #SBATCH -e %j.err
-export SRUN="srun -N 2 -n 56 -c 2" # run five srun jobs at once
+export SRUN="srun -N 256 -n 4096 -c2" # five sruns can run simultaneously in this batch job
 
 export SCRATCH=/lustre/orion/chm137/proj-shared/cctbx
 export SCRATCH_FOLDER=$SCRATCH/no_reservation/$SLURM_JOB_ID
@@ -35,7 +35,7 @@ export CCTBX_GPUS_PER_NODE=8
 export XFEL_CUSTOM_WORKER_PATH=$MODULES/psii_spread/merging/application # User must export $MODULES path
 
 echo "
-max_sigz=4.0
+max_sigz = 4.
 spectrum_from_imageset = True
 downsamp_spec {
   skip = True
@@ -48,8 +48,9 @@ roi {
   fit_tilt_using_weights = False
   reject_edge_reflections = True
   pad_shoebox_for_background_estimation = 0
+  skip_roi_with_negative_bg = True
 }
-space_group=P43212
+space_group=P21212
 
 sigmas {
   G = 1
@@ -84,37 +85,44 @@ simulator {
 
 logging {
   rank0_level = low normal *high
-  logfiles = True # True for memory troubleshooting but consumes 3 seconds of wall time
+  logfiles = False # True for memory troubleshooting but consumes 3 seconds of wall time
 }
 " > stage_two.phil
 
 # copy program to nodes
-#echo "start cctbx transfer $(date)"
-#export CCTBX_ZIP_FILE=alcc-recipes3.tar.gz
-#sbcast $SCRATCH/$CCTBX_ZIP_FILE /tmp/$CCTBX_ZIP_FILE
-#srun -n $SLURM_NNODES -N $SLURM_NNODES tar -xf /tmp/$CCTBX_ZIP_FILE -C /tmp/
-#. /tmp/alcc-recipes/cctbx/activate.sh
-#echo "finish cctbx extraction $(date)"
-source $MODULES/../activate.sh
+echo "start cctbx transfer $(date)"
+export CCTBX_ZIP_FILE=alcc-recipes3.tar.gz
+sbcast $SCRATCH/$CCTBX_ZIP_FILE /tmp/$CCTBX_ZIP_FILE
+srun -n $SLURM_NNODES -N $SLURM_NNODES tar -xf /tmp/$CCTBX_ZIP_FILE -C /tmp/
+. /tmp/alcc-recipes/cctbx/activate.sh
+echo "finish cctbx extraction $(date)"
 
 # run program for each ordered set of job IDs matching one crystal size
+# each row is one job's index, merge, and predict job IDs, in that order
+# rows are 16, 8, 4, 2, 1, and 0.5 micron crystal sizes, in that order
+# (0.5 micron dataset is dropped for 5-srun batch job)
 export job_ids_arr=(
-1427014 1427835 1428320
-1427017 1427900 1428322
-1411658 1427901 1428333
-1427020 1427902 1428365
-1427035 1427903 1428853)
+1429675 1429811 1437715
+1429676 1429812 1437713
+1429680 1429813 1433651
+1429681 1429814 1433652
+#1429682 1429815 xxxxxxx # skipping 1 um -- not ready
+1429809 1429819 1437694)
 
 for job in {0..4}; do
   export JOB_ID_INDEX=${job_ids_arr[job*3]} # not used
   export JOB_ID_MERGE=${job_ids_arr[job*3+1]}
   export JOB_ID_PREDICT=${job_ids_arr[job*3+2]}
-  export MTZ=${SCRATCH}/yb_lyso/${JOB_ID_MERGE}/out/yb_lyso_500k_all.mtz
-  export PANDA=$SCRATCH/yb_lyso/${JOB_ID_PREDICT}/predict/preds_for_hopper.pkl
+  export MTZ=${SCRATCH}/cry11ba/${JOB_ID_MERGE}/out/cry11ba_500k_all.mtz
+  export PANDA=$SCRATCH/cry11ba/${JOB_ID_PREDICT}/predict/preds_for_hopper.pkl
   echo "#! /bin/bash
 echo \"jobstart job \$(date)\" > job${job}.out 2> job${job}.err
 pwd >> job${job}.out 2>> job${job}.err
-$SRUN libtbx.python $MODULES/cctbx_project/simtbx/diffBragg/tests/tst_diffBragg_Fhkl_complex.py >> job${job}.out 2>> job${job}.err
+echo \"running stage 2 on 524k cry11ba images with command $SRUN\"
+$SRUN simtbx.diffBragg.stage_two stage_two.phil \
+io.output_dir=${SLURM_JOB_ID}_job${job} \
+pandas_table=$PANDA num_devices=$PERL_NDEV \
+simulator.structure_factors.mtz_name=$MTZ >> job${job}.out 2>> job${job}.err
 echo \"jobend \$(date)\" >> job${job}.out 2>> job${job}.err
 pwd >> job${job}.out 2>> job${job}.err
 " > job${job}.sh

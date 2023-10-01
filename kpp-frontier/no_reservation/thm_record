@@ -1,0 +1,30 @@
+# 524k images -- 20 um xtal size
+export JOB_ID_INDEX=1433992
+export JOB_ID_MERGE=1435935
+export JOB_ID_PREDICT=1444175
+
+# 524k images -- 10 um xtal size
+export JOB_ID_INDEX=1430293
+export JOB_ID_MERGE=1435907
+export JOB_ID_PREDICT=1444174
+
+# 524k images -- 5.0 um xtal size
+export JOB_ID_INDEX=1431151
+export JOB_ID_MERGE=1435356
+export JOB_ID_PREDICT=1444173
+
+# 524k images -- 2.0 um xtal size
+export JOB_ID_INDEX=1434439
+export JOB_ID_MERGE=1435005
+export JOB_ID_PREDICT=
+
+# 524k images -- 1.0 um xtal size
+export JOB_ID_INDEX=1431149
+export JOB_ID_MERGE=1434920
+export JOB_ID_PREDICT=1443110
+
+# 524k images -- 0.5 um xtal size
+export JOB_ID_INDEX=1432661
+export JOB_ID_MERGE=1434903
+export JOB_ID_PREDICT=1437231
+

@@ -1,14 +1,14 @@
 #!/bin/bash -l
-#SBATCH -N 512
+#SBATCH -N 256
 #SBATCH -J stage2
 #SBATCH -A CHM137
 #SBATCH -p batch
 #SBATCH -t 120
 #SBATCH -o %j.out
 #SBATCH -e %j.err
-export NTASKS_PER_NODE=32
+export NTASKS_PER_NODE=16
 export NTASKS=$((SLURM_JOB_NUM_NODES * NTASKS_PER_NODE))
-export SRUN="srun -N$SLURM_JOB_NUM_NODES -n$NTASKS -c1 --cpu-bind=cores"
+export SRUN="srun -N$SLURM_JOB_NUM_NODES -n$NTASKS -c2 --cpu-bind=cores"
 echo "running diffBragg stage 2 on $SLURM_JOB_NUM_NODES nodes with $SRUN"
 
 export SCRATCH=/lustre/orion/chm137/proj-shared/cctbx

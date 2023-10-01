@@ -1,12 +1,13 @@
 #!/bin/bash
-#SBATCH -N 10            # Number of nodes
-#SBATCH -J dummy         # job name
+
+#SBATCH -N 1280          # Number of nodes
+#SBATCH -J stage2        # job name
 #SBATCH -A CHM137        # allocation
-#SBATCH -p batch         # regular partition
-#SBATCH -t 2
+#SBATCH -p batch
+#SBATCH -t 120
 #SBATCH -o %j.out
 #SBATCH -e %j.err
-export SRUN="srun -N 2 -n 56 -c 2" # run five srun jobs at once
+export SRUN="srun -N 256 -n 4096 -c2" # five sruns can run simultaneously in this batch job
 
 export SCRATCH=/lustre/orion/chm137/proj-shared/cctbx
 export SCRATCH_FOLDER=$SCRATCH/no_reservation/$SLURM_JOB_ID
@@ -35,7 +36,6 @@ export CCTBX_GPUS_PER_NODE=8
 export XFEL_CUSTOM_WORKER_PATH=$MODULES/psii_spread/merging/application # User must export $MODULES path
 
 echo "
-max_sigz=4.0
 spectrum_from_imageset = True
 downsamp_spec {
   skip = True
@@ -43,7 +43,7 @@ downsamp_spec {
 method = 'L-BFGS-B'
 debug_mode = False
 roi {
-  shoebox_size = 10
+  shoebox_size = 15
   fit_tilt = True
   fit_tilt_using_weights = False
   reject_edge_reflections = True
@@ -84,20 +84,21 @@ simulator {
 
 logging {
   rank0_level = low normal *high
-  logfiles = True # True for memory troubleshooting but consumes 3 seconds of wall time
+  logfiles = False # True for memory troubleshooting but consumes 3 seconds of wall time
 }
 " > stage_two.phil
 
 # copy program to nodes
-#echo "start cctbx transfer $(date)"
-#export CCTBX_ZIP_FILE=alcc-recipes3.tar.gz
-#sbcast $SCRATCH/$CCTBX_ZIP_FILE /tmp/$CCTBX_ZIP_FILE
-#srun -n $SLURM_NNODES -N $SLURM_NNODES tar -xf /tmp/$CCTBX_ZIP_FILE -C /tmp/
-#. /tmp/alcc-recipes/cctbx/activate.sh
-#echo "finish cctbx extraction $(date)"
-source $MODULES/../activate.sh
+echo "start cctbx transfer $(date)"
+export CCTBX_ZIP_FILE=alcc-recipes3.tar.gz
+sbcast $SCRATCH/$CCTBX_ZIP_FILE /tmp/$CCTBX_ZIP_FILE
+srun -n $SLURM_NNODES -N $SLURM_NNODES tar -xf /tmp/$CCTBX_ZIP_FILE -C /tmp/
+. /tmp/alcc-recipes/cctbx/activate.sh
+echo "finish cctbx extraction $(date)"
 
 # run program for each ordered set of job IDs matching one crystal size
+# each row is one job's index, merge, and predict job IDs, in that order
+# rows are 2, 1, 0.5, 0.25, and 0.125 micron crystal sizes, in that order
 export job_ids_arr=(
 1427014 1427835 1428320
 1427017 1427900 1428322
@@ -114,7 +115,11 @@ for job in {0..4}; do
   echo "#! /bin/bash
 echo \"jobstart job \$(date)\" > job${job}.out 2> job${job}.err
 pwd >> job${job}.out 2>> job${job}.err
-$SRUN libtbx.python $MODULES/cctbx_project/simtbx/diffBragg/tests/tst_diffBragg_Fhkl_complex.py >> job${job}.out 2>> job${job}.err
+echo \"running stage 2 on 524k lysozyme images with command $SRUN\"
+$SRUN simtbx.diffBragg.stage_two stage_two.phil \
+io.output_dir=${SLURM_JOB_ID}_job${job} \
+pandas_table=$PANDA num_devices=$PERL_NDEV \
+simulator.structure_factors.mtz_name=$MTZ >> job${job}.out 2>> job${job}.err
 echo \"jobend \$(date)\" >> job${job}.out 2>> job${job}.err
 pwd >> job${job}.out 2>> job${job}.err
 " > job${job}.sh

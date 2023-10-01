@@ -1,16 +1,16 @@
 #!/bin/bash
-#SBATCH -N 10            # Number of nodes
-#SBATCH -J dummy         # job name
-#SBATCH -A CHM137        # allocation
-#SBATCH -p batch         # regular partition
-#SBATCH -t 2
+#SBATCH -N 1280            # Number of nodes
+#SBATCH -J stage2          # job name
+#SBATCH -A CHM137          # allocation
+#SBATCH -p batch           # regular queue
+#SBATCH -t 120             # wall clock time limit
 #SBATCH -o %j.out
 #SBATCH -e %j.err
-export SRUN="srun -N 2 -n 56 -c 2" # run five srun jobs at once
+export SRUN="srun -N 256 -n 4096 -c2" # five sruns can run simultaneously in this batch job
 
 export SCRATCH=/lustre/orion/chm137/proj-shared/cctbx
 export SCRATCH_FOLDER=$SCRATCH/no_reservation/$SLURM_JOB_ID
-mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER
+mkdir -p "$SCRATCH_FOLDER"; cd "$SCRATCH_FOLDER" || exit
 
 export PERL_NDEV=8  # number GPU per node
 export GEOM=$MODULES/exafel_project/kpp-sim/t000_rg002_chunk000_reintegrated_000000.expt
@@ -35,7 +35,6 @@ export CCTBX_GPUS_PER_NODE=8
 export XFEL_CUSTOM_WORKER_PATH=$MODULES/psii_spread/merging/application # User must export $MODULES path
 
 echo "
-max_sigz=4.0
 spectrum_from_imageset = True
 downsamp_spec {
   skip = True
@@ -49,7 +48,7 @@ roi {
   reject_edge_reflections = True
   pad_shoebox_for_background_estimation = 0
 }
-space_group=P43212
+space_group=P6522
 
 sigmas {
   G = 1
@@ -67,7 +66,7 @@ refiner {
   sigma_r = 3
   num_devices = 4
   adu_per_photon = 1
-  res_ranges='1.75-999'
+  res_ranges='1.5-999'
   stage_two.save_model_freq=None
   stage_two.save_Z_freq=None
 }
@@ -84,37 +83,42 @@ simulator {
 
 logging {
   rank0_level = low normal *high
-  logfiles = True # True for memory troubleshooting but consumes 3 seconds of wall time
+  logfiles = False # True for memory troubleshooting but consumes 3 seconds of wall time
 }
 " > stage_two.phil
 
 # copy program to nodes
-#echo "start cctbx transfer $(date)"
-#export CCTBX_ZIP_FILE=alcc-recipes3.tar.gz
-#sbcast $SCRATCH/$CCTBX_ZIP_FILE /tmp/$CCTBX_ZIP_FILE
-#srun -n $SLURM_NNODES -N $SLURM_NNODES tar -xf /tmp/$CCTBX_ZIP_FILE -C /tmp/
-#. /tmp/alcc-recipes/cctbx/activate.sh
-#echo "finish cctbx extraction $(date)"
-source $MODULES/../activate.sh
+echo "start cctbx transfer $(date)"
+export CCTBX_ZIP_FILE=alcc-recipes3.tar.gz
+sbcast $SCRATCH/$CCTBX_ZIP_FILE /tmp/$CCTBX_ZIP_FILE
+srun -n $SLURM_NNODES -N $SLURM_NNODES tar -xf /tmp/$CCTBX_ZIP_FILE -C /tmp/
+. /tmp/alcc-recipes/cctbx/activate.sh
+echo "finish cctbx extraction $(date)"
 
 # run program for each ordered set of job IDs matching one crystal size
+# each row is one job's index, merge, and predict job IDs, in that order
+# rows are 40, 25, 10, 5, and 2 micron crystal sizes, in that order
 export job_ids_arr=(
-1427014 1427835 1428320
-1427017 1427900 1428322
-1411658 1427901 1428333
-1427020 1427902 1428365
-1427035 1427903 1428853)
+1426077 1427767 1435064
+1429648 1429661 1434948
+1427782 1427786 1435065
+1427783 1427787 1435069
+1429649 1429662 1435711)
 
 for job in {0..4}; do
   export JOB_ID_INDEX=${job_ids_arr[job*3]} # not used
   export JOB_ID_MERGE=${job_ids_arr[job*3+1]}
   export JOB_ID_PREDICT=${job_ids_arr[job*3+2]}
-  export MTZ=${SCRATCH}/yb_lyso/${JOB_ID_MERGE}/out/yb_lyso_500k_all.mtz
-  export PANDA=$SCRATCH/yb_lyso/${JOB_ID_PREDICT}/predict/preds_for_hopper.pkl
+  export MTZ=${SCRATCH}/cytochrome/${JOB_ID_MERGE}/out/ly99sim_all.mtz
+  export PANDA=$SCRATCH/cytochrome/${JOB_ID_PREDICT}/predict/preds_for_hopper.pkl
   echo "#! /bin/bash
 echo \"jobstart job \$(date)\" > job${job}.out 2> job${job}.err
 pwd >> job${job}.out 2>> job${job}.err
-$SRUN libtbx.python $MODULES/cctbx_project/simtbx/diffBragg/tests/tst_diffBragg_Fhkl_complex.py >> job${job}.out 2>> job${job}.err
+echo \"running stage 2 on 524k cytochrome images with command $SRUN\"
+$SRUN simtbx.diffBragg.stage_two stage_two.phil \
+io.output_dir=${SLURM_JOB_ID}_job${job} \
+pandas_table=$PANDA num_devices=$PERL_NDEV \
+simulator.structure_factors.mtz_name=$MTZ >> job${job}.out 2>> job${job}.err
 echo \"jobend \$(date)\" >> job${job}.out 2>> job${job}.err
 pwd >> job${job}.out 2>> job${job}.err
 " > job${job}.sh
