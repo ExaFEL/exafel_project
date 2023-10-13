@@ -81,6 +81,9 @@ cache = None
   .type = str
   .help = If given & cache does not exist, write results to cache pickle.
   .help = If given & cache exists, read and show results instead of calculating.
+ecp_report = True
+  .type = bool
+  .help = Increase font size, add enumeration etc. for ECP report
 """
 
 
@@ -321,40 +324,48 @@ def offsets_from_refl(refl: flex.reflection_table, detector) -> pd.DataFrame:
 
 
 class OffsetKind(NamedTuple):
+  enum: str
   title: str
   dB_col_name: str
   DIALS_col_name: str
 
 
-offset_kinds = [OffsetKind('Overall', 'dB_offset', 'DIALS_offset'),
-                OffsetKind('Radial', 'dB_rad', 'DIALS_rad'),
-                OffsetKind('Tangential', 'dB_tang', 'DIALS_tang')]
+offset_kinds = [
+  OffsetKind('a) ', 'Overall', 'dB_offset', 'DIALS_offset'),
+  OffsetKind('b) ', 'Radial', 'dB_rad', 'DIALS_rad'),
+  OffsetKind('c) ', 'Tangential', 'dB_tang', 'DIALS_tang')]
 
 
 class OffsetArtist:
-  def __init__(self, offset_summary: pd.DataFrame, stat: str) -> None:
+  def __init__(self, offset_summary: pd.DataFrame, params_) -> None:
     self.data = offset_summary
-    self.stat = stat
+    self.params = params_
+
+  @property
+  def font_size(self):
+    return 15 if params.ecp_report else 10
 
   def plot_offset(self, offset_kind: OffsetKind) -> None:
     fig, ax = plt.subplots()
     fig.set_size_inches((5, 4))
-    ax.set_title(offset_kind.title)
+    title = (offset_kind.enum if self.params else '') + offset_kind.title
+    ax.set_title(title, fontsize=self.font_size)
     x = [i + 0.5 for i in range(len(self.data.index))]
     y1 = self.data[offset_kind.dB_col_name]
     y2 = self.data[offset_kind.DIALS_col_name]
     ax.plot(x, y1, color='chartreuse', marker='s', mec='k')
     ax.plot(x, y2, color='tomato', marker='o', mec='k')
     ax.set_xticks(list(range(len(self.data.index) + 1)))
-    x_labels = ['inf'] + [i.rsplit('-', 1)[1][:4] for i in self.data.index]
-    ax.set_xticklabels(x_labels)
-    ax.tick_params(labelsize=10, length=0)
+    x_ticks = ['inf'] + [i.rsplit('-', 1)[1][:4] for i in self.data.index]
+    y_label = self.params.stat + " of prediction offset (pixels)"
+    ax.set_xticklabels(x_ticks)
+    ax.tick_params(labelsize=self.font_size, length=0)
     ax.grid(visible=True, color="#777777", ls="--", lw=0.5)
-    ax.set_xlabel("resolution ($\AA$)", fontsize=11, labelpad=5)
-    ax.set_ylabel(self.stat + " of prediction offset (pixels)", fontsize=11)
+    ax.set_xlabel("resolution ($\AA$)", fontsize=self.font_size, labelpad=5)
+    ax.set_ylabel(y_label, fontsize=self.font_size)
     ax.set_facecolor('gainsboro')
     plt.subplots_adjust(bottom=0.15, left=0.15, right=0.95, top=0.9)
-    legend = ax.legend(("diffBragg", "DIALS"), prop={"size": 10})
+    legend = ax.legend(("diffBragg", "DIALS"), prop={"size": self.font_size})
     legend_frame = legend.get_frame()
     legend_frame.set_facecolor("bisque")
     legend_frame.set_alpha(1)
@@ -390,7 +401,7 @@ def run(parameters) -> None:
     if COMM.rank != 0:
       return
     print0(offset_summary)
-  oa = OffsetArtist(offset_summary[:-1], parameters.stat)  # no summary row
+  oa = OffsetArtist(offset_summary[:-1], parameters)  # no summary row
   for offset_kind in offset_kinds:
     oa.plot_offset(offset_kind)
   plt.show()
