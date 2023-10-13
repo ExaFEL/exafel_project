@@ -341,15 +341,16 @@ class OffsetArtist:
     self.data = offset_summary
     self.params = params_
 
+
   @property
   def font_size(self):
-    return 15 if params.ecp_report else 10
+    return 14 if self.params.ecp_report else 10
 
   def plot_offset(self, offset_kind: OffsetKind) -> None:
     fig, ax = plt.subplots()
     fig.set_size_inches((5, 4))
     title = (offset_kind.enum if self.params else '') + offset_kind.title
-    ax.set_title(title, fontsize=self.font_size)
+    ax.set_title(title, fontsize=self.font_size, pad=15)
     x = [i + 0.5 for i in range(len(self.data.index))]
     y1 = self.data[offset_kind.dB_col_name]
     y2 = self.data[offset_kind.DIALS_col_name]
