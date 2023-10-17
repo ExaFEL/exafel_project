@@ -57,7 +57,7 @@ class Tranche:
   def get_back(self,lines):
     for line in lines:
       text = line.strip().split()
-      if len(text)>=8 and " ".join(text[5:8])=="DONE LOADING DATA;":
+      if len(text)>=10 and " ".join(text[5:10])=="DONE LOADING DATA; EXIT BARRIER":
             return to_min(int(text[3][0:2]),int(text[3][3:5]),int(text[3][6:8]))
 
   def get_gpu(self,lines):
