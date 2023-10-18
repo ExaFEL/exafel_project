@@ -6,7 +6,7 @@
 #SBATCH -t 120
 #SBATCH -o %j.out
 #SBATCH -e %j.err
-SRUN="srun -n 1024 -c 3"
+SRUN="srun -n 256 -c 3"
 
 export SCRATCH_FOLDER=$SCRATCH/reservation02/$SLURM_JOB_ID
 mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER
@@ -94,9 +94,11 @@ logging {
 
 # copy program to nodes
 echo "start cctbx transfer $(date)"
-export CCTBX_ZIP_FILE=alcc-recipes3.tar.gz
-sbcast $SCRATCH/$CCTBX_ZIP_FILE /tmp/$CCTBX_ZIP_FILE
-srun -n $SLURM_NNODES -N $SLURM_NNODES tar -xf /tmp/$CCTBX_ZIP_FILE -C /tmp/
+# export CCTBX_ZIP_FILE=alcc-recipes3.tar.gz
+# sbcast $SCRATCH/$CCTBX_ZIP_FILE /tmp/$CCTBX_ZIP_FILE
+# srun -n $SLURM_NNODES -N $SLURM_NNODES tar -xf /tmp/$CCTBX_ZIP_FILE -C /tmp/
+export SLURM_STAGE_SETTINGS_FILE=${SCRATCH}/slurm-stage.toml
+/usr/bin/lua ${SCRATCH}/stage.lua.ex sw-in
 . /tmp/alcc-recipes/cctbx/activate.sh
 echo "finish cctbx extraction $(date)"
 
