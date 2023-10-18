@@ -26,7 +26,11 @@ labels = None
   .help = the datasets in table and on plot "A" & "B C" instead of "1" & "2".
 title = None
   .type = str
-  .help = If given, use it as plot title.
+  .help = If given, use it as plot title. See also "split_samples"
+kpp_report = False
+  .type = bool
+  .help = If true, split entries based on label into several subplots,
+  .help = increase font size.
 """
 
 SIGMA_Z_REGEX = re.compile(r'^.+sigmaZ: mean=(.+), median=(.+)$', flags=re.M)
@@ -43,17 +47,36 @@ def run(parameters) -> None:
   keys = l.split(',') if (l := parameters.labels) else sigma_z_means.keys()
   sigma_z_means_df = pd.DataFrame(sigma_z_means.values(), dtype=float, index=keys).T
   print(sigma_z_means_df)
-  fig, ax = plt.subplots()
-  for job_id in sigma_z_means_df:
-    ax.plot(job_id, data=sigma_z_means_df, label=job_id)
-  if t := parameters.title:
-    ax.set_title(t)
-  ax.set_xlabel('Stage 2 iteration')
-  ax.set_ylabel('Mean sigma Z')
-  ax.xaxis.get_major_locator().set_params(integer=True)
-  if len(sigma_z_means_df.keys()) > 1:
-    ax.legend()
-  ax.grid()
+  if parameters.kpp_report:
+    samples = []
+    for k in keys:
+      if s := k.split(maxsplit=1)[0] not in samples:
+        samples.append(s)
+    fig, *axes = plt.subplots(ncols=len(samples))
+    fig.set_size_inches(15, 5)
+    for ax, sample in zip(axes, samples):
+      for key in sigma_z_means_df:
+        if key.startswith(sample):
+          ax.plot(key, data=sigma_z_means_df, label=key.split(maxsplit=1)[1])
+      ax.set_title(sample)
+      ax.set_xlabel('Stage 2 iteration')
+      ax.set_ylabel('Mean sigma Z')
+      ax.xaxis.get_major_locator().set_params(integer=True)
+      if len(sigma_z_means_df.keys()) > 1:
+        ax.legend()
+      ax.grid()
+  else:
+    fig, ax = plt.subplots()
+    for job_id in sigma_z_means_df:
+      ax.plot(job_id, data=sigma_z_means_df, label=job_id)
+    if t := parameters.title:
+      ax.set_title(t)
+    ax.set_xlabel('Stage 2 iteration')
+    ax.set_ylabel('Mean sigma Z')
+    ax.xaxis.get_major_locator().set_params(integer=True)
+    if len(sigma_z_means_df.keys()) > 1:
+      ax.legend()
+    ax.grid()
   plt.show()
 
 
