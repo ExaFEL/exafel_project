@@ -6,8 +6,10 @@ and plot it/them as a function of iteration step number.
 from collections import defaultdict
 import pathlib
 import re
+import string
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 
 from exafel_project.kpp_eval.phil import parse_phil
@@ -49,21 +51,25 @@ def run(parameters) -> None:
   print(sigma_z_means_df)
   if parameters.kpp_report:
     samples = []
+    y_min = np.nanquantile(sigma_z_means_df, 0.001) - 0.1
+    y_max = np.nanquantile(sigma_z_means_df, 0.999) + 0.1
     for k in keys:
-      if s := k.split(maxsplit=1)[0] not in samples:
+      if (s := k.split(maxsplit=1)[0]) not in samples:
         samples.append(s)
-    fig, *axes = plt.subplots(ncols=len(samples))
+    fig, axes = plt.subplots(ncols=len(samples), sharey=True)
     fig.set_size_inches(15, 5)
-    for ax, sample in zip(axes, samples):
+    axes[0].set_ylabel('Mean sigma Z', fontsize=12)
+    for i, (ax, sample) in enumerate(zip(axes, samples)):
       for key in sigma_z_means_df:
         if key.startswith(sample):
           ax.plot(key, data=sigma_z_means_df, label=key.split(maxsplit=1)[1])
-      ax.set_title(sample)
-      ax.set_xlabel('Stage 2 iteration')
-      ax.set_ylabel('Mean sigma Z')
+      ax.tick_params(labelsize=12, labelleft=True)
+      ax.set_title(string.ascii_lowercase[i] + ") " + sample, fontsize=14, pad=10)
+      ax.set_xlabel('Stage 2 iteration', fontsize=12)
+      ax.set_ylim(y_min, y_max)
       ax.xaxis.get_major_locator().set_params(integer=True)
       if len(sigma_z_means_df.keys()) > 1:
-        ax.legend()
+        ax.legend(prop={"size": 12}, loc='upper right')
       ax.grid()
   else:
     fig, ax = plt.subplots()
