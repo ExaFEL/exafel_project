@@ -34,6 +34,7 @@ export OMP_PLACES=threads
 export SIT_PSDM_DATA=/global/cfs/cdirs/lcls/psdm-sauter
 export MPI4PY_RC_RECV_MPROBE='False'
 export CCTBX_GPUS_PER_NODE=8
+env > env.out
 
 echo "
 noise=True
@@ -70,3 +71,4 @@ output {
 echo "jobstart $(date)";pwd
 $SRUN libtbx.python $MODULES/exafel_project/kpp_utils/LY99_batch.py trial.phil
 echo "jobend $(date)";pwd
+if [ "$(cat ../${SLURM_JOB_ID}.err)" != "" ]; then exit; fi
