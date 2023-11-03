@@ -19,7 +19,7 @@ export SLURM_CPU_BIND=cores # critical to force ranks onto different cores. veri
 export OMP_PROC_BIND=spread
 export OMP_PLACES=threads
 
-export H5_SIM_PATH=$SCRATCH/thermolysin/$JOB_ID_SIM
+export H5_SIM_PATH=$SCRATCH/cytochrome/$JOB_ID_SIM
 
 export TRIAL=tdata
 export OUT_DIR=.
