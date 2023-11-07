@@ -227,4 +227,21 @@ def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,pa
     reshape_data = tuple([ nominal_data[ip*nslow:(ip+1)*nslow, 0:nfast ] for ip in range(npanel)])
     kwargs["writer"].append_frame(data=reshape_data)
 
+    import numpy as np
+    def save_variable(variable, variable_name, convert_numpy=True, root='/model'):
+      path = os.path.join(root, variable_name)
+      if convert_numpy:
+        variable = variable.as_numpy_array()
+      try:
+        print('Appending to existing dataset')
+        new_dataset = np.concatenate((kwargs["writer"].handle[path], np.expand_dims(variable,axis=0)), axis=0)
+        del kwargs["writer"].handle[path]
+        kwargs["writer"].handle.create_dataset(path, data=new_dataset)
+      except KeyError:
+        kwargs["writer"].handle.create_dataset(path, data=np.expand_dims(variable, axis=0))
+
+    save_variable(rotation, 'rotation')
+    save_variable(Amatrix_rot, 'Amatrix_rot')
+    save_variable(SIM.Ncells_abc, 'Ncells_abc', convert_numpy=False)
+
   SIM.free_all()
