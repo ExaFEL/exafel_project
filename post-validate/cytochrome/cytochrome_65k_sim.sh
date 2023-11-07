@@ -21,7 +21,7 @@ export LOG_BY_RANK=1 # Use Aaron's rank logger
 export RANK_PROFILE=0 # 0 or 1 Use cProfiler, default 1
 export N_SIM=65536 # total number of images to simulate
 export ADD_BACKGROUND_ALGORITHM=cuda
-export DEVICES_PER_NODE=8
+export DEVICES_PER_NODE=4
 export MOS_DOM=25
 
 export CCTBX_NO_UUID=1
@@ -33,7 +33,7 @@ export OMP_PROC_BIND=spread
 export OMP_PLACES=threads
 export SIT_PSDM_DATA=/global/cfs/cdirs/lcls/psdm-sauter
 export MPI4PY_RC_RECV_MPROBE='False'
-export CCTBX_GPUS_PER_NODE=8
+export CCTBX_GPUS_PER_NODE=4
 env > env.out
 
 echo "
