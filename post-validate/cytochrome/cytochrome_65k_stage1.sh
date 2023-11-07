@@ -5,7 +5,7 @@
 #SBATCH -A m2859_g         # allocation
 #SBATCH -C gpu
 #SBATCH -q regular         # regular or special queue
-#SBATCH -t 01:00:00        # wall clock time limit
+#SBATCH -t 00:20:00        # wall clock time limit
 #SBATCH --gpus-per-node 4
 #SBATCH -o %j.out
 #SBATCH -e %j.err
@@ -42,7 +42,7 @@ method = 'L-BFGS-B'
 outdir = 'stage1'
 debug_mode = False
 roi {
-  shoebox_size = 15
+  shoebox_size = 10
   fit_tilt = True
   reject_edge_reflections = False
   reject_roi_with_hotpix = False
@@ -67,7 +67,7 @@ sigmas {
 }
 
 init {
-  Nabc = 52 52 52
+  Nabc = 29 29 29
   G = 1e5
 }
 

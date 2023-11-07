@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#SBATCH -N 2              # Number of nodes
+#SBATCH -N 1              # Number of nodes
 #SBATCH -J cyto_split
 #SBATCH -L SCRATCH        # job requires SCRATCH files
 #SBATCH -A m2859          # allocation
@@ -8,7 +8,7 @@
 #SBATCH -t 00:05:00       # wall clock time limit
 #SBATCH -o %j.out
 #SBATCH -e %j.err
-SRUN="srun -n 256 -c 2"
+SRUN="srun -n 128 -c 2"
 
 export JOB_ID_INDEX=$1
 
