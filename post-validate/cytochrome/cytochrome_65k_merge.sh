@@ -5,7 +5,7 @@
 #SBATCH -A m2859           # allocation
 #SBATCH -C cpu
 #SBATCH -q regular         # regular or special queue
-#SBATCH -t 00:30:00        # wall clock time limit
+#SBATCH -t 00:10:00        # wall clock time limit
 #SBATCH -o %j.out
 #SBATCH -e %j.err
 SRUN="srun -n 256 -c 16"
