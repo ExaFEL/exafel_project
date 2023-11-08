@@ -17,13 +17,13 @@ SRUN="srun -n 4096 -c 4"
 export SCRATCH_FOLDER=$SCRATCH/cytochrome/$SLURM_JOB_ID
 mkdir -p "$SCRATCH_FOLDER"; cd "$SCRATCH_FOLDER" || exit
 
-export JOB_ID_MERGE=${1}
+export JOB_ID_SIM=${1}
 export JOB_ID_PREDICT=${2}
 
 export PERL_NDEV=4  # number GPU per node
 export PANDA=$SCRATCH/cytochrome/${JOB_ID_PREDICT}/predict/preds_for_hopper.pkl
 export GEOM=$MODULES/exafel_project/kpp-sim/t000_rg002_chunk000_reintegrated_000000.expt
-export MTZ=${SCRATCH}/cytochrome/${JOB_ID_MERGE}/out/ly99sim_all.mtz
+export MTZ=${SCRATCH}/cytochrome/${JOB_ID_SIM}/ground_truth.mtz
 
 export CCTBX_DEVICE_PER_NODE=1
 export N_START=0
