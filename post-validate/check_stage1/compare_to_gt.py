@@ -38,15 +38,17 @@ for i_f, f in enumerate(pkls):
 df = pandas.concat(dfs).reset_index(drop=True)
 
 angles = []
+angles_dials = []
 gt_ncells = None
 refined_ucells = []
 refined_ncells = []
 for i_df, (e, i_exp, A, ncells) in enumerate(zip(df.exp_name, df.exp_idx, df.Amats, df.ncells)):
     expt = ExperimentList.from_file(e, False)[i_exp]
     C = expt.crystal
+    C_dials = deepcopy(C)
     C.set_A(tuple(A))
 
-    refined_ucells.append( C.get_unit_cell().parameters() )
+    refined_ucells.append(C.get_unit_cell().parameters() )
 
     h5 = expt.imageset.get_path(0)
     h5_idx = expt.imageset.indices()[0]
@@ -57,22 +59,29 @@ for i_df, (e, i_exp, A, ncells) in enumerate(zip(df.exp_name, df.exp_idx, df.Ama
     Cgt.set_U(tuple(gt_amat.ravel()))
     a, b, c = Cgt.get_real_space_vectors()
     ang = utils.compare_with_ground_truth(a, b, c, [C], symbol=symbol)[0]
+    ang_dials = utils.compare_with_ground_truth(a, b, c, [C_dials], symbol=symbol)[0]
     angles.append(ang)
+    angles_dials.append(ang_dials)
     ucell_s = ",".join(["%.3f" %u for u in refined_ucells[-1]])
     nabc_s = ",".join(["%.1f"%n for n in ncells])
-    print("missori=%.5f deg.; ucell=[%s]; nabc=[%s] (shot %d / %d)" % (ang, ucell_s, nabc_s, i_df, len(df)))
+    print("missori=%.5f -> %.5f deg.; ucell=[%s]; nabc=[%s] (shot %d / %d)" % (ang_dials, ang, ucell_s, nabc_s, i_df, len(df)))
     refined_ncells.append( ncells)
 
 angles = COMM.reduce(angles)
+angles_dials = COMM.reduce(angles_dials)
 refined_ncells = COMM.reduce(refined_ncells)
 refined_ucells = COMM.reduce(refined_ucells)
 if COMM.rank==0:
     import numpy as np
+    med_d = np.median(angles_dials)
+    mn_d = np.mean(angles_dials)
+    sig_d = np.std(angles_dials)
     med = np.median(angles)
     mn = np.mean(angles)
     sig = np.std(angles)
     print("\nRESULTS\n><><><><><><><><><><><>")
-    print("Misori: Median, Mean, Stdev = %.4f , %.4f %.4f (degrees)" %(med, mn, sig))
+    print("Init misori: Median, Mean, Stdev = %.4f , %.4f %.4f (degrees)" %(med_d, mn_d, sig_d))
+    print("Final misori: Median, Mean, Stdev = %.4f , %.4f %.4f (degrees)" %(med, mn, sig))
 
     print("\nUnit cell stats:")
     labels = ["a", "b","c", "al", "be", "ga"]
@@ -90,3 +99,4 @@ if COMM.rank==0:
     N_sigs = np.std(refined_ncells, axis=0)
     for name, med, mn, sig  in zip(labels, N_meds, N_mns, N_sigs):
         print("%s: Median, Mean, Stdev = %.4f , %.4f %.4f (unit cells)" %(name, med, mn, sig))
+    print("Ground truth Ncells_abc=", gt_ncells)
