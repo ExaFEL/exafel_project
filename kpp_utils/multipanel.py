@@ -10,6 +10,7 @@ import scitbx
 import os
 from libtbx.development.timers import Profiler
 from simtbx import get_exascale
+import numpy as np
 
 def specific_expt(params):
   P = Profiler("Initialize specific expt file %s"%(params.detector.reference))
@@ -24,7 +25,7 @@ def specific_expt(params):
   mutate_root.set_frame(mutate_root.get_fast_axis(), mutate_root.get_slow_axis(), (x,y,z))
   return expt_return
 
-def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,params,
+def run_sim2h5(crystal,spectra,reference,Umatrix,rank,gpu_channels_singleton,params,
                 quick=False,save_bragg=False,sfall_channels=None, **kwargs):
   DETECTOR = reference.detector
   PANEL = DETECTOR[0]
@@ -75,7 +76,7 @@ def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,pa
   # this will become F000, marking the beam center
   SIM.default_F=0
   SIM.Fhkl=sfall_channels[0] # instead of sfall_main
-  Amatrix_rot = (rotation *
+  Amatrix_rot = (Umatrix *
              sqr(sfall_channels[0].unit_cell().orthogonalization_matrix())).transpose()
 
   SIM.Amatrix_RUB = Amatrix_rot
@@ -227,8 +228,16 @@ def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,pa
     reshape_data = tuple([ nominal_data[ip*nslow:(ip+1)*nslow, 0:nfast ] for ip in range(npanel)])
     kwargs["writer"].append_frame(data=reshape_data)
 
-    import numpy as np
-    def save_variable(variable, variable_name, convert_numpy=True, root='/model'):
+    # It is understood that save_variable is provisional.  In the future we have to address that
+    #   - the resulting H5 are no longer NeXus compliant
+    #   - orientation refers to the P1-setting used internally in nanoBragg, rather than the conventional reference setting
+    save_variable(Umatrix, 'Umatrix')
+    save_variable(Amatrix_rot, 'Amatrix_rot')
+    save_variable(SIM.Ncells_abc, 'Ncells_abc', convert_numpy=False)
+
+  SIM.free_all()
+
+  def save_variable(variable, variable_name, convert_numpy=True, root='/model'):
       path = os.path.join(root, variable_name)
       if convert_numpy:
         variable = variable.as_numpy_array()
@@ -240,8 +249,3 @@ def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,pa
       except KeyError:
         kwargs["writer"].handle.create_dataset(path, data=np.expand_dims(variable, axis=0))
 
-    save_variable(rotation, 'rotation')
-    save_variable(Amatrix_rot, 'Amatrix_rot')
-    save_variable(SIM.Ncells_abc, 'Ncells_abc', convert_numpy=False)
-
-  SIM.free_all()
