@@ -237,7 +237,7 @@ def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,pa
 
   SIM.free_all()
 
-  def save_variable(variable, variable_name, convert_numpy=True, root='/model'):
+def save_variable(variable, variable_name, convert_numpy=True, root='/model'):
       path = os.path.join(root, variable_name)
       if convert_numpy:
         variable = variable.as_numpy_array()
