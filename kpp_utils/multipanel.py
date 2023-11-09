@@ -10,6 +10,7 @@ import scitbx
 import os
 from libtbx.development.timers import Profiler
 from simtbx import get_exascale
+import numpy as np
 
 def specific_expt(params):
   P = Profiler("Initialize specific expt file %s"%(params.detector.reference))
@@ -227,4 +228,24 @@ def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,pa
     reshape_data = tuple([ nominal_data[ip*nslow:(ip+1)*nslow, 0:nfast ] for ip in range(npanel)])
     kwargs["writer"].append_frame(data=reshape_data)
 
+    # It is understood that save_variable is provisional.  In the future we have to address that
+    #   - the resulting H5 are no longer NeXus compliant
+    #   - orientation refers to the P1-setting used internally in nanoBragg, rather than the conventional reference setting
+    save_variable(kwargs["writer"], rotation, 'Umatrix_rot')
+    save_variable(kwargs["writer"], Amatrix_rot, 'Amatrix_rot')
+    save_variable(kwargs["writer"], SIM.Ncells_abc, 'Ncells_abc', convert_numpy=False)
+
   SIM.free_all()
+
+def save_variable(writer, variable, variable_name, convert_numpy=True, root='/model'):
+      path = os.path.join(root, variable_name)
+      if convert_numpy:
+        variable = variable.as_numpy_array()
+      try:
+        print('Appending to existing dataset')
+        new_dataset = np.concatenate((writer.handle[path], np.expand_dims(variable,axis=0)), axis=0)
+        del writer.handle[path]
+        writer.handle.create_dataset(path, data=new_dataset)
+      except KeyError:
+        writer.handle.create_dataset(path, data=np.expand_dims(variable, axis=0))
+
