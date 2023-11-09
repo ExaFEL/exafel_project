@@ -231,21 +231,25 @@ def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,pa
     # It is understood that save_variable is provisional.  In the future we have to address that
     #   - the resulting H5 are no longer NeXus compliant
     #   - orientation refers to the P1-setting used internally in nanoBragg, rather than the conventional reference setting
-    save_variable(kwargs["writer"], rotation, 'Umatrix_rot')
-    save_variable(kwargs["writer"], Amatrix_rot, 'Amatrix_rot')
-    save_variable(kwargs["writer"], SIM.Ncells_abc, 'Ncells_abc', convert_numpy=False)
+    save_variable(kwargs["writer"], rotation.as_numpy_array(), 'Umatrix_rot')
+    save_variable(kwargs["writer"], Amatrix_rot.as_numpy_array(), 'Amatrix_rot')
+    save_variable(kwargs["writer"], np.array(SIM.Ncells_abc), 'Ncells_abc')
 
   SIM.free_all()
 
-def save_variable(writer, variable, variable_name, convert_numpy=True, root='/model'):
+def save_variable(writer, variable, variable_name, root='/model'):
       path = os.path.join(root, variable_name)
-      if convert_numpy:
-        variable = variable.as_numpy_array()
+      h5 = writer.handle
+      assert isinstance(variable, np.ndarray)
       try:
         print('Appending to existing dataset')
-        new_dataset = np.concatenate((writer.handle[path], np.expand_dims(variable,axis=0)), axis=0)
-        del writer.handle[path]
-        writer.handle.create_dataset(path, data=new_dataset)
+        dset = h5[path]
+        nimg = dset.shape[0]
+        other_dims = tuple(list(dset.shape)[1:])
+        new_shape (nimg+1,)+other_dims
+        dset.resize(new_shape)
+        dset[-1] = variable
       except KeyError:
-        writer.handle.create_dataset(path, data=np.expand_dims(variable, axis=0))
+        maxshape = (None,)+variable.shape
+        h5.create_dataset(path, data=variable[None], maxshape=maxshape)
 
