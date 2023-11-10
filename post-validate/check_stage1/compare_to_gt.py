@@ -1,8 +1,9 @@
 # coding: utf-8
 """
-Usage: srun libtbx.python compare_to_gt.py ./path/to/stage1_outdir
+Usage: srun libtbx.python compare_to_gt.py ./path/to/stage1_outdir --figname hist.png --nbins 50
 """
 import pandas
+import numpy as np
 from mpi4py import MPI
 COMM = MPI.COMM_WORLD
 import sys
@@ -13,9 +14,16 @@ from dxtbx.model import ExperimentList
 import h5py
 from simtbx.diffBragg import utils
 
-stage1_dir = sys.argv[1]
-gt_ucell = 79.1, 79.1, 38.4, 90,90,90
-symbol="P43212"
+from argparse import ArgumentParser
+parser = ArgumentParser()
+parser.add_argument("dirname", type=str, help="stage 1 output folder")
+parser.add_argument("--symbol", type=str, default=None, help="space group lookup symbol (e.g. P212121). If not provided, will be read from DIALS crystal models")
+parser.add_argument("--figname", type=str, default=None, help="If provided, will save a histogram plot to this file.")
+parser.add_argument("--nbins", default=70, type=int, help="Number of histogram bins")
+parser.add_argument("--logbins", action="store_true", help="whether to use log-spaced bins for the histogram")
+args = parser.parse_args()
+
+stage1_dir = args.dirname
 
 def print0(*args, **kwargs):
     if COMM.rank==0:
@@ -28,6 +36,7 @@ pkls = glob.glob(os.path.join(stage1_dir, "pandas/hopper*rank*pkl"))
 if not pkls:
     print("No input files found, check stage1 dir")
     exit()
+
 dfs = []
 for i_f, f in enumerate(pkls):
     if i_f % COMM.size != COMM.rank:
@@ -35,44 +44,50 @@ for i_f, f in enumerate(pkls):
     print0("Loaded %d / %d pickles" %(i_f+1, len(pkls)), end="\r", flush=True)
     df = pandas.read_pickle(f)[cols]
     dfs.append(df)
-df = pandas.concat(dfs).reset_index(drop=True)
 
 angles = []
 angles_dials = []
-gt_ncells = None
 refined_ucells = []
 refined_ncells = []
-for i_df, (e, i_exp, A, ncells) in enumerate(zip(df.exp_name, df.exp_idx, df.Amats, df.ncells)):
-    expt = ExperimentList.from_file(e, False)[i_exp]
-    C = expt.crystal
-    C_dials = deepcopy(C)
-    C.set_A(tuple(A))
 
-    refined_ucells.append(C.get_unit_cell().parameters() )
+if dfs:
+    df = pandas.concat(dfs).reset_index(drop=True)
+    gt_ncells = None
+    for i_df, (e, i_exp, A, ncells) in enumerate(zip(df.exp_name, df.exp_idx, df.Amats, df.ncells)):
+        expt = ExperimentList.from_file(e, False)[i_exp]
+        C = expt.crystal
+        C_dials = deepcopy(C)
+        C.set_A(tuple(A))
 
-    h5 = expt.imageset.get_path(0)
-    h5_idx = expt.imageset.indices()[0]
-    gt_amat = h5py.File(h5, 'r')['model/rotation'][h5_idx]
-    if gt_ncells is None:
-        gt_ncells = h5py.File(h5, 'r')['model/Ncells_abc'][h5_idx]
-    Cgt = deepcopy(C)
-    Cgt.set_U(tuple(gt_amat.ravel()))
-    a, b, c = Cgt.get_real_space_vectors()
-    ang = utils.compare_with_ground_truth(a, b, c, [C], symbol=symbol)[0]
-    ang_dials = utils.compare_with_ground_truth(a, b, c, [C_dials], symbol=symbol)[0]
-    angles.append(ang)
-    angles_dials.append(ang_dials)
-    ucell_s = ",".join(["%.3f" %u for u in refined_ucells[-1]])
-    nabc_s = ",".join(["%.1f"%n for n in ncells])
-    print("missori=%.5f -> %.5f deg.; ucell=[%s]; nabc=[%s] (shot %d / %d)" % (ang_dials, ang, ucell_s, nabc_s, i_df, len(df)))
-    refined_ncells.append( ncells)
+        refined_ucells.append(C.get_unit_cell().parameters() )
+
+        h5 = expt.imageset.get_path(0)
+        h5_idx = expt.imageset.indices()[0]
+        gt_amat = h5py.File(h5, 'r')['model/Umatrix_rot'][h5_idx]
+        if gt_ncells is None:
+            gt_ncells = h5py.File(h5, 'r')['model/Ncells_abc'][h5_idx]
+        Cgt = deepcopy(C)
+        Cgt.set_U(tuple(gt_amat.ravel()))
+        a, b, c = Cgt.get_real_space_vectors()
+        symbol = args.symbol
+        if args.symbol is None:
+            symbol = C.get_space_group().info().type().lookup_symbol()
+            print(symbol)
+        ang = utils.compare_with_ground_truth(a, b, c, [C], symbol=symbol)[0]
+        ang_dials = utils.compare_with_ground_truth(a, b, c, [C_dials], symbol=symbol)[0]
+        angles.append(ang)
+        angles_dials.append(ang_dials)
+        ucell_s = ",".join(["%.3f" %u for u in refined_ucells[-1]])
+        nabc_s = ",".join(["%.1f"%n for n in ncells])
+        print("missori=%.5f -> %.5f deg.; ucell=[%s]; nabc=[%s] (shot %d / %d)" % (ang_dials, ang, ucell_s, nabc_s, i_df, len(df)))
+        refined_ncells.append( ncells)
 
 angles = COMM.reduce(angles)
 angles_dials = COMM.reduce(angles_dials)
 refined_ncells = COMM.reduce(refined_ncells)
 refined_ucells = COMM.reduce(refined_ucells)
 if COMM.rank==0:
-    import numpy as np
+    # PRINT RESULTS
     med_d = np.median(angles_dials)
     mn_d = np.mean(angles_dials)
     sig_d = np.std(angles_dials)
@@ -100,3 +115,35 @@ if COMM.rank==0:
     for name, med, mn, sig  in zip(labels, N_meds, N_mns, N_sigs):
         print("%s: Median, Mean, Stdev = %.4f , %.4f %.4f (unit cells)" %(name, med, mn, sig))
     print("Ground truth Ncells_abc=", gt_ncells)
+
+
+    # MAKEPLOT
+    import pylab as plt
+    fig, ax = plt.subplots(1,1)
+    fig.set_size_inches((5.5,3))
+    all_ang = np.hstack((angles, angles_dials))
+    if args.logbins:
+        bins = np.logspace(np.log10(all_ang.min()), np.log10(all_ang.max()), args.nbins)
+    else:
+        bins = np.linspace(0, np.max(all_ang), args.nbins)
+
+    med = np.median(angles)
+    med_dials = np.median(angles_dials)
+    hist_args = {"histtype":"step", "lw":1.5,"alpha":0.8}
+    heights=plt.hist(angles,bins=bins,
+            label="diffBragg, median=%.4f$\degree$" % med,
+            **hist_args)[0]
+    heights_dials=plt.hist(angles_dials, bins=bins ,
+            label="DIALS, median=%.4f$\degree$" % med_dials,
+            color='tomato', **hist_args)[0]
+    ax.set_xlabel("degrees")
+    if args.logbins:
+        ax.set_xscale("log")
+    ax.set_ylabel("# of images")
+    ax.grid(1, which='both', ls='--')
+    plt.legend()
+    plt.subplots_adjust(left=.1, bottom=.18, right=.96, top=.94)
+    if args.figname is not None:
+        plt.savefig(args.figname, dpi=500)
+    plt.show()
+

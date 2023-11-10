@@ -246,7 +246,7 @@ def save_variable(writer, variable, variable_name, root='/model'):
         dset = h5[path]
         nimg = dset.shape[0]
         other_dims = tuple(list(dset.shape)[1:])
-        new_shape (nimg+1,)+other_dims
+        new_shape = (nimg+1,)+other_dims
         dset.resize(new_shape)
         dset[-1] = variable
       except KeyError:
