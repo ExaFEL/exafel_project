@@ -22,7 +22,7 @@ export RANK_PROFILE=0 # 0 or 1 Use cProfiler, default 1
 export N_SIM=65536 # total number of images to simulate
 export ADD_BACKGROUND_ALGORITHM=cuda
 export DEVICES_PER_NODE=4
-export MOS_DOM=25
+export MOS_DOM=26
 
 export CCTBX_NO_UUID=1
 export DIFFBRAGG_USE_KOKKOS=1

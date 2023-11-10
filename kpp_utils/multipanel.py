@@ -47,20 +47,14 @@ def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,pa
   #SIM.adc_offset_adu = 10 # Do not offset by 40
   SIM.mosaic_spread_deg = 0.05 # interpreted by UMAT_nm as a half-width stddev
                                # mosaic_domains setter MUST come after mosaic_spread_deg setter
-  SIM.mosaic_domains = int(os.environ.get("MOS_DOM","25"))
-  print ("MOSAIC",SIM.mosaic_domains)
+  SIM.mosaic_domains = int(os.environ.get("MOS_DOM","26")) # AnisoU class requires an even number
+  print ("MOSAIC",SIM.mosaic_domains,"after two fold duplicity is applied")
   SIM.distance_mm = PANEL.get_distance()
   print ("DISTANCE_mm",SIM.distance_mm)
 
-  UMAT_nm = flex.mat3_double()
-  mersenne_twister = flex.mersenne_twister(seed=0)
-  scitbx.random.set_random_seed(1234)
-  rand_norm = scitbx.random.normal_distribution(mean=0, sigma=SIM.mosaic_spread_deg * math.pi/180.)
-  g = scitbx.random.variate(rand_norm)
-  mosaic_rotation = g(SIM.mosaic_domains)
-  for m in mosaic_rotation:
-    site = col(mersenne_twister.random_double_point_on_sphere())
-    UMAT_nm.append( site.axis_and_angle_as_r3_rotation_matrix(m,deg=False) )
+  from simtbx.nanoBragg.anisotropic_mosaicity import AnisoUmats
+  AUM = AnisoUmats(num_random_samples=SIM.mosaic_domains)
+  UMAT_nm,_,_ = AUM.generate_Umats(eta = SIM.mosaic_spread_deg, how=2, compute_derivs=False)
   SIM.set_mosaic_blocks(UMAT_nm)
 
   if params.attenuation:
