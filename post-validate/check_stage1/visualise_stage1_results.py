@@ -48,7 +48,7 @@ def sliding_pairs(sequence: Sequence[T]) -> Generator[Tuple[T], None, None]:
 
 
 def assert_same_length(*args: Tuple[Sequence]) -> None:
-    if (lens := {len(arg) for arg in args}) > 1:
+    if (lens := len({len(arg) for arg in args})) > 1:
         raise ValueError(f'Iterable input lengths do not match: {lens}')
 
 
@@ -79,6 +79,8 @@ def plot_heatmap(x: pd.Series,
                  bins: int = None) -> Stage1Results:
     # TODO: Allow log-scale, allow individual rgb colors via r, g, b parameters
     assert_same_length(x, y)
+    x_name = x.name
+    y_name = y.name
     x = np.array(x)
     y = np.array(y)
     bins = bins if bins else int(np.log2(len(x)))
@@ -93,27 +95,27 @@ def plot_heatmap(x: pd.Series,
     for y_bin_max in y_lims[1:]:
         y_bin += x > y_bin_max
 
-    for x_i in range(len(x)):
-        for y_i in range(len(y)):
+    for x_i in range(bins):
+        for y_i in range(bins):
             heat[x_i, y_i] = sum((x_bin == x_i) & (y_bin == y_i))
-    heat_x = heat.sum(axis=0)
-    heat_y = heat.sum(axis=1)
+    heat_x = heat.sum(axis=1)
+    heat_y = heat.sum(axis=0)
 
     fig, ((axx, axn), (axh, axy)) = plt.subplots(2, 2, sharex='col',
         sharey='row', width_ratios=[2, 1], height_ratios=[1, 2])
     plt.subplots_adjust(wspace=0, hspace=0)
 
-    axh.imshow(heat, cmap="Purples", origin='lower')
+    axh.imshow(heat.T, cmap="Purples", origin='lower')
     axh.set_aspect('auto')
+    axh.scatter(x=(x-min(x))/(max(x)-min(x))*bins-0.5,
+                y=(y-min(y))/(max(y)-min(y))*bins-0.5, color='#008000', s=10)
     x_tick_labels = ["{:.2E}".format(t) for t in x_lims]
     y_tick_labels = ["{:.2E}".format(t) for t in y_lims]
-    axh.set_xticks(np.arange(len(x) + 1) - 0.5, labels=x_tick_labels)
-    axh.set_yticks(np.arange(len(y) + 1) - 0.5, labels=y_tick_labels)
-    for data, set_label in [(x, axh.set_xlabel), (y, axh.set_ylabel)]:
-        if hasattr(data, 'name') and data.name:
-            set_label(data.name)
+    axh.set_xticks(np.arange(bins + 1) - 0.5, labels=x_tick_labels)
+    axh.set_yticks(np.arange(bins + 1) - 0.5, labels=y_tick_labels)
+    axh.set_xlabel(x_name)
+    axh.set_ylabel(y_name)
     purple = plt.get_cmap('Purples')(1.0)
-    axh.scatter(x=x/len(x), y=y/len(y), color='#000000')
     axx.bar(x=range(bins), height=heat_x, width=1, color=purple)
     axy.barh(y=range(bins), width=heat_y, height=1, color=purple)
     axn.axis('off')
