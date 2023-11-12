@@ -5,7 +5,7 @@
 #SBATCH -A m2859_g       # allocation
 #SBATCH -C gpu
 #SBATCH -q regular       # regular or special queue
-#SBATCH -t 0:20:00
+#SBATCH -t 0:30:00
 #SBATCH --gpus-per-node 4
 #SBATCH -o %j.out
 #SBATCH -e %j.err
@@ -14,6 +14,7 @@ SRUN='srun -n 256 -c 2'
 export SCRATCH_FOLDER=$SCRATCH/yb_lyso/$SLURM_JOB_ID
 mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER
 
+LENGTH=${1}
 export CCTBX_DEVICE_PER_NODE=1
 export N_START=0
 export LOG_BY_RANK=1 # Use Aaron's rank logger
@@ -21,7 +22,7 @@ export RANK_PROFILE=0 # 0 or 1 Use cProfiler, default 1
 export N_SIM=4096 # total number of images to simulate
 export ADD_BACKGROUND_ALGORITHM=cuda
 export DEVICES_PER_NODE=4
-export MOS_DOM=25
+export MOS_DOM=50
 
 export CCTBX_NO_UUID=1
 export DIFFBRAGG_USE_KOKKOS=1
@@ -66,7 +67,7 @@ crystal {
   pdb.code=None
   pdb.source=file
   pdb.file=${MODULES}/exafel_project/kpp-frontier/yb_lyso/4bs7.pdb
-  length_um=0.5 # increase crystal path length
+  length_um=${LENGTH} # increase crystal path length
 }
 detector {
   tiles=multipanel
