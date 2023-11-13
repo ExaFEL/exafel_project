@@ -81,6 +81,8 @@ def plot_heatmap(x: pd.Series,
     assert_same_length(x, y)
     x_name = x.name
     y_name = y.name
+    print(x.describe())
+    print(y.describe())
     x = np.array(x)
     y = np.array(y)
     bins = bins if bins else int(np.log2(len(x)))
