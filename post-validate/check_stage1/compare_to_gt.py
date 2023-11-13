@@ -31,7 +31,7 @@ def print0(*args, **kwargs):
 
 
 import glob
-cols = ["exp_name", "exp_idx", "ncells", "Amats", "a", "b", "c", "al", "be", "ga"]
+cols = ["exp_name", "exp_idx", "ncells", "Amats", "a", "b", "c", "al", "be", "ga", "eta_abc", "eta", "sigz", "niter"]
 pkls = glob.glob(os.path.join(stage1_dir, "pandas/hopper*rank*pkl"))
 if not pkls:
     print("No input files found, check stage1 dir")
@@ -49,11 +49,13 @@ angles = []
 angles_dials = []
 refined_ucells = []
 refined_ncells = []
+sigzs = []
+etas = []
 
 if dfs:
     df = pandas.concat(dfs).reset_index(drop=True)
     gt_ncells = None
-    for i_df, (e, i_exp, A, ncells) in enumerate(zip(df.exp_name, df.exp_idx, df.Amats, df.ncells)):
+    for i_df, (e, i_exp, A, ncells, sigz, eta_abc) in enumerate(zip(df.exp_name, df.exp_idx, df.Amats, df.ncells, df.sigz, df.eta)):
         expt = ExperimentList.from_file(e, False)[i_exp]
         C = expt.crystal
         C_dials = deepcopy(C)
@@ -81,11 +83,15 @@ if dfs:
         nabc_s = ",".join(["%.1f"%n for n in ncells])
         print("missori=%.5f -> %.5f deg.; ucell=[%s]; nabc=[%s] (shot %d / %d)" % (ang_dials, ang, ucell_s, nabc_s, i_df, len(df)))
         refined_ncells.append( ncells)
+        sigzs.append(sigz)
+        etas.append(eta_abc)
 
 angles = COMM.reduce(angles)
 angles_dials = COMM.reduce(angles_dials)
 refined_ncells = COMM.reduce(refined_ncells)
 refined_ucells = COMM.reduce(refined_ucells)
+sigzs = COMM.reduce(sigzs)
+etas = COMM.reduce(etas)
 if COMM.rank==0:
     # PRINT RESULTS
     med_d = np.median(angles_dials)
@@ -116,6 +122,12 @@ if COMM.rank==0:
         print("%s: Median, Mean, Stdev = %.4f , %.4f %.4f (unit cells)" %(name, med, mn, sig))
     print("Ground truth Ncells_abc=", gt_ncells)
 
+    print("\n<SigmaZ>")
+    N_meds = np.median(refined_ncells, axis=0)
+    N_mns= np.median(refined_ncells, axis=0)
+    N_sigs = np.std(refined_ncells, axis=0)
+    print("Min - Max, Median Mean = %.4f - %.4f, %.4f %.4f" %(
+        np.min(sigzs), np.max(sigzs), np.median(sigzs), np.mean(sigzs)))
 
     # MAKEPLOT
     import pylab as plt
@@ -136,7 +148,8 @@ if COMM.rank==0:
     heights_dials=plt.hist(angles_dials, bins=bins ,
             label="DIALS, median=%.4f$\degree$" % med_dials,
             color='tomato', **hist_args)[0]
-    ax.set_xlabel("degrees")
+
+    ax.set_xlabel("Crystal misorientation (°)")
     if args.logbins:
         ax.set_xscale("log")
     ax.set_ylabel("# of images")
@@ -145,5 +158,13 @@ if COMM.rank==0:
     plt.subplots_adjust(left=.1, bottom=.18, right=.96, top=.94)
     if args.figname is not None:
         plt.savefig(args.figname, dpi=500)
+
+    fig, ax = plt.subplots(1,1)
+    ax.set_xlabel("<$\sigma$Z>")
+    ax.set_ylabel("# of images")
+    heights_sigz=plt.hist(sigzs, bins=args.nbins ,
+            label="$\sigma$Z, median=%.4f" % np.median(sigzs),
+            color='tomato')[0]
+    plt.legend()
     plt.show()
 
