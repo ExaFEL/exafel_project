@@ -68,7 +68,7 @@ sigmas {
   RotXYZ = 0.01 0.01 0.01
   G = 1
   Nabc = 1 1 1
-  eta_abc = 0.1
+  eta_abc = 0.1 0.1 0.1
 }
 
 init {

@@ -9,7 +9,7 @@
 #SBATCH -A m2859_g       # allocation
 #SBATCH -C gpu
 #SBATCH -q regular
-#SBATCH -t 03:00:00
+#SBATCH -t 00:20:00
 #SBATCH -o %j.out
 #SBATCH -e %j.err
 SRUN="srun -N128 --ntasks-per-node=32 --gpus-per-node=4 --cpus-per-gpu=4 -c4"

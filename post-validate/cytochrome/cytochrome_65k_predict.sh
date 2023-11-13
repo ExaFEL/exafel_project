@@ -12,7 +12,7 @@
 #SBATCH --gpus-per-node 4
 #SBATCH -o %j.out
 #SBATCH -e %j.err
-SRUN="srun -n 4096 -c 4"
+SRUN="srun -c 4"
 
 export SCRATCH_FOLDER=$SCRATCH/cytochrome/$SLURM_JOB_ID
 mkdir -p "$SCRATCH_FOLDER"; cd "$SCRATCH_FOLDER" || exit
@@ -20,7 +20,7 @@ mkdir -p "$SCRATCH_FOLDER"; cd "$SCRATCH_FOLDER" || exit
 export JOB_ID_HOPPER=$1
 export HOPPER_RESULTS=$SCRATCH/cytochrome/$JOB_ID_HOPPER/stage1
 
-export CCTBX_DEVICE_PER_NODE=4
+export CCTBX_DEVICE_PER_NODE=1
 export N_START=0
 export LOG_BY_RANK=1 # Use Aaron's rank logger
 export RANK_PROFILE=0 # 0 or 1 Use cProfiler, default 1
