@@ -51,6 +51,7 @@ refined_ucells = []
 refined_ncells = []
 sigzs = []
 etas = []
+tdata = []
 
 if dfs:
     df = pandas.concat(dfs).reset_index(drop=True)
@@ -82,6 +83,7 @@ if dfs:
         ucell_s = ",".join(["%.3f" %u for u in refined_ucells[-1]])
         nabc_s = ",".join(["%.1f"%n for n in ncells])
         print("missori=%.5f -> %.5f deg.; ucell=[%s]; nabc=[%s] (shot %d / %d)" % (ang_dials, ang, ucell_s, nabc_s, i_df, len(df)))
+        tdata.append(" ".join(["%.6f"%u for u in refined_ucells[-1]]) + " %s"%("".join(symbol.split())))
         refined_ncells.append( ncells)
         sigzs.append(sigz)
         etas.append(eta_abc)
@@ -92,7 +94,15 @@ refined_ncells = COMM.reduce(refined_ncells)
 refined_ucells = COMM.reduce(refined_ucells)
 sigzs = COMM.reduce(sigzs)
 etas = COMM.reduce(etas)
+tdata = COMM.reduce(tdata)
 if COMM.rank==0:
+    #handle tdata
+    tdata_file = os.path.join(os.getcwd(),"tdata_cells.tdata")
+    mycluster = "uc_metrics.dbscan file_name=%s space_group=Pmmm eps=0.02 feature_vector=a,b,c write_covariance=False plot.outliers=False"%tdata_file
+    with open(tdata_file,"w") as F:
+      F.write("\n".join(tdata))
+      print("Plot unit cell distribution with\n%s"%mycluster)
+
     # PRINT RESULTS
     med_d = np.median(angles_dials)
     mn_d = np.mean(angles_dials)
@@ -106,12 +116,14 @@ if COMM.rank==0:
 
     print("\nUnit cell stats:")
     labels = ["a", "b","c", "al", "be", "ga"]
+    uc_mins = np.min(refined_ucells, axis=0)
+    uc_maxs = np.max(refined_ucells, axis=0)
     uc_meds = np.median(refined_ucells, axis=0)
     uc_mns= np.median(refined_ucells, axis=0)
     uc_sigs = np.std(refined_ucells, axis=0)
     units = ["Ang"]*3 + ["deg."]*3
-    for name, med, mn, sig, unit in zip(labels, uc_meds, uc_mns, uc_sigs, units):
-        print("%s: Median, Mean, Stdev = %.4f , %.4f %.4f (%s)" %(name, med, mn, sig, unit))
+    for name, minu, maxu, med, mn, sig, unit in zip(labels, uc_mins, uc_maxs, uc_meds, uc_mns, uc_sigs, units):
+        print("%2s: Min-Max, Median, Mean, Stdev = %8.4f-%8.4f, %8.4f , %8.4f %8.4f (%s)" %(name, minu, maxu, med, mn, sig, unit))
 
     print("\nNcells_abc stats:")
     labels = ["Na", "Nb", "Nc"]
