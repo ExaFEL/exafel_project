@@ -1,43 +1,42 @@
-#!/bin/bash -l
-#SBATCH -N 128             # Number of nodes
-#SBATCH --ntasks-per-node=32
+#!/bin/bash
+#SBATCH -N 16            # Number of nodes
+#SBATCH --ntasks-per-node=16
 #SBATCH --gpus-per-node=4
 #SBATCH --cpus-per-gpu=4
-#SBATCH -J cyto_stage1     # job name
-#SBATCH -L SCRATCH         # job requires SCRATCH files
-#SBATCH -A m2859_g         # allocation
+#SBATCH -J stage_1       # job name
+#SBATCH -L SCRATCH       # job requires SCRATCH files
+#SBATCH -A m2859_g       # allocation
 #SBATCH -C gpu
-#SBATCH -q regular         # regular or special queue
-#SBATCH -t 00:20:00        # wall clock time limit
-#SBATCH --gpus-per-node 4
+#SBATCH -q regular
+#SBATCH -t 01:00:00
 #SBATCH -o %j.out
 #SBATCH -e %j.err
-SRUN="srun -n 4096 -c 4"
+SRUN="srun -N16 --ntasks-per-node=16 --gpus-per-node=4 --cpus-per-gpu=4 -c2"
 
-export SCRATCH_FOLDER=$SCRATCH/cytochrome/$SLURM_JOB_ID
-mkdir -p "$SCRATCH_FOLDER"; cd "$SCRATCH_FOLDER" || exit
+export SCRATCH_FOLDER=$SCRATCH/yb_lyso/$SLURM_JOB_ID
+mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER
 
-export MTZ_PATH=$SCRATCH/cytochrome/${1}/ground_truth.mtz
-export SPEC_PATH=$SCRATCH/cytochrome/${2}_integ_exp_ref.txt
+export MTZ_PATH=$SCRATCH/yb_lyso/${1}/out/ly99sim_all.mtz
+export SPEC_PATH=$SCRATCH/yb_lyso/${2}_integ_exp_ref.txt
 
-export CCTBX_DEVICE_PER_NODE=4
+export CCTBX_DEVICE_PER_NODE=1
 export N_START=0
 export LOG_BY_RANK=1 # Use Aaron's rank logger
 export RANK_PROFILE=0 # 0 or 1 Use cProfiler, default 1
-export DEVICES_PER_NODE=4
 export ADD_BACKGROUND_ALGORITHM=cuda
+export DEVICES_PER_NODE=1
 export MOS_DOM=25
 
+export CCTBX_NO_UUID=1
 export DIFFBRAGG_USE_KOKKOS=1
-export HIP_LAUNCH_BLOCKING=1
+export CUDA_LAUNCH_BLOCKING=1
 export NUMEXPR_MAX_THREADS=128
 export SLURM_CPU_BIND=cores # critical to force ranks onto different cores. verify with ps -o psr <pid>
 export OMP_PROC_BIND=spread
 export OMP_PLACES=threads
 export SIT_PSDM_DATA=/global/cfs/cdirs/lcls/psdm-sauter
-export MPI4PY_RC_RECV_MPROBE='False'
-export CCTBX_GPUS_PER_NODE=4
-env > env.out
+export CCTBX_GPUS_PER_NODE=1
+export XFEL_CUSTOM_WORKER_PATH=$MODULES/psii_spread/merging/application # User must export $MODULES path
 
 echo "
 spectrum_from_imageset = True
@@ -45,7 +44,7 @@ method = 'L-BFGS-B'
 outdir = 'stage1'
 debug_mode = False
 roi {
-  shoebox_size = 10
+  shoebox_size = 15
   fit_tilt = True
   reject_edge_reflections = False
   reject_roi_with_hotpix = False
@@ -60,6 +59,7 @@ fix {
   Nabc=False
   G=False
   RotXYZ=False
+  eta_abc=False
 }
 
 sigmas {
@@ -67,11 +67,13 @@ sigmas {
   RotXYZ = 0.01 0.01 0.01
   G = 1
   Nabc = 1 1 1
+  eta_abc = 0.1 0.1 0.1
 }
 
 init {
-  Nabc = 29 29 29
+  Nabc = 52 52 52
   G = 1e5
+  eta_abc = 0.05 0.05 0.05
 }
 
 refiner {
@@ -85,8 +87,9 @@ refiner {
 simulator {
   oversample = 1
   crystal.has_isotropic_ncells = False
+  crystal.num_mosaicity_samples = 24
   structure_factors {
-    mtz_column = 'F(+),F(-)'
+    mtz_column = 'Iobs(+),SIGIobs(+),Iobs(-),SIGIobs(-)'
   }
   beam {
     size_mm = 0.001
@@ -104,10 +107,11 @@ maxs {
   detz_shift = 1.5
   Nabc = 1600 1600 1600
   RotXYZ = 15 15 15
+  G = 1e6
 }
 ucell_edge_perc = 15
 ucell_ang_abs = 1
-space_group = P6522
+space_group = P43212
 use_restraints = False
 logging {
   rank0_level = low normal *high
