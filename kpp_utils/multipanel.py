@@ -7,6 +7,8 @@ import libtbx.load_env # possibly implicit
 from cctbx import crystal
 import math
 import scitbx
+from dxtbx.model import Crystal
+from iotbx.pdb import input as pdb_input
 import os
 from libtbx.development.timers import Profiler
 from simtbx import get_exascale
@@ -56,6 +58,8 @@ def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,pa
   AUM = AnisoUmats(num_random_samples=SIM.mosaic_domains)
   UMAT_nm,_,_ = AUM.generate_Umats(eta = SIM.mosaic_spread_deg, how=2, compute_derivs=False)
   SIM.set_mosaic_blocks(UMAT_nm)
+  # TODO add a PHIL parameter for symmetrize_Flatt
+  #if symmetrize_Flatt:
 
   if params.attenuation:
     SIM.detector_thick_mm = 0.032 # = 0 for Rayonix
@@ -75,6 +79,29 @@ def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,pa
 
   SIM.Amatrix_RUB = Amatrix_rot
   #workaround for failing init_cell, use custom written Amatrix setter
+
+  #TODO control symmetrize_Flatt using PHIL
+  symmetrize_Flatt=False
+  if symmetrize_Flatt:
+    # recip space Amat (rows are the recip lattice vecs)
+    A = sqr(SIM.Amatrix).transpose()
+    Areal = A.inverse()
+    real_a,real_b,real_c = Areal.as_list_of_lists()
+    # nanoBragg stores the primitive unit cell
+    C_p1 = Crystal(real_a,real_b,real_c, "P1")
+
+    # get the space group from the params
+    if params.crystal.structure=='pdb':
+      P = pdb_input(params.crystal.pdb.file)
+      symbol = P.crystal_symmetry().space_group().info().type().lookup_symbol()
+    elif params.crystal.structure=='ferredoxin':
+      symbol = ""  # TODO
+    elif params.crystal.structure=='PSII':
+      symbol = ""  # TODO
+    else:
+      raise NotImplementedError("crystal.structure must be PSII, pdb, or ferrodoxin")
+    SIM.set_mosaic_blocks_sym(C_p1, symbol, orig_mos_domains=len(UMAT_nm))
+
   print("unit_cell_Adeg=",SIM.unit_cell_Adeg)
   print("unit_cell_tuple=",SIM.unit_cell_tuple)
   Amat = sqr(SIM.Amatrix).transpose() # recovered Amatrix from SIM
