@@ -43,6 +43,9 @@ def parse_input():
         .help = width of one energy channel in eV.
     }
     crystal {
+      symmetrize_Flatt = True
+        .type = bool
+        .help = add 3-fold symmetry to F_latt for trigonal and hexagonal crystals
       structure = *ferredoxin PSII pdb
         .type = choice
         .help = type of crystal structure to be simulated

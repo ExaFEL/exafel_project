@@ -58,8 +58,6 @@ def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,pa
   AUM = AnisoUmats(num_random_samples=SIM.mosaic_domains)
   UMAT_nm,_,_ = AUM.generate_Umats(eta = SIM.mosaic_spread_deg, how=2, compute_derivs=False)
   SIM.set_mosaic_blocks(UMAT_nm)
-  # TODO add a PHIL parameter for symmetrize_Flatt
-  #if symmetrize_Flatt:
 
   if params.attenuation:
     SIM.detector_thick_mm = 0.032 # = 0 for Rayonix
@@ -80,9 +78,7 @@ def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,pa
   SIM.Amatrix_RUB = Amatrix_rot
   #workaround for failing init_cell, use custom written Amatrix setter
 
-  #TODO control symmetrize_Flatt using PHIL
-  symmetrize_Flatt=False
-  if symmetrize_Flatt:
+  if params.crystal.symmetrize_Flatt:
     # recip space Amat (rows are the recip lattice vecs)
     A = sqr(SIM.Amatrix).transpose()
     Areal = A.inverse()
