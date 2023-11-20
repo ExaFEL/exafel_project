@@ -25,6 +25,9 @@ from exafel_project.kpp_eval.evaluate_cc12 import CrossCorrelationSums
 
 
 phil_scope_str = """
+stride = 1
+  .type = int
+  .help = skip this many iterations between plot points
 pdb = None
   .type = str
   .help = Path to the pdb file to be analyzed. If None, 1m2a.pdb will be used.
@@ -114,7 +117,7 @@ def read_npz(npz_path: str,
 
 
 def bin_label_from(bin_range: Tuple[float, float]) -> str:
-  return '-'.join(['{:.4f}'.format(m if m > 0 else np.nan) for m in bin_range])
+  return '-'.join(['{:.3f}'.format(m if m > 0 else np.nan) for m in bin_range])
 
 
 def calc_pearson_r(ma1: miller.array, ma2: miller.array) -> float:
@@ -256,7 +259,7 @@ def run(parameters) -> None:
   # iterate over and evaluate all npz files present
   f_asu_map = np.load(input_path + '/f_asu_map.npy', allow_pickle=True)[()]
   all_iter_npz = len(glob.glob(input_path + '/_fcell_trial0_iter*.npz'))
-  for num_iter in range(all_iter_npz):
+  for num_iter in range(0,all_iter_npz,params.stride):
     npz_file = f'{input_path}/_fcell_trial0_iter{num_iter}.npz'
     print(npz_file)
     ma = read_npz(npz_file, f_asu_map, symmetry, save_mtz=True)
@@ -268,7 +271,7 @@ def run(parameters) -> None:
   stats_dataframe = pd.concat(stats_binned_steps, axis=1)
 
   # Plot stat as a function of iteration
-  indices = [-1] + list(range(all_iter_npz))
+  indices = [-1] + list(range(0,all_iter_npz, params.stride))
   plt.close("all")  # remove all previously generated figures from memory
   fig, axes = plt.subplots()
   for bin_i, (bin_range, stats_row) in enumerate(stats_dataframe.iterrows()):
@@ -277,8 +280,11 @@ def run(parameters) -> None:
   axes.set_xlabel('diffBragg iteration step')
   axes.set_ylabel(stat.value)
   if parameters.n_bins > 1:
-    axes.legend(loc='lower right')
+    axes.legend(bbox_to_anchor=(0.5,1.005), bbox_transform=fig.transFigure,
+                ncol=3,handletextpad=.1, borderpad=.2, loc='upper center')
+  axes.grid(1, ls='--')
   fig.savefig(stat.value + '.png')
+
   if parameters.show:
     plt.show()
 
