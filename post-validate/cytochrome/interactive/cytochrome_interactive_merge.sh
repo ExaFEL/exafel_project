@@ -1,10 +1,11 @@
+#!/bin/bash
 SRUN="srun -c2"
 H5_SIM_PATH=$1
 H5_SIM_PATH=${H5_SIM_PATH%/} # remove any trailing forward slash
 export SCRATCH_FOLDER=${H5_SIM_PATH}/merge
 mkdir -p "$SCRATCH_FOLDER"; cd "$SCRATCH_FOLDER" || exit
 
-export DIALS_OUTPUT=${H5_SIM_PATH}.index
+export DIALS_OUTPUT=${H5_SIM_PATH}/index
 
 export TRIAL=ly99sim
 export OUT_DIR=${SCRATCH_FOLDER}

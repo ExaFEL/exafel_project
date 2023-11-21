@@ -1,3 +1,4 @@
+#!/bin/bash
 SRUN="srun -c2"
 H5_SIM_PATH=$1
 H5_SIM_PATH=${H5_SIM_PATH%/} # remove any trailing forward slash

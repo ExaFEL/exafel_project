@@ -1,19 +1,17 @@
-
+#!/bin/bash
 SRUN="srun -c2"
-export LENGTH=${1} # micron length of crystal
+export LENGTH=$1 # micron length of crystal
 export N_SIM=$2 # total number of images to simulate
 OUTDIR_TAG=$3 # output folder tag
 
-export SCRATCH_FOLDER=$SCRATCH/cytochrome/${SLURM_JOB_ID}-${OUTDIR_TAG}
+export SCRATCH_FOLDER=$SCRATCH/cytochrome/${OUTDIR_TAG}
 mkdir -p "$SCRATCH_FOLDER"; cd "$SCRATCH_FOLDER" || exit
 
 export N_START=0
 export LOG_BY_RANK=1 # Use Aaron's rank logger
 export RANK_PROFILE=0 # 0 or 1 Use cProfiler, default 1
 export ADD_BACKGROUND_ALGORITHM=cuda
-export CCTBX_DEVICE_PER_NODE=1
-export DEVICES_PER_NODE=4
-export CCTBX_GPUS_PER_NODE=4
+export DEVICES_PER_NODE=4  # THIS IS USED in LY99_batch.py
 export MOS_DOM=26
 
 export CCTBX_NO_UUID=1
@@ -46,7 +44,7 @@ crystal {
   pdb.code=None
   pdb.source=file
   pdb.file=${MODULES}/exafel_project/kpp-frontier/cytochrome/5wp2.pdb
-  length_um=${LENGTH}  # X-ray path thru crystal in microns – scan 40/25/10/5/2
+  length_um=${LENGTH}
 }
 detector {
   tiles=multipanel
