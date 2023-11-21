@@ -160,13 +160,13 @@ def main(parameters) -> None:
     x_df = split_tuple_columns(x_df)
     if (x_key := parameters.x.key) not in x_df:
         x_df[x_key] = x_df.eval(x_key)
-    x = pd.Series(x_df[x_key], name=px + ': ' + x_key)
+    x = pd.Series(x_df[x_key], name=stage1_path_x + ': ' + x_key)
     y_df = read_pickled_dataframes(stage1_path_y)
     y_df = calculate_n_cells_dist(y_df)
     y_df = split_tuple_columns(y_df)
     if (y_key := parameters.y.key) not in y_df:
         y_df[y_key] = y_df.eval(y_key)
-    y = pd.Series(y_df[x_key], name=py + ': ' + y_key)
+    y = pd.Series(y_df[y_key], name=stage1_path_y + ': ' + y_key)
     plot_heatmap(x, y)
 
 
