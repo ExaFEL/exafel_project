@@ -71,7 +71,6 @@ outdir=.
 $SRUN diffBragg.integrate pred.phil predict_stage1_kokkos.phil \
     ${HOPPER_RESULTS} $outdir \
     --cmdlinePhil oversample_override=1 \
-    predictions.threshold=1 label_weak_col=rlp \ 
+    predictions.threshold=1 label_weak_col=rlp \
     --numdev $DEVICES_PER_NODE --scanWeakFracs
 echo "jobend $(date)";pwd
-
