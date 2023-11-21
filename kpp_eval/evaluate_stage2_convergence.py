@@ -18,6 +18,7 @@ import iotbx.mtz
 import iotbx.pdb
 from libtbx import Auto
 from simtbx.diffBragg.utils import get_complex_fcalc_from_pdb
+from iotbx.reflection_file_reader import any_reflection_file
 
 from exafel_project.kpp_eval.phil import parse_phil
 from exafel_project.kpp_eval.util import set_default_return
@@ -39,6 +40,9 @@ stage2 = None
   .type = str
   .help = Directory with stage 2 results. If None,
   .help = use $WORK/exafel_output/$JOB_ID_STAGE2
+is_ens_hopper = False
+  .type = bool
+  .help = Whether the stage2 folder is from ens.hopper, or the original stage2_refiner (default)
 stat = *PearsonR_F PearsonR_anom cc_F cc_anom Rwork_F Rwork_anom significance_F significance_anom
   .type = choice(multi=False)
   .help = The type of statistic to be calculated
@@ -96,7 +100,6 @@ def expand_integer_ranges(ranges_str: str) -> List[int]:
       else:
         raise IndexError(f'Unknown range string format: "{range_str}"')
   return indices
-
 
 def read_npz(npz_path: str,
              f_asu_map: dict,
@@ -257,21 +260,34 @@ def run(parameters) -> None:
   stats_binned_steps = [stat_binned]
 
   # iterate over and evaluate all npz files present
-  f_asu_map = np.load(input_path + '/f_asu_map.npy', allow_pickle=True)[()]
-  all_iter_npz = len(glob.glob(input_path + '/_fcell_trial0_iter*.npz'))
-  for num_iter in range(0,all_iter_npz,params.stride):
-    npz_file = f'{input_path}/_fcell_trial0_iter{num_iter}.npz'
-    print(npz_file)
-    ma = read_npz(npz_file, f_asu_map, symmetry, save_mtz=True)
+  if params.is_ens_hopper:
+    all_mtz_files =glob.glob(input_path + '/optimized_channel0_iter*.mtz')
+    get_iter = lambda x: int(x.split("channel0_iter")[1].split(".mtz")[0])
+    all_mtz_files = sorted(all_mtz_files, key=get_iter)
+    all_iters = len(all_mtz_files)
+  else:
+    f_asu_map = np.load(input_path + '/f_asu_map.npy', allow_pickle=True)[()]
+    all_iters = len(glob.glob(input_path + '/_fcell_trial0_iter*.npz'))
+  for num_iter in range(0,all_iters,params.stride):
+    if params.is_ens_hopper:
+      mtz_file = all_mtz_files[num_iter]
+      print(mtz_file)
+      ma = any_reflection_file(mtz_file).as_miller_arrays()[0]
+    else:
+      npz_file = f'{input_path}/_fcell_trial0_iter{num_iter}.npz'
+      print(npz_file)
+      ma = read_npz(npz_file, f_asu_map, symmetry, save_mtz=True)
+
     if stat.input is StatInput.ANOM:
       ma = ma.anomalous_differences()
+
     scatter_id = f'diffBragg{num_iter}' if num_iter in scatter_idx else None
     stat_binned = evaluate_iteration(ma, ma_gt, ma_ref, stat, scatter_id)
     stats_binned_steps.append(stat_binned)
   stats_dataframe = pd.concat(stats_binned_steps, axis=1)
 
   # Plot stat as a function of iteration
-  indices = [-1] + list(range(0,all_iter_npz, params.stride))
+  indices = [-1] + list(range(0,all_iters, params.stride))
   plt.close("all")  # remove all previously generated figures from memory
   fig, axes = plt.subplots()
   for bin_i, (bin_range, stats_row) in enumerate(stats_dataframe.iterrows()):

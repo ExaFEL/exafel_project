@@ -8,14 +8,13 @@ export MTZ_OLD=${H5_SIM_PATH}/merge/out/ly99sim_all.mtz
 export MTZ=${H5_SIM_PATH}/merge/out/ly99sim_all.COMPLETE.mtz
 diffBragg.completeF $MTZ_OLD $MTZ
 
-export SCRATCH_FOLDER=${H5_SIM_PATH}/ensHopper_t1
+export SCRATCH_FOLDER=${H5_SIM_PATH}/ensHopper
 mkdir -p "$SCRATCH_FOLDER"; cd "$SCRATCH_FOLDER" || exit
 
 export ADD_BACKGROUND_ALGORITHM=cuda
 export DEVICES_PER_NODE=4
 
 export DIFFBRAGG_USE_KOKKOS=1
-#export DIFFBRAGG_USE_CUDA=1
 export CCTBX_NO_UUID=1
 export CUDA_LAUNCH_BLOCKING=1
 export NUMEXPR_MAX_THREADS=64
@@ -69,7 +68,7 @@ $SRUN ens.hopper $PANDA $PHIL --outdir . \
   simulator.structure_factors.mtz_name="${MTZ}" \
   simulator.structure_factors.mtz_column="F(+),F(-)" \
   --refl predictions_77perc \
-  --saveAll --saveFreq 10
+  --saveFreq 10
 
 echo "jobend $(date)";pwd
 
