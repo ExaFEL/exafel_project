@@ -63,11 +63,11 @@ fix {
 }
 
 sigmas {
-  ucell = .1 .1
-  RotXYZ = 0.01 0.01 0.01
+  ucell = 1 1
+  RotXYZ = 1e-3 1e-3 1e-3
   G = 1
   Nabc = 1 1 1
-  eta_abc = 0.1 0.1 0.1
+  eta_abc = 1 1 1
 }
 
 init {
@@ -86,8 +86,9 @@ refiner {
 
 simulator {
   oversample = 1
+  crystal.has_isotropic_mosaicity = True
   crystal.has_isotropic_ncells = False
-  crystal.num_mosaicity_samples = 24
+  crystal.num_mosaicity_samples = 6
   structure_factors {
     mtz_column = 'Iobs(+),SIGIobs(+),Iobs(-),SIGIobs(-)'
   }
@@ -104,6 +105,7 @@ mins {
   RotXYZ = -15 -15 -15
 }
 maxs {
+  eta_abc = 10 10 10
   detz_shift = 1.5
   Nabc = 1600 1600 1600
   RotXYZ = 15 15 15
