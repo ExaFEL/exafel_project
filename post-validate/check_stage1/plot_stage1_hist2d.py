@@ -6,6 +6,7 @@ from collections import deque
 import glob
 from itertools import islice
 
+from matplotlib.patches import Patch
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -48,7 +49,7 @@ y {
     .help = If None, `stage1` from the outer scope will be used.
   }
 r {
-  key = ncells0-ncells_init0
+  key = (ncells0-ncells_init0)/ncells_init0
     .type = str
     .help = Key of the pandas stage 1 results table that should be visualized
     .help = as the brightness of red color.
@@ -59,7 +60,7 @@ r {
     .help = If None, `stage1` from the outer scope will be used.
   }
 g {
-  key = ncells1-ncells_init1
+  key = (ncells1-ncells_init1)/ncells_init1
     .type = str
     .help = Key of the pandas stage 1 results table that should be visualized
     .help = as the brightness of green color.
@@ -70,7 +71,7 @@ g {
     .help = If None, `stage1` from the outer scope will be used.
   }
 b {
-  key = ncells2-ncells_init2
+  key = (ncells2-ncells_init2)/ncells_init2
     .type = str
     .help = Key of the pandas stage 1 results table that should be visualized
     .help = as the brightness of blue color.
@@ -134,6 +135,15 @@ def split_tuple_columns(df: Stage1Results):
     return df
 
 
+def normalize_array(a: np.ndarray) -> np.ndarray:
+    """Return an array normalized to 0-1 range; preserve boolean values"""
+    if np.issubdtype(a.dtype, bool):
+        return a.astype(float)
+    else:
+        lim = (mn, mx) if (mn := min(a)) < (mx := max(a)) else (mn, mn + 1e-10)
+        return (a - lim[0]) / (lim[1] - lim[0])
+
+
 def normalize_colors(
         r: Sequence = None,
         g: Sequence = None,
@@ -146,19 +156,12 @@ def normalize_colors(
     b_full = np.array([0.0, 0.0, 0.9])
     b_null = np.array([0.0, 0.0, 0.1])
     l = [len(v) for v in (r, g, b) if v is not None][0]
-    r = r if r is not None else np.zeros(l, dtype=float)
-    g = g if g is not None else np.zeros(l, dtype=float)
-    b = b if b is not None else np.zeros(l, dtype=float)
-    ep = 1e-10
-    r_lim = (mn, mx) if (mn := min(r)) < (mx := max(r)) else (mn, mn + ep)
-    g_lim = (mn, mx) if (mn := min(g)) < (mx := max(g)) else (mn, mn + ep)
-    b_lim = (mn, mx) if (mn := min(b)) < (mx := max(b)) else (mn, mn + ep)
-    r_01 = (r - r_lim[0]) / (r_lim[1] - r_lim[0])
-    g_01 = (g - g_lim[0]) / (g_lim[1] - g_lim[0])
-    b_01 = (b - b_lim[0]) / (b_lim[1] - b_lim[0])
-    c = (np.outer(r_full, r_01) + np.outer(r_null, 1 - r_01) +
-         np.outer(g_full, g_01) + np.outer(g_null, 1 - g_01) +
-         np.outer(b_full, b_01) + np.outer(b_null, 1 - b_01)) / 1.0
+    r_norm = normalize_array(r) if r is not None else np.zeros(l, dtype=float)
+    g_norm = normalize_array(g) if g is not None else np.zeros(l, dtype=float)
+    b_norm = normalize_array(b) if b is not None else np.zeros(l, dtype=float)
+    c = (np.outer(r_full, r_norm) + np.outer(r_null, 1 - r_norm) +
+         np.outer(g_full, g_norm) + np.outer(g_null, 1 - g_norm) +
+         np.outer(b_full, b_norm) + np.outer(b_null, 1 - b_norm)) / 1.0
     return c.T
 
 
@@ -169,18 +172,16 @@ def plot_heatmap(x: pd.Series,
                  b: pd.Series = None,
                  bins: int = None) -> Stage1Results:
     # TODO: Allow log-scale, allow individual rgb colors via r, g, b parameters
-    assert_same_length([k for k in (x, y, r, g, b) if k is not None])
-    print(x.describe())
-    print(y.describe())
+    series = [k for k in (x, y, r, g, b) if k is not None]
+    assert_same_length(series)
+    print(pd.concat([s.describe() for s in series], axis=1))
     x_name = x.name
     y_name = y.name
-    r_name = r.name if r is not None else ''
-    g_name = g.name if g is not None else ''
-    b_name = b.name if b is not None else ''
+    color_names = [col.name if col is not None else '' for col in (r, g, b)]
     x = np.array(x)
     y = np.array(y)
     r = r if any(k is not None for k in (r, g, b)) else np.zeros_like(x)
-    c = normalize_colors(r, b, g)
+    c = normalize_colors(r, g, b)
     bins = bins if bins else int(np.log2(len(x)))
     x_bins = np.linspace(min(x), max(x), num=bins+1)
     y_bins = np.linspace(min(y), max(y), num=bins+1)
@@ -211,6 +212,8 @@ def plot_heatmap(x: pd.Series,
     axh.set_ylabel(y_name)
     axh.set_xlim(min(x), max(x))
     axh.set_ylim(min(y), max(y))
+    axh.legend(handles=[Patch(color=color, label=label) for color, label
+                        in zip('rgb', color_names) if color is not None])
     x_hist = axx.hist(x, bins=x_bins, orientation='vertical')
     for bar, x_color in zip(x_hist[2], x_colors):
         bar.set_facecolor(x_color)
@@ -221,9 +224,6 @@ def plot_heatmap(x: pd.Series,
     ab = np.polyfit(x, y, deg=1)
     r = np.corrcoef(x, y)[0, 1]
     axn_text = f'a = {ab[0]:.2e}\nb = {ab[1]:.2e}\nR = {r:+6.4f}'
-    axn_text += f'\nred: {r_name}' if r_name else ''
-    axn_text += f'\ngreen: {g_name}' if g_name else ''
-    axn_text += f'\nblue: {b_name}' if b_name else ''
     axn.annotate(axn_text, xy=(.5, .5), xycoords='axes fraction',
                  ha='center', va='center')
     plt.show()
