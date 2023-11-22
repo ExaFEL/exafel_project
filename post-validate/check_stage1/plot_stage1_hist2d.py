@@ -85,6 +85,9 @@ b {
 
 T = TypeVar('T')
 Stage1Results = pd.DataFrame
+pd.set_option('display.max_columns', None)
+pd.set_option('display.max_rows', None)
+pd.set_option('display.width', None)
 
 
 def sliding_pairs(sequence: Sequence[T]) -> Generator[Tuple[T], None, None]:
