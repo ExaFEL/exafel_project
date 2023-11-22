@@ -26,7 +26,7 @@ x {
     .help = 'Amats[0-8]', 'a', 'a_init', 'al', 'al_init',
     .help = 'b', 'b_init', 'be', 'be_init', 'beamsize_mm', 'c', 'c_init',
     .help = 'detz_shift_mm', 'diffuse_sigma[0-2]', 'eta', 'eta_abc[0-2]',
-    .help = 'eta', 'exp_idx', 'fp_fdp_shift', 'ga', 'ga_init', 'lam0', 'lam1',
+    .help = 'exp_idx', 'fp_fdp_shift', 'ga', 'ga_init', 'lam0', 'lam1',
     .help = 'ncells[0-2]', 'ncells_def[0-2]', 'ncells_init[0-2]', 'niter', 
     .help = 'osc_deg', 'oversample', 'phi_deg', 'rotX', 'rotY', 'rotZ', 'sigz',
     .help = 'spot_scales', 'spot_scales_init', 'total_flux', and 'ncells_dist',
@@ -41,10 +41,43 @@ y {
     .type = str
     .help = Key of the pandas stage 1 results table that should be visualized
     .help = along the y axis.
-    .help = For a list of avaliable keys, refer to `x.key`'s help string.
+    .help = For a list of available keys, refer to `x.key`'s help string.
   stage1 = None
     .type = str
     .help = Directory with stage 1 results to be used for y axis.
+    .help = If None, `stage1` from the outer scope will be used.
+  }
+r {
+  key = ncells0-ncells_init0
+    .type = str
+    .help = Key of the pandas stage 1 results table that should be visualized
+    .help = as the brightness of red color.
+    .help = For a list of available keys, refer to `x.key`'s help string.
+  stage1 = None
+    .type = str
+    .help = Directory with stage 1 results to be used for red coloring.
+    .help = If None, `stage1` from the outer scope will be used.
+  }
+g {
+  key = ncells1-ncells_init1
+    .type = str
+    .help = Key of the pandas stage 1 results table that should be visualized
+    .help = as the brightness of green color.
+    .help = For a list of available keys, refer to `x.key`'s help string.
+  stage1 = None
+    .type = str
+    .help = Directory with stage 1 results to be used for green coloring.
+    .help = If None, `stage1` from the outer scope will be used.
+  }
+b {
+  key = ncells2-ncells_init2
+    .type = str
+    .help = Key of the pandas stage 1 results table that should be visualized
+    .help = as the brightness of blue color.
+    .help = For a list of available keys, refer to `x.key`'s help string.
+  stage1 = None
+    .type = str
+    .help = Directory with stage 1 results to be used for blue coloring.
     .help = If None, `stage1` from the outer scope will be used.
   }
 """
@@ -100,17 +133,54 @@ def split_tuple_columns(df: Stage1Results):
         df[split_keys] = pd.DataFrame(df[sk].tolist(), index=df.index)
     return df
 
+
+def normalize_colors(
+        r: Sequence = None,
+        g: Sequence = None,
+        b: Sequence = None,
+        ) -> Tuple[Sequence, Sequence, Sequence]:
+    r_full = np.array([0.9, 0.0, 0.0])
+    r_null = np.array([0.1, 0.0, 0.0])
+    g_full = np.array([0.0, 0.9, 0.0])
+    g_null = np.array([0.0, 0.1, 0.0])
+    b_full = np.array([0.0, 0.0, 0.9])
+    b_null = np.array([0.0, 0.0, 0.1])
+    l = [len(v) for v in (r, g, b) if v is not None][0]
+    r = r if r is not None else np.zeros(l, dtype=float)
+    g = g if g is not None else np.zeros(l, dtype=float)
+    b = b if b is not None else np.zeros(l, dtype=float)
+    ep = 1e-10
+    r_lim = (mn, mx) if (mn := min(r)) < (mx := max(r)) else (mn, mn + ep)
+    g_lim = (mn, mx) if (mn := min(g)) < (mx := max(g)) else (mn, mn + ep)
+    b_lim = (mn, mx) if (mn := min(b)) < (mx := max(b)) else (mn, mn + ep)
+    r_01 = (r - r_lim[0]) / (r_lim[1] - r_lim[0])
+    g_01 = (g - g_lim[0]) / (g_lim[1] - g_lim[0])
+    b_01 = (b - b_lim[0]) / (b_lim[1] - b_lim[0])
+    c = (np.outer(r_full, r_01) + np.outer(r_null, 1 - r_01) +
+         np.outer(g_full, g_01) + np.outer(g_null, 1 - g_01) +
+         np.outer(b_full, b_01) + np.outer(b_null, 1 - b_01)) / 1.0
+    return c.T
+
+
 def plot_heatmap(x: pd.Series,
                  y: pd.Series,
+                 r: pd.Series = None,
+                 g: pd.Series = None,
+                 b: pd.Series = None,
                  bins: int = None) -> Stage1Results:
     # TODO: Allow log-scale, allow individual rgb colors via r, g, b parameters
-    assert_same_length(x, y)
+    assert_same_length([k for k in (x, y, r, g, b) if k is not None])
     print(x.describe())
     print(y.describe())
     x_name = x.name
     y_name = y.name
+    r_name = r.name if r is not None else ''
+    g_name = g.name if g is not None else ''
+    b_name = b.name if b is not None else ''
     x = np.array(x)
     y = np.array(y)
+    r = r if any(k is not None for k in (r, g, b)) else np.zeros_like(x)
+    c = normalize_colors(r, b, g)
     bins = bins if bins else int(np.log2(len(x)))
     x_bins = np.linspace(min(x), max(x), num=bins+1)
     y_bins = np.linspace(min(y), max(y), num=bins+1)
@@ -126,48 +196,59 @@ def plot_heatmap(x: pd.Series,
     for x_i in range(bins):
         for y_i in range(bins):
             heat[x_i, y_i] = sum((x_bin == x_i) & (y_bin == y_i))
+    x_colors = [np.mean(c[x_bin == x_i], axis=0) for x_i in range(bins)]
+    y_colors = [np.mean(c[y_bin == y_i], axis=0) for y_i in range(bins)]
 
     fig, ((axx, axn), (axh, axy)) = plt.subplots(2, 2, sharex='col',
         sharey='row', width_ratios=[2, 1], height_ratios=[1, 2])
     plt.subplots_adjust(wspace=0, hspace=0)
-    purple = plt.get_cmap('Purples')(1.0)
 
-    axh_extent = (x_bins[0], x_bins[-1], y_bins[0], y_bins[-1])
-    axh.imshow(heat.T, cmap="Purples", extent=axh_extent, origin='lower')
-    axh.axvline(x=x.mean(), color=purple)
-    axh.axhline(y=y.mean(), color=purple)
+    axh.axvline(x=x.mean(), color='k')
+    axh.axhline(y=y.mean(), color='k')
     axh.set_aspect('auto')
-    axh.scatter(x=x, y=y, color='#008000', s=10)
+    axh.scatter(x=x, y=y, c=c, s=10)
     axh.set_xlabel(x_name)
     axh.set_ylabel(y_name)
-    axx.hist(x, bins=x_bins, color=purple, orientation='vertical')
-    axy.hist(y, bins=y_bins, color=purple, orientation='horizontal')
+    axh.set_xlim(min(x), max(x))
+    axh.set_ylim(min(y), max(y))
+    x_hist = axx.hist(x, bins=x_bins, orientation='vertical')
+    for bar, x_color in zip(x_hist[2], x_colors):
+        bar.set_facecolor(x_color)
+    y_hist = axy.hist(y, bins=y_bins, orientation='horizontal')
+    for bar, y_color in zip(y_hist[2], y_colors):
+        bar.set_facecolor(y_color)
     axn.axis('off')
     ab = np.polyfit(x, y, deg=1)
     r = np.corrcoef(x, y)[0, 1]
     axn_text = f'a = {ab[0]:.2e}\nb = {ab[1]:.2e}\nR = {r:+6.4f}'
+    axn_text += f'\nred: {r_name}' if r_name else ''
+    axn_text += f'\ngreen: {g_name}' if g_name else ''
+    axn_text += f'\nblue: {b_name}' if b_name else ''
     axn.annotate(axn_text, xy=(.5, .5), xycoords='axes fraction',
                  ha='center', va='center')
     plt.show()
 
 
+def prepare_series(parameters, default_path: str) -> pd.DataFrame:
+    if parameters.key is None:
+        return None
+    path = p if (p := parameters.stage1) else default_path
+    df = read_pickled_dataframes(path)
+    df = calculate_n_cells_dist(df)
+    df = split_tuple_columns(df)
+    if (key := parameters.key) not in df:
+        df[key] = df.eval(key)
+    return pd.Series(df[key], name=path + ': ' + key)
+
+
 def main(parameters) -> None:
     stage1_path = p if (p := parameters.stage1) else '.'
-    stage1_path_x = px if (px := parameters.x.stage1) else stage1_path
-    stage1_path_y = py if (py := parameters.y.stage1) else stage1_path
-    x_df = read_pickled_dataframes(stage1_path_x)
-    x_df = calculate_n_cells_dist(x_df)
-    x_df = split_tuple_columns(x_df)
-    if (x_key := parameters.x.key) not in x_df:
-        x_df[x_key] = x_df.eval(x_key)
-    x = pd.Series(x_df[x_key], name=stage1_path_x + ': ' + x_key)
-    y_df = read_pickled_dataframes(stage1_path_y)
-    y_df = calculate_n_cells_dist(y_df)
-    y_df = split_tuple_columns(y_df)
-    if (y_key := parameters.y.key) not in y_df:
-        y_df[y_key] = y_df.eval(y_key)
-    y = pd.Series(y_df[y_key], name=stage1_path_y + ': ' + y_key)
-    plot_heatmap(x, y)
+    x = prepare_series(parameters.x, stage1_path)
+    y = prepare_series(parameters.y, stage1_path)
+    r = prepare_series(parameters.r, stage1_path)
+    g = prepare_series(parameters.g, stage1_path)
+    b = prepare_series(parameters.b, stage1_path)
+    plot_heatmap(x, y, r, g, b)
 
 
 params = []
