@@ -18,7 +18,10 @@ export SCRATCH_FOLDER=$SCRATCH/cytochrome/$SLURM_JOB_ID
 mkdir -p "$SCRATCH_FOLDER"; cd "$SCRATCH_FOLDER" || exit
 
 export MTZ_PATH=$SCRATCH/cytochrome/${1}/out/ly99sim_all.mtz
-export SPEC_PATH=$SCRATCH/cytochrome/${2}_integ_exp_ref.txt
+export MTZ_PATH=$SCRATCH/cytochrome/${2}/out/ly99sim_all.mtz
+export SPEC_PATH=$SCRATCH/cytochrome/${3}_integ_exp_ref.txt
+N_FIRST_PASS=8192
+OUTDIR=unrestrained
 
 export CCTBX_DEVICE_PER_NODE=4
 export N_START=0
@@ -41,6 +44,7 @@ env > env.out
 
 echo "
 symmetrize_Flatt = True
+lbfgs_maxiter = 1500
 spectrum_from_imageset = True
 method = 'L-BFGS-B'
 outdir = 'stage1'
@@ -56,22 +60,23 @@ roi {
 }
 
 fix {
+  eta_abc = False
   detz_shift = True
   ucell=False
   Nabc=False
   G=False
   RotXYZ=False
 }
-
+use_restraints = False
 sigmas {
-  ucell = .1 .1
+  ucell = 1 1
   RotXYZ = 0.01 0.01 0.01
   G = 1
   Nabc = 1 1 1
+  eta_abc = 1 1 1
 }
 
 init {
-  Nabc = 29 29 29
   G = 1e5
 }
 
@@ -80,12 +85,15 @@ refiner {
   verbose = 0
   sigma_r = 3
   adu_per_photon = 1
-  #reference_geom = '${MODULES}/exafel_project/kpp-sim/t000_rg002_chunk000_reintegrated_000000.expt'
 }
 
 simulator {
   oversample = 1
-  crystal.has_isotropic_ncells = False
+  crystal {
+    has_isotropic_ncells = False
+    has_isotropic_mosaicity = True
+    num_mosaicity_samples = 6
+  }
   structure_factors {
     mtz_column = 'Iobs(+),SIGIobs(+),Iobs(-),SIGIobs(-)'
   }
@@ -109,9 +117,9 @@ maxs {
 ucell_edge_perc = 15
 ucell_ang_abs = 1
 space_group = P6522
-use_restraints = False
 logging {
   rank0_level = low normal *high
+  parameters = True
 }
 downsamp_spec {
   skip = True
@@ -119,5 +127,13 @@ downsamp_spec {
 " > stage1.phil
 
 echo "jobstart $(date)";pwd
-$SRUN hopper stage1.phil structure_factors.mtz_name="$MTZ_PATH" exp_ref_spec_file="$SPEC_PATH"
+# read the stills process folder for domain size estimates, and append them to stage1.phil
+diffBragg.estimate_Ncells_Eta $INDEX_PATH --updatePhil stage1.phil --njobs 32
+# first run stage 1 to estimate parameter trends
+$SRUN hopper stage1.phil structure_factors.mtz_name="$MTZ_PATH" exp_ref_spec_file="$SPEC_PATH" max_process=${N_FIRST_PASS} outdir=$OUTDIR
+
+# use the results from the first stage 1 pass to estimate better initial conditions and averages
+NEW_PHIL=stage1_updated.phil
+diffBragg.update_stage1_phil $OUTDIR $NEW_PHIL
+$SRUN hopper $NEW_PHIL max_process=-1 outdir=stage1 filter_during_refinement.enable=True filter_after_refinement.enable=True
 echo "jobend $(date)";pwd
