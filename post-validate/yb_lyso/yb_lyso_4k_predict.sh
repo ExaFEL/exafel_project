@@ -88,7 +88,7 @@ $SRUN diffBragg.integrate pred.phil predict_stage1_kokkos.phil \
 $SCRATCH/yb_lyso/$JOB_ID_HOPPER/stage1 \
 predict \
 --cmdlinePhil oversample_override=1 \
-Nabc_override=[52,52,52] threshold=1 label_weak_col=rlp \
+Nabc_override=[52,52,52] predictions.threshold=1 label_weak_col=rlp \
 --numdev 4
 libtbx.python -c "import pandas; df = pandas.read_pickle('predict/preds_for_hopper.pkl'); print('pickled',len(df))"
 echo "jobend $(date)";pwd

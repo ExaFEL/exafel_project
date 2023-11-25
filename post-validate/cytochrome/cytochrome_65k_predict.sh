@@ -88,6 +88,6 @@ echo "jobstart $(date)";pwd
 $SRUN diffBragg.integrate pred.phil predict_stage1_kokkos.phil \
     "${HOPPER_RESULTS}" predict \
     --cmdlinePhil oversample_override=1 Nabc_override=[52,52,52] \
-    threshold=1 label_weak_col=rlp \
+    predictions.threshold=1 label_weak_col=rlp \
     --numdev $CCTBX_DEVICE_PER_NODE
 echo "jobend $(date)";pwd
