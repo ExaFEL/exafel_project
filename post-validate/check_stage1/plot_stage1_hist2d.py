@@ -1,7 +1,7 @@
 """
 Read stage 1 pandas table and draw desired contents as histogram or heatmap.
 """
-
+import copy
 from collections import deque
 import glob
 from itertools import islice
@@ -197,12 +197,14 @@ def plot_heatmap(x: pd.Series,
     b_is_log = b is not None and b.attrs.get('log_scale', False)
     are_log = (x_is_log, y_is_log, r_is_log, g_is_log, b_is_log)
 
-    series = {k: v for k, v in zip('xyrgb', [x, y, r, g, b]) if v is not None}
+    series = {k: copy.deepcopy(v) for k, v in zip('xyrgb', [x, y, r, g, b])
+              if v is not None}
     assert_same_length(series.values())
     for (sk, sv), ls in zip(series.items(), are_log):
         print(f'{sk}: "{sv.name}"' + f' (log)' * int(ls))
         sv.name = sk
     print(pd.concat([s.describe() for s in series.values()], axis=1))
+
     x_name = x.name
     y_name = y.name
     color_names = [col.name if col is not None else '' for col in (r, g, b)]
