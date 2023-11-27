@@ -192,9 +192,9 @@ def plot_heatmap(x: pd.Series,
     # TODO: Allow log-scale, allow individual rgb colors via r, g, b parameters
     series = {k: v for k, v in zip('xyrgb', [x, y, r, g, b]) if v is not None}
     assert_same_length(series.values())
-    for series_key, series_value in series.items():
-        print(series_key + ': ' + series_value.name)
-        series_value.name = series_key
+    for sk, sv in series.items():
+        print(f'{sk}: "{sv.name}"' + f' (log)' * int(sv.attrs['log_scale']))
+        sv.name = sk
     print(pd.concat([s.describe() for s in series.values()], axis=1))
     x_name = x.name
     y_name = y.name
@@ -202,9 +202,9 @@ def plot_heatmap(x: pd.Series,
     xa = np.array(x)
     ya = np.array(y)
     r = r if any(k is not None for k in (r, g, b)) else np.zeros_like(xa)
-    r = np.log10(r) if r is not None and r.attrs['log_space'] else r
-    g = np.log10(g) if g is not None and g.attrs['log_space'] else g
-    b = np.log10(b) if b is not None and b.attrs['log_space'] else b
+    r = np.log10(r) if r is not None and r.attrs.get('log_space', False) else r
+    g = np.log10(g) if g is not None and g.attrs.get('log_space', False) else g
+    b = np.log10(b) if b is not None and b.attrs.get('log_space', False) else b
     c = normalize_colors(r, g, b)
     bins = bins if bins else int(np.log2(len(x)))
     x_space = np.linspace if x.attrs['log_space'] else np.logspace
