@@ -175,8 +175,11 @@ def plot_heatmap(x: pd.Series,
                  b: pd.Series = None,
                  bins: int = None) -> Stage1Results:
     # TODO: Allow log-scale, allow individual rgb colors via r, g, b parameters
-    series = [k for k in (x, y, r, g, b) if k is not None]
-    assert_same_length(series)
+    series = {k: v for k, v in zip('xyrgb', [x, y, r, g, b]) if v is not None}
+    assert_same_length(series.values())
+    for series_key, series_value in series:
+        print(series_key + ': ' + series_value.name)
+        series_value.name = series_key
     print(pd.concat([s.describe() for s in series], axis=1))
     x_name = x.name
     y_name = y.name
