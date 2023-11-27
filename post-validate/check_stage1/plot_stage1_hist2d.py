@@ -32,6 +32,9 @@ x {
     .help = 'osc_deg', 'oversample', 'phi_deg', 'rotX', 'rotY', 'rotZ', 'sigz',
     .help = 'spot_scales', 'spot_scales_init', 'total_flux', and 'ncells_dist',
     .help = as well as their arithmetic combinations, i.e. 'ncells2 - ncells0'.
+  log_scale = False
+    .type = bool
+    .help = If true, make the x axis log-scale on the produced plot
   stage1 = None
     .type = str
     .help = Directory with stage 1 results to be used for x axis.
@@ -43,6 +46,9 @@ y {
     .help = Key of the pandas stage 1 results table that should be visualized
     .help = along the y axis.
     .help = For a list of available keys, refer to `x.key`'s help string.
+  log_scale = False
+    .type = bool
+    .help = If true, make the y axis log-scale on the produced plot
   stage1 = None
     .type = str
     .help = Directory with stage 1 results to be used for y axis.
@@ -54,6 +60,9 @@ r {
     .help = Key of the pandas stage 1 results table that should be visualized
     .help = as the brightness of red color.
     .help = For a list of available keys, refer to `x.key`'s help string.
+  log_scale = False
+    .type = bool
+    .help = If true, make the color scale with value's log on the produced plot
   stage1 = None
     .type = str
     .help = Directory with stage 1 results to be used for red coloring.
@@ -65,6 +74,9 @@ g {
     .help = Key of the pandas stage 1 results table that should be visualized
     .help = as the brightness of green color.
     .help = For a list of available keys, refer to `x.key`'s help string.
+  log_scale = False
+    .type = bool
+    .help = If true, make the color scale with value's log on the produced plot
   stage1 = None
     .type = str
     .help = Directory with stage 1 results to be used for green coloring.
@@ -76,6 +88,9 @@ b {
     .help = Key of the pandas stage 1 results table that should be visualized
     .help = as the brightness of blue color.
     .help = For a list of available keys, refer to `x.key`'s help string.
+  log_scale = False
+    .type = bool
+    .help = If true, make the color scale with value's log on the produced plot
   stage1 = None
     .type = str
     .help = Directory with stage 1 results to be used for blue coloring.
@@ -184,16 +199,21 @@ def plot_heatmap(x: pd.Series,
     x_name = x.name
     y_name = y.name
     color_names = [col.name if col is not None else '' for col in (r, g, b)]
-    x = np.array(x)
-    y = np.array(y)
-    r = r if any(k is not None for k in (r, g, b)) else np.zeros_like(x)
+    xa = np.array(x)
+    ya = np.array(y)
+    r = r if any(k is not None for k in (r, g, b)) else np.zeros_like(xa)
+    r = np.log10(r) if r is not None and r.attrs['log_space'] else r
+    g = np.log10(g) if g is not None and g.attrs['log_space'] else g
+    b = np.log10(b) if b is not None and b.attrs['log_space'] else b
     c = normalize_colors(r, g, b)
     bins = bins if bins else int(np.log2(len(x)))
-    x_bins = np.linspace(min(x), max(x), num=bins+1)
-    y_bins = np.linspace(min(y), max(y), num=bins+1)
+    x_space = np.linspace if x.attrs['log_space'] else np.logspace
+    y_space = np.linspace if y.attrs['log_space'] else np.logspace
+    x_bins = x_space(min(xa), max(xa), num=bins+1)
+    y_bins = y_space(min(ya), max(ya), num=bins+1)
     heat = np.zeros(shape=(bins, bins), dtype=int)
-    x_bin = np.zeros(len(x), dtype=int)
-    y_bin = np.zeros(len(y), dtype=int)
+    x_bin = np.zeros(len(xa), dtype=int)
+    y_bin = np.zeros(len(ya), dtype=int)
 
     for x_bin_max in x_bins[1:-1]:
         x_bin += x > x_bin_max
@@ -210,25 +230,28 @@ def plot_heatmap(x: pd.Series,
         sharey='row', width_ratios=[2, 1], height_ratios=[1, 2])
     plt.subplots_adjust(wspace=0, hspace=0)
 
-    axh.axvline(x=x.mean(), color='k')
-    axh.axhline(y=y.mean(), color='k')
+    axh.axvline(x=xa.mean(), color='k')
+    axh.axhline(y=ya.mean(), color='k')
     axh.set_aspect('auto')
-    axh.scatter(x=x, y=y, c=c, s=10)
+    axh.scatter(x=xa, y=ya, c=c, s=10)
     axh.set_xlabel(x_name)
     axh.set_ylabel(y_name)
-    axh.set_xlim(min(x), max(x))
-    axh.set_ylim(min(y), max(y))
+    axh.set_xlim(min(xa), max(xa))
+    axh.set_ylim(min(ya), max(ya))
+    axh.set_xscale('log' if x.attrs['log_scale'] else 'linear')
+    axh.set_yscale('log' if y.attrs['log_scale'] else 'linear')
+
     axh.legend(handles=[Patch(color=color, label=label) for color, label
                         in zip('rgb', color_names) if color is not None])
-    x_hist = axx.hist(x, bins=x_bins, orientation='vertical')
+    x_hist = axx.hist(xa, bins=x_bins, orientation='vertical')
     for bar, x_color in zip(x_hist[2], x_colors):
         bar.set_facecolor(x_color)
-    y_hist = axy.hist(y, bins=y_bins, orientation='horizontal')
+    y_hist = axy.hist(ya, bins=y_bins, orientation='horizontal')
     for bar, y_color in zip(y_hist[2], y_colors):
         bar.set_facecolor(y_color)
     axn.axis('off')
-    ab = np.polyfit(x, y, deg=1)
-    r = np.corrcoef(x, y)[0, 1]
+    ab = np.polyfit(xa, ya, deg=1)
+    r = np.corrcoef(xa, ya)[0, 1]
     axn_text = f'a = {ab[0]:.2e}\nb = {ab[1]:.2e}\nR = {r:+6.4f}'
     axn.annotate(axn_text, xy=(.5, .5), xycoords='axes fraction',
                  ha='center', va='center')
@@ -244,6 +267,7 @@ def prepare_series(parameters, default_path: str) -> pd.DataFrame:
     df = split_tuple_columns(df)
     if (key := parameters.key) not in df:
         df[key] = df.eval(key)
+    df.attrs['log_scale'] = parameters.logscale
     return pd.Series(df[key], name=path + ': ' + key)
 
 
