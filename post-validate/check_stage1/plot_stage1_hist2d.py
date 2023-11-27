@@ -190,11 +190,11 @@ def plot_heatmap(x: pd.Series,
                  b: pd.Series = None,
                  bins: int = None) -> Stage1Results:
     # TODO: Allow log-scale, allow individual rgb colors via r, g, b parameters
-    x_is_log = x is not None and x.attrs.get('log_scale')
-    y_is_log = y is not None and y.attrs.get('log_scale')
-    r_is_log = r is not None and r.attrs.get('log_scale')
-    g_is_log = g is not None and g.attrs.get('log_scale')
-    b_is_log = b is not None and b.attrs.get('log_scale')
+    x_is_log = x is not None and x.attrs.get('log_scale', False)
+    y_is_log = y is not None and y.attrs.get('log_scale', False)
+    r_is_log = r is not None and r.attrs.get('log_scale', False)
+    g_is_log = g is not None and g.attrs.get('log_scale', False)
+    b_is_log = b is not None and b.attrs.get('log_scale', False)
     are_log = (x_is_log, y_is_log, r_is_log, g_is_log, b_is_log)
 
     series = {k: v for k, v in zip('xyrgb', [x, y, r, g, b]) if v is not None}
