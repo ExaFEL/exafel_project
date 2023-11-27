@@ -214,10 +214,12 @@ def plot_heatmap(x: pd.Series,
     b = np.log10(b) if b_is_log else b
     c = normalize_colors(r, g, b)
     bins = bins if bins else int(np.log2(len(x)))
-    x_space = np.linspace if x_is_log else np.logspace
-    y_space = np.linspace if y_is_log else np.logspace
+    x_space = np.geomspace if x_is_log else np.linspace
+    y_space = np.geomspace if y_is_log else np.linspace
     x_bins = x_space(min(xa), max(xa), num=bins+1)
     y_bins = y_space(min(ya), max(ya), num=bins+1)
+    print(x_bins)
+    print(y_bins)
     heat = np.zeros(shape=(bins, bins), dtype=int)
     x_bin = np.zeros(len(xa), dtype=int)
     y_bin = np.zeros(len(ya), dtype=int)
@@ -274,8 +276,9 @@ def prepare_series(parameters, default_path: str) -> pd.DataFrame:
     df = split_tuple_columns(df)
     if (key := parameters.key) not in df:
         df[key] = df.eval(key)
-    df.attrs['log_scale'] = parameters.log_scale
-    return pd.Series(df[key], name=path + ': ' + key)
+    series = pd.Series(df[key], name=path + ': ' + key)
+    series.attrs['log_scale'] = parameters.log_scale
+    return series
 
 
 def main(parameters) -> None:
