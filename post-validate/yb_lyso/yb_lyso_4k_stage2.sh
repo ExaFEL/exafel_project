@@ -99,6 +99,5 @@ echo "jobstart $(date)";pwd
 $SRUN simtbx.diffBragg.stage_two stage_two.phil \
 io.output_dir=${SLURM_JOB_ID} \
 pandas_table=${PANDA} num_devices=$PERL_NDEV \
-simulator.structure_factors.mtz_name=${SCRATCH}/yb_lyso/${JOB_ID_MERGE}/out/ly99sim_all.mtz \
-
+simulator.structure_factors.mtz_name=${SCRATCH}/yb_lyso/${JOB_ID_MERGE}/out/ly99sim_all.mtz
 echo "jobend $(date)";pwd
