@@ -220,8 +220,6 @@ def plot_heatmap(x: pd.Series,
     y_space = np.geomspace if y_is_log else np.linspace
     x_bins = x_space(min(xa), max(xa), num=bins+1)
     y_bins = y_space(min(ya), max(ya), num=bins+1)
-    print(x_bins)
-    print(y_bins)
     heat = np.zeros(shape=(bins, bins), dtype=int)
     x_bin = np.zeros(len(xa), dtype=int)
     y_bin = np.zeros(len(ya), dtype=int)
