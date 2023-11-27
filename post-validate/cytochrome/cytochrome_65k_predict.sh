@@ -2,7 +2,7 @@
 #SBATCH -N 128             # Number of nodes
 #SBATCH --ntasks-per-node=32
 #SBATCH --gpus-per-node=4
-#SBATCH --cpus-per-gpu=4
+#SBATCH --cpus-per-gpu=8
 #SBATCH -J cyto_predict    # job name
 #SBATCH -L SCRATCH         # job requires SCRATCH files
 #SBATCH -A m2859_g         # allocation

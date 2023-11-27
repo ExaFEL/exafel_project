@@ -1,17 +1,17 @@
 #!/bin/bash
 #SBATCH -N 4             # Number of nodes
-#SBATCH --ntasks-per-node=16
+#SBATCH --ntasks-per-node=32
 #SBATCH --gpus-per-node=4
-#SBATCH --cpus-per-gpu=4
+#SBATCH --cpus-per-gpu=8
 #SBATCH -J predict       # job name
 #SBATCH -L SCRATCH       # job requires SCRATCH files
 #SBATCH -A m2859_g       # allocation
 #SBATCH -C gpu
 #SBATCH -q regular
-#SBATCH -t 00:20:00
+#SBATCH -t 00:10:00
 #SBATCH -o %j.out
 #SBATCH -e %j.err
-SRUN="srun -N4 --ntasks-per-node=16 --gpus-per-node=4 --cpus-per-gpu=4 -c2"
+SRUN="srun -N4 --ntasks-per-node=32 --gpus-per-node=4 --cpus-per-gpu=8 -c2"
 
 export SCRATCH_FOLDER=$SCRATCH/yb_lyso/$SLURM_JOB_ID
 mkdir -p $SCRATCH_FOLDER; cd $SCRATCH_FOLDER
