@@ -190,10 +190,17 @@ def plot_heatmap(x: pd.Series,
                  b: pd.Series = None,
                  bins: int = None) -> Stage1Results:
     # TODO: Allow log-scale, allow individual rgb colors via r, g, b parameters
+    x_is_log = x is not None and x.attrs.get('log_scale')
+    y_is_log = y is not None and y.attrs.get('log_scale')
+    r_is_log = r is not None and r.attrs.get('log_scale')
+    g_is_log = g is not None and g.attrs.get('log_scale')
+    b_is_log = b is not None and b.attrs.get('log_scale')
+    are_log = (x_is_log, y_is_log, r_is_log, g_is_log, b_is_log)
+
     series = {k: v for k, v in zip('xyrgb', [x, y, r, g, b]) if v is not None}
     assert_same_length(series.values())
-    for sk, sv in series.items():
-        print(f'{sk}: "{sv.name}"' + f' (log)' * int(sv.attrs['log_scale']))
+    for (sk, sv), ls in zip(series.items(), are_log):
+        print(f'{sk}: "{sv.name}"' + f' (log)' * int(ls))
         sv.name = sk
     print(pd.concat([s.describe() for s in series.values()], axis=1))
     x_name = x.name
@@ -202,13 +209,13 @@ def plot_heatmap(x: pd.Series,
     xa = np.array(x)
     ya = np.array(y)
     r = r if any(k is not None for k in (r, g, b)) else np.zeros_like(xa)
-    r = np.log10(r) if r is not None and r.attrs.get('log_space', False) else r
-    g = np.log10(g) if g is not None and g.attrs.get('log_space', False) else g
-    b = np.log10(b) if b is not None and b.attrs.get('log_space', False) else b
+    r = np.log10(r) if r_is_log else r
+    g = np.log10(g) if g_is_log else g
+    b = np.log10(b) if b_is_log else b
     c = normalize_colors(r, g, b)
     bins = bins if bins else int(np.log2(len(x)))
-    x_space = np.linspace if x.attrs['log_space'] else np.logspace
-    y_space = np.linspace if y.attrs['log_space'] else np.logspace
+    x_space = np.linspace if x_is_log else np.logspace
+    y_space = np.linspace if y_is_log else np.logspace
     x_bins = x_space(min(xa), max(xa), num=bins+1)
     y_bins = y_space(min(ya), max(ya), num=bins+1)
     heat = np.zeros(shape=(bins, bins), dtype=int)
@@ -238,8 +245,8 @@ def plot_heatmap(x: pd.Series,
     axh.set_ylabel(y_name)
     axh.set_xlim(min(xa), max(xa))
     axh.set_ylim(min(ya), max(ya))
-    axh.set_xscale('log' if x.attrs['log_scale'] else 'linear')
-    axh.set_yscale('log' if y.attrs['log_scale'] else 'linear')
+    axh.set_xscale('log' if x_is_log else 'linear')
+    axh.set_yscale('log' if y_is_log else 'linear')
 
     axh.legend(handles=[Patch(color=color, label=label) for color, label
                         in zip('rgb', color_names) if color is not None])
