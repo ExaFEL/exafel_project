@@ -267,7 +267,7 @@ def prepare_series(parameters, default_path: str) -> pd.DataFrame:
     df = split_tuple_columns(df)
     if (key := parameters.key) not in df:
         df[key] = df.eval(key)
-    df.attrs['log_scale'] = parameters.logscale
+    df.attrs['log_scale'] = parameters.log_scale
     return pd.Series(df[key], name=path + ': ' + key)
 
 
