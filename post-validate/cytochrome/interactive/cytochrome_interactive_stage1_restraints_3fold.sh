@@ -116,7 +116,7 @@ downsamp_spec {
 echo "jobstart $(date)";pwd
 
 # read the stills process folder for domain size estimates, and append them to stage1.phil 
-diffBragg.estimate_Ncells_Eta $INDEX_PATH --updatePhil stage1.phil --njobs 32
+$SRUN diffBragg.estimate_Ncells_Eta $INDEX_PATH --updatePhil stage1.phil
 
 # first run stage 1 to estimate parameter trends 
 $SRUN hopper stage1.phil structure_factors.mtz_name="$MTZ_PATH" exp_ref_spec_file="$SPEC_PATH" max_process=${N_FIRST_PASS} outdir=$OUTDIR

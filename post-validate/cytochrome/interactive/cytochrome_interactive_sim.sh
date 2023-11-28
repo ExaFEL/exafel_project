@@ -2,9 +2,7 @@
 SRUN="srun -c2"
 export LENGTH=$1 # micron length of crystal
 export N_SIM=$2 # total number of images to simulate
-OUTDIR_TAG=$3 # output folder tag
-
-export SCRATCH_FOLDER=$SCRATCH/cytochrome/${OUTDIR_TAG}
+export SCRATCH_FOLDER=$3
 mkdir -p "$SCRATCH_FOLDER"; cd "$SCRATCH_FOLDER" || exit
 
 export N_START=0
