@@ -4,7 +4,7 @@
 nshot=1024 # number of shots to sim
 length=6  # length of crystal in micron
 Q=debug  # NERSC queue
-N=1  # NERSC number of nodes for cytochrome 1 Node per 1000 shots
+N=2  # NERSC number of nodes for cytochrome: 1 node/1000 shots (Q=regular); 2 nodes/1000 shots (Q=debug)
 A=m2859  # NERSC account (_g will automatically be appended for GPU accounts)
 
 # ==========================
