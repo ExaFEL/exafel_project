@@ -52,7 +52,7 @@ refiner {
   sigma_r = 0.3
   num_devices = ${DEVICES_PER_NODE}
   adu_per_photon = 1
-  res_ranges='1.6-999'
+  res_ranges='1.5-999'
   stage_two.save_model_freq=None
   stage_two.save_Z_freq=None
 }

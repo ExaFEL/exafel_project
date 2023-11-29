@@ -5,11 +5,12 @@ H5_SIM_PATH=${H5_SIM_PATH%/} # remove any trailing forward slash
 export SCRATCH_FOLDER=${H5_SIM_PATH}/index
 mkdir -p "$SCRATCH_FOLDER"; cd "$SCRATCH_FOLDER" || exit
 
+export CCTBX_NO_UUID=1
 export NUMEXPR_MAX_THREADS=16
 export SLURM_CPU_BIND=cores
 export OMP_PROC_BIND=spread
 export OMP_PLACES=threads
-
+export MPI4PY_RC_RECV_MPROBE='False'
 
 export TRIAL=tdata
 export OUT_DIR=.

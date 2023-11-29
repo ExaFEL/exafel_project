@@ -35,7 +35,7 @@ record_device_timings = True # only applies to rank0
 lbfgs_maxiter = 1500
 spectrum_from_imageset = True
 method = 'L-BFGS-B'
-debug_mode = True
+debug_mode = False
 roi {
   shoebox_size = 10
   fit_tilt = True
