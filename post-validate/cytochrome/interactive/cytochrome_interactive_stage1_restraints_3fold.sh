@@ -117,10 +117,10 @@ echo "jobstart $(date)";pwd
 
 # read the stills process folder for domain size estimates, and append them to stage1.phil 
 $SRUN diffBragg.estimate_Ncells_Eta $INDEX_PATH --updatePhil stage1.phil
-
+sleep 10
 # first run stage 1 to estimate parameter trends 
 $SRUN hopper stage1.phil structure_factors.mtz_name="$MTZ_PATH" exp_ref_spec_file="$SPEC_PATH" max_process=${N_FIRST_PASS} outdir=$OUTDIR
-
+sleep 10
 # use the results from the first stage 1 pass to estimate better initial conditions and averages 
 NEW_PHIL=stage1_updated.phil
 diffBragg.update_stage1_phil $OUTDIR $NEW_PHIL 
