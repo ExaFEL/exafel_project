@@ -114,6 +114,15 @@ if COMM.rank==0:
     print("Init misori: Median, Mean, Stdev = %.4f , %.4f %.4f (degrees)" %(med_d, mn_d, sig_d))
     print("Final misori: Median, Mean, Stdev = %.4f , %.4f %.4f (degrees)" %(med, mn, sig))
 
+    from scipy.stats import rayleigh
+    assert(np.min(angles_dials) >= 0.)
+    param_angles_dials = rayleigh.fit(angles_dials, floc=0.) # distribution fitting
+    assert(np.min(angles) >= 0.)
+    param_angles_stge1 = rayleigh.fit(angles, floc=0., method="MM")
+    print("Init misori: Rayleigh scale, Max = %.4f , %.4f (degrees)" %
+                          (param_angles_dials[1],np.max(angles_dials)))
+    print("Final misori:Rayleigh scale, Max = %.4f , %.4f (degrees)" %
+                          (param_angles_stge1[1],np.max(angles)))
     print("\nUnit cell stats:")
     labels = ["a", "b","c", "al", "be", "ga"]
     uc_mins = np.min(refined_ucells, axis=0)
@@ -160,6 +169,11 @@ if COMM.rank==0:
     heights_dials=plt.hist(angles_dials, bins=bins ,
             label="DIALS, median=%.4f$\degree$" % med_dials,
             color='tomato', **hist_args)[0]
+
+    rayleigh_fit_dials = rayleigh.pdf(bins,loc=param_angles_dials[0],scale=param_angles_dials[1])
+    plt.plot(bins,rayleigh_fit_dials,'r-')
+    rayleigh_fit_stge1 = rayleigh.pdf(bins,loc=param_angles_stge1[0],scale=param_angles_stge1[1])
+    plt.plot(bins,rayleigh_fit_stge1,'b-')
 
     ax.set_xlabel("Crystal misorientation (°)")
     if args.logbins:

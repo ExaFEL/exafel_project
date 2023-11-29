@@ -113,17 +113,11 @@ centers {
   ucell_a = 168.24
   ucell_b = 158.53
   ucell_c = 57.53
-  ucell_alpha = 90.
-  ucell_beta = 90.
-  ucell_gamma = 90.
 }
 betas {
-  ucell_a = 0.0001
-  ucell_b = 0.0001
-  ucell_c = 0.000025
-  ucell_alpha = 0.
-  ucell_beta = 0.
-  ucell_gamma = 0.
+  ucell_a = 0.0000001
+  ucell_b = 0.0000001
+  ucell_c = 0.000000025
 }
 logging {
   rank0_level = low normal *high
