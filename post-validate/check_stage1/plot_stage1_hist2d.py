@@ -125,7 +125,6 @@ def assert_same_length(*args: Tuple[Sequence]) -> None:
         raise ValueError(f'Iterable input lengths do not match: {lens}')
 
 
-@lru_cache(maxsize=5)
 def read_pickled_dataframes(stage1_path: str = '.') -> Stage1Results:
     pickle_glob = stage1_path + '/**/pandas/hopper_results_rank*.pkl'
     pickle_paths = glob.glob(pickle_glob, recursive=True)
@@ -278,13 +277,19 @@ def plot_heatmap(x: pd.Series,
     plt.show()
 
 
+@lru_cache(maxsize=5)
+def prepare_dataframe(path: str) -> pd.DataFrame:
+    df = read_pickled_dataframes(path)
+    df = split_tuple_columns(df)
+    df = calculate_dist_columns(df)
+    return df
+
+
 def prepare_series(parameters, default_path: str) -> pd.DataFrame:
     if parameters.key is None:
         return None
     path = p if (p := parameters.stage1) else default_path
-    df = read_pickled_dataframes(path)
-    df = split_tuple_columns(df)
-    df = calculate_dist_columns(df)
+    df = prepare_dataframe(path)
     if (key := parameters.key) not in df:
         df[key] = df.eval(key)
     series = pd.Series(df[key], name=path + ': ' + key)
@@ -293,7 +298,7 @@ def prepare_series(parameters, default_path: str) -> pd.DataFrame:
 
 
 def main(parameters) -> None:
-    # TODO process unequal lens, remove outliers for plot, simplify defaults
+    # TODO process unequal lens, remove outliers for plot
     stage1_path = p if (p := parameters.stage1) else '.'
     x = prepare_series(parameters.x, stage1_path)
     y = prepare_series(parameters.y, stage1_path)
