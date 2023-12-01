@@ -145,14 +145,15 @@ def calculate_dist_columns(df: Stage1Results) -> Stage1Results:
     and `ncells_init=Series([(4,4,4)])` it adds `ncells_dist=Series([(3,3,3)])`.
     For cols of numeric, this is a signed difference, i.e. for `a=Series([6,9])`
     and `a_init=Series([8,8])`, it adds a column `a_dist=Series([-2,1])`."""
-    cols_with_init = {r: k for k in df if (r := k.replace('_init', '')) in df}
+    cols_with_init = {r: k for k in df if '_init' in k and
+                      ((r := k.replace('_init', '')) in df)}
     for cwi_key, cwi_init_key in cols_with_init.items():
         cwi = np.array(list(df[cwi_key]))
         cwi_init = np.array(list(df[cwi_init_key]))
         dist_key = cwi_init_key.replace('_init', '_dist')
-        if isinstance(df[dist_key][0], Number):
+        if isinstance(df[cwi_key][0], Number):
            df[dist_key] = cwi - cwi_init
-        elif isinstance(df[dist_key][0], tuple):
+        elif isinstance(df[cwi_key][0], tuple):
             df[dist_key] = np.sum((cwi - cwi_init) ** 2, axis=1) ** 0.5
     return df
 
@@ -239,8 +240,8 @@ def plot_heatmap(x: pd.Series,
     y_space = np.geomspace if y_is_log else np.linspace
     x_bins = x_space(min(xa), max(xa), num=bins+1)
     y_bins = y_space(min(ya), max(ya), num=bins+1)
-    x_bin_idx = np.digitize(xa, bins, right=True)
-    y_bin_idx = np.digitize(ya, bins, right=True)
+    x_bin_idx = np.digitize(xa, x_bins, right=True)
+    y_bin_idx = np.digitize(ya, y_bins, right=True)
     x_colors = [np.mean(c[x_bin_idx == x_i], axis=0) for x_i in range(bins)]
     y_colors = [np.mean(c[y_bin_idx == y_i], axis=0) for y_i in range(bins)]
 
@@ -282,8 +283,8 @@ def prepare_series(parameters, default_path: str) -> pd.DataFrame:
         return None
     path = p if (p := parameters.stage1) else default_path
     df = read_pickled_dataframes(path)
-    df = calculate_dist_columns(df)
     df = split_tuple_columns(df)
+    df = calculate_dist_columns(df)
     if (key := parameters.key) not in df:
         df[key] = df.eval(key)
     series = pd.Series(df[key], name=path + ': ' + key)
