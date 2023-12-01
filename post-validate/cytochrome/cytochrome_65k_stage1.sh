@@ -8,7 +8,7 @@
 #SBATCH -A m2859_g         # allocation
 #SBATCH -C gpu
 #SBATCH -q regular         # regular or special queue
-#SBATCH -t 00:30:00        # wall clock time limit
+#SBATCH -t 00:20:00        # wall clock time limit
 #SBATCH --gpus-per-node 4
 #SBATCH -o %j.out
 #SBATCH -e %j.err
@@ -41,6 +41,7 @@ env > env.out
 
 echo "
 symmetrize_Flatt = True
+lbfgs_maxiter = 1500
 spectrum_from_imageset = True
 method = 'L-BFGS-B'
 outdir = 'stage1'
@@ -76,7 +77,7 @@ init {
 }
 
 refiner {
-  num_devices=4
+  num_devices = ${DEVICES_PER_NODE}
   verbose = 0
   sigma_r = 3
   adu_per_photon = 1

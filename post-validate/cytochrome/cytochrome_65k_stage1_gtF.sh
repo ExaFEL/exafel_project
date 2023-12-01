@@ -41,6 +41,7 @@ env > env.out
 
 echo "
 symmetrize_Flatt = True
+lbfgs_maxiter = 1500
 spectrum_from_imageset = True
 method = 'L-BFGS-B'
 outdir = 'stage1'
@@ -76,7 +77,7 @@ init {
 }
 
 refiner {
-  num_devices=4
+  num_devices = ${DEVICES_PER_NODE}
   verbose = 0
   sigma_r = 3
   adu_per_photon = 1

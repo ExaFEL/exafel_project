@@ -69,11 +69,11 @@ fix {
 }
 use_restraints = False
 sigmas {
-  ucell = 1 1
+  ucell = .1 .1
   RotXYZ = 0.001 0.001 0.001
   G = 1
   Nabc = 1 1 1
-  eta_abc = 1 1 1
+  eta_abc = .1 .1 .1
 }
 
 init {
@@ -81,7 +81,7 @@ init {
 }
 
 refiner {
-  num_devices=4
+  num_devices = ${DEVICES_PER_NODE}
   verbose = 0
   sigma_r = 3
   adu_per_photon = 1
