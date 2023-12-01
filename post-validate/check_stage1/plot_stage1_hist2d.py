@@ -224,20 +224,10 @@ def plot_heatmap(x: pd.Series,
     y_space = np.geomspace if y_is_log else np.linspace
     x_bins = x_space(min(xa), max(xa), num=bins+1)
     y_bins = y_space(min(ya), max(ya), num=bins+1)
-    heat = np.zeros(shape=(bins, bins), dtype=int)
-    x_bin = np.zeros(len(xa), dtype=int)
-    y_bin = np.zeros(len(ya), dtype=int)
-
-    for x_bin_max in x_bins[1:-1]:
-        x_bin += x > x_bin_max
-    for y_bin_max in y_bins[1:-1]:
-        y_bin += y > y_bin_max
-
-    for x_i in range(bins):
-        for y_i in range(bins):
-            heat[x_i, y_i] = sum((x_bin == x_i) & (y_bin == y_i))
-    x_colors = [np.mean(c[x_bin == x_i], axis=0) for x_i in range(bins)]
-    y_colors = [np.mean(c[y_bin == y_i], axis=0) for y_i in range(bins)]
+    x_bin_idx = np.digitize(xa, bins, right=True)
+    y_bin_idx = np.digitize(ya, bins, right=True)
+    x_colors = [np.mean(c[x_bin_idx == x_i], axis=0) for x_i in range(bins)]
+    y_colors = [np.mean(c[y_bin_idx == y_i], axis=0) for y_i in range(bins)]
 
     fig, ((axx, axn), (axh, axy)) = plt.subplots(2, 2, sharex='col',
         sharey='row', width_ratios=[2, 1], height_ratios=[1, 2])
@@ -289,7 +279,6 @@ def prepare_series(parameters, default_path: str) -> pd.DataFrame:
 def main(parameters) -> None:
     # TODO process unequal lens,
     # TODO remove outliers for plot, simplify defaults,
-    # TODO optimize x/y binning for more loops
     stage1_path = p if (p := parameters.stage1) else '.'
     x = prepare_series(parameters.x, stage1_path)
     y = prepare_series(parameters.y, stage1_path)
