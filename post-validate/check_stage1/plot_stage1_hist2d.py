@@ -6,6 +6,7 @@ from functools import lru_cache
 from collections import deque
 import glob
 from itertools import islice
+from numbers import Number
 
 from matplotlib.patches import Patch
 import matplotlib.pyplot as plt
@@ -34,8 +35,10 @@ x {
     .help = 'exp_idx', 'fp_fdp_shift', 'ga', 'ga_init', 'lam0', 'lam1',
     .help = 'ncells[0-2]', 'ncells_def[0-2]', 'ncells_init[0-2]', 'niter', 
     .help = 'osc_deg', 'oversample', 'phi_deg', 'rotX', 'rotY', 'rotZ', 'sigz',
-    .help = 'spot_scales', 'spot_scales_init', 'total_flux', and 'ncells_dist',
-    .help = as well as their arithmetic combinations, i.e. 'ncells2 - ncells0'.
+    .help = 'spot_scales', 'spot_scales_init', 'total_flux'.
+    .help = Additionally, for all columns that have an `_init` defined,
+    .help = a distance to init is calculated, i.e. 'ncells_dist' or `c_dist`.
+    .help = Arithmetic combinations are also allowed, i.e. 'ncells2 - ncells0'.
   log_scale = False
     .type = bool
     .help = If true, make the x axis log-scale on the produced plot
@@ -121,6 +124,7 @@ def assert_same_length(*args: Tuple[Sequence]) -> None:
     if (lens := len({len(arg) for arg in args})) > 1:
         raise ValueError(f'Iterable input lengths do not match: {lens}')
 
+
 @lru_cache(maxsize=5)
 def read_pickled_dataframes(stage1_path: str = '.') -> Stage1Results:
     pickle_glob = stage1_path + '/**/pandas/hopper_results_rank*.pkl'
@@ -135,10 +139,21 @@ def read_pickled_dataframes(stage1_path: str = '.') -> Stage1Results:
     return df
 
 
-def calculate_n_cells_dist(df: Stage1Results) -> Stage1Results:
-    n_cells = np.array(list(df['ncells']))
-    n_cells_init = np.array(list(df['ncells_init']))
-    df['ncells_dist'] = np.sum((n_cells - n_cells_init) ** 2, axis=1) ** 0.5
+def calculate_dist_columns(df: Stage1Results) -> Stage1Results:
+    """Calculate distance to init for all cols with relevant `_init` defined.
+    For cols of tuples, this is second norm, i.e. for `ncells=Series([(5,5,5)])`
+    and `ncells_init=Series([(4,4,4)])` it adds `ncells_dist=Series([(3,3,3)])`.
+    For cols of numeric, this is a signed difference, i.e. for `a=Series([6,9])`
+    and `a_init=Series([8,8])`, it adds a column `a_dist=Series([-2,1])`."""
+    cols_with_init = {r: k for k in df if (r := k.replace('_init', '')) in df}
+    for cwi_key, cwi_init_key in cols_with_init.items():
+        cwi = np.array(list(df[cwi_key]))
+        cwi_init = np.array(list(df[cwi_init_key]))
+        dist_key = cwi_init_key.replace('_init', '_dist')
+        if isinstance(df[dist_key][0], Number):
+           df[dist_key] = cwi - cwi_init
+        elif isinstance(df[dist_key][0], tuple):
+            df[dist_key] = np.sum((cwi - cwi_init) ** 2, axis=1) ** 0.5
     return df
 
 
@@ -267,7 +282,7 @@ def prepare_series(parameters, default_path: str) -> pd.DataFrame:
         return None
     path = p if (p := parameters.stage1) else default_path
     df = read_pickled_dataframes(path)
-    df = calculate_n_cells_dist(df)
+    df = calculate_dist_columns(df)
     df = split_tuple_columns(df)
     if (key := parameters.key) not in df:
         df[key] = df.eval(key)
@@ -277,8 +292,7 @@ def prepare_series(parameters, default_path: str) -> pd.DataFrame:
 
 
 def main(parameters) -> None:
-    # TODO process unequal lens,
-    # TODO remove outliers for plot, simplify defaults,
+    # TODO process unequal lens, remove outliers for plot, simplify defaults
     stage1_path = p if (p := parameters.stage1) else '.'
     x = prepare_series(parameters.x, stage1_path)
     y = prepare_series(parameters.y, stage1_path)
