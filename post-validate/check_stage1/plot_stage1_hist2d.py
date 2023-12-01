@@ -23,7 +23,7 @@ stage1 = None
   .help = Directory with stage 1 results. If None, look recursively in work dir.
 n_bins = None
   .type = int
-  .help = Number of bins to group data along x and y; default log2(len(x)).
+  .help = Number of bins to group data along x and y. Default log2(len(x)).
 x {
   key = sigz
     .type = str
