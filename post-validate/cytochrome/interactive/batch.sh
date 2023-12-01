@@ -2,9 +2,10 @@
 # with dependency=singleton jobs are linked by userid+jobname and then run in order of submission
 
 # command line args:
-n_thousand=$1  # an integer from >= 1.  Set to e.g., 64 to simulate 64*1024 shots
-length=$2  # length of crystal in micron
-tag=$3  # a tag for the output folder
+sample=$1 # contents of the crystal -- one of cytochrome, yb_lyso, thermolysin, or cry11ba
+n_thousand=$2  # an integer from >= 1.  Set to e.g., 64 to simulate 64*1024 shots
+length=$3  # length of crystal in micron
+tag=$4  # a tag for the output folder
 # other settings
 Q=regular  # NERSC queue
 A=m2859  # NERSC account (_g will automatically be appended for GPU accounts)
@@ -36,14 +37,14 @@ tens=120  # stage2 (ensemble hopper)
 #  I had to switch all $CPU to $GPU below for index, merge, split steps
 
 # submit:
-sbatch -J$job $GPU -t $tsim -o${odir}/sim.out -e${odir}/sim.err ./cytochrome_interactive_sim.sh $length $nshot $odir
-sbatch -J$job $CPU -t $tidx -o${odir}/idx.out -e${odir}/idx.err ./cytochrome_interactive_index.sh $odir
-sbatch -J$job $CPU -t $tmrg -o${odir}/mrg.out -e${odir}/mrg.err ./cytochrome_interactive_merge.sh $odir
-sbatch -J$job $CPU -t $tspl -o${odir}/spl.out -e${odir}/spl.err ./cytochrome_interactive_split.sh $odir
-sbatch -J$job $GPU -t $tst1 -o${odir}/st1.out -e${odir}/st1.err ./cytochrome_interactive_stage1_restraints_3fold.sh $odir ${n_unrestrain}
-sbatch -J$job $GPU -t $tprd -o${odir}/prd.out -e${odir}/prd.err ./cytochrome_interactive_predict.sh $odir
-sbatch -J$job $GPU -t $tst2 -o${odir}/st2.out -e${odir}/st2.err ./cytochrome_interactive_stage2.sh $odir
-sbatch -J$job $GPU -t $tens -o${odir}/ens.out -e${odir}/ens.err ./cytochrome_interactive_ensHopper.sh $odir
+sbatch -J$job $GPU -t $tsim -o${odir}/sim.out -e${odir}/sim.err ./interactive_sim.sh $sample $length $nshot $detdist $odir
+sbatch -J$job $CPU -t $tidx -o${odir}/idx.out -e${odir}/idx.err ./interactive_index.sh $sample $dmin $odir
+sbatch -J$job $CPU -t $tmrg -o${odir}/mrg.out -e${odir}/mrg.err ./interactive_merge.sh $sample $odir
+sbatch -J$job $CPU -t $tspl -o${odir}/spl.out -e${odir}/spl.err ./interactive_split.sh $odir
+sbatch -J$job $GPU -t $tst1 -o${odir}/st1.out -e${odir}/st1.err ./interactive_stage1.sh $sample $odir ${n_unrestrain}
+sbatch -J$job $GPU -t $tprd -o${odir}/prd.out -e${odir}/prd.err ./interactive_predict.sh $sample $dmin $odir
+sbatch -J$job $GPU -t $tst2 -o${odir}/st2.out -e${odir}/st2.err ./interactive_stage2.sh $dmin $odir
+sbatch -J$job $GPU -t $tens -o${odir}/ens.out -e${odir}/ens.err ./interactive_ensHopper.sh $dmin $odir
 
 nodehr=$(((tsim+tidx+tmrg+tspl+tst1+tprd+tst2+tens)*N/60))
 echo "Estimated node hours (multiply by 2 if using priority queue): "$nodehr
