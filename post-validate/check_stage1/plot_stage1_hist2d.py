@@ -62,7 +62,7 @@ y {
     .help = If None, `stage1` from the outer scope will be used.
   }
 r {
-  key = (ncells0-ncells_init0)/ncells_init0
+  key = ncells_dist0/ncells_init0
     .type = str
     .help = Key of the pandas stage 1 results table that should be visualized
     .help = as the brightness of red color.
@@ -76,7 +76,7 @@ r {
     .help = If None, `stage1` from the outer scope will be used.
   }
 g {
-  key = (ncells1-ncells_init1)/ncells_init1
+  key = ncells_dist1/ncells_init1
     .type = str
     .help = Key of the pandas stage 1 results table that should be visualized
     .help = as the brightness of green color.
@@ -90,7 +90,7 @@ g {
     .help = If None, `stage1` from the outer scope will be used.
   }
 b {
-  key = (ncells2-ncells_init2)/ncells_init2
+  key = ncells_dist2/ncells_init2
     .type = str
     .help = Key of the pandas stage 1 results table that should be visualized
     .help = as the brightness of blue color.
