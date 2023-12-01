@@ -8,7 +8,7 @@
 #SBATCH -A m2859_g         # allocation
 #SBATCH -C gpu
 #SBATCH -q regular         # regular or special queue
-#SBATCH -t 01:00:00        # wall clock time limit
+#SBATCH -t 00:15:00        # wall clock time limit
 #SBATCH --gpus-per-node 4
 #SBATCH -o %j.out
 #SBATCH -e %j.err
@@ -46,6 +46,7 @@ export MPI4PY_RC_RECV_MPROBE='False'
 env > env.out
 
 echo "
+symmetrize_Flatt = True
 spectrum_from_imageset = True
 downsamp_spec {
   skip = True

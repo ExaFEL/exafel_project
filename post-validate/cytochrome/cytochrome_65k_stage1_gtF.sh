@@ -40,6 +40,7 @@ export CCTBX_GPUS_PER_NODE=4
 env > env.out
 
 echo "
+symmetrize_Flatt = True
 spectrum_from_imageset = True
 method = 'L-BFGS-B'
 outdir = 'stage1'
