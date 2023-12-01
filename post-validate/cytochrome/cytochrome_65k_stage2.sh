@@ -8,7 +8,7 @@
 #SBATCH -A m2859_g         # allocation
 #SBATCH -C gpu
 #SBATCH -q regular         # regular or special queue
-#SBATCH -t 01:00:00        # wall clock time limit
+#SBATCH -t 00:15:00        # wall clock time limit
 #SBATCH --gpus-per-node 4
 #SBATCH -o %j.out
 #SBATCH -e %j.err
@@ -30,7 +30,7 @@ export N_START=0
 export LOG_BY_RANK=1 # Use Aaron's rank logger
 export RANK_PROFILE=0 # 0 or 1 Use cProfiler, default 1
 export ADD_BACKGROUND_ALGORITHM=cuda
-export DEVICES_PER_NODE=1
+export DEVICES_PER_NODE=4
 export MOS_DOM=25
 
 export CCTBX_NO_UUID=1
@@ -46,6 +46,7 @@ export MPI4PY_RC_RECV_MPROBE='False'
 env > env.out
 
 echo "
+symmetrize_Flatt = True
 spectrum_from_imageset = True
 downsamp_spec {
   skip = True
@@ -75,7 +76,7 @@ refiner {
   tradeps = 1e-20
   verbose = 0
   sigma_r = 3
-  num_devices = 4
+  num_devices = ${DEVICES_PER_NODE}
   adu_per_photon = 1
   res_ranges='1.5-999'
   stage_two.save_model_freq=None

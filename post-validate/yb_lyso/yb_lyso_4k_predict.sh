@@ -54,7 +54,7 @@ predictions {
   threshold = 1
   oversample_override = 1
   Nabc_override = None
-  pink_stride_override = 10
+  pink_stride_override = None
   default_Famplitude = 1e3
   resolution_range = [1.7,999]
   symbol_override = P43212
