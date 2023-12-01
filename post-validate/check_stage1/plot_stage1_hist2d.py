@@ -2,6 +2,7 @@
 Read stage 1 pandas table and draw desired contents as histogram or heatmap.
 """
 import copy
+from functools import lru_cache
 from collections import deque
 import glob
 from itertools import islice
@@ -19,6 +20,9 @@ phil_scope_str = """
 stage1 = None
   .type = str
   .help = Directory with stage 1 results. If None, look recursively in work dir.
+n_bins = None
+  .type = int
+  .help = Number of bins to group data along x and y; default log2(len(x)).
 x {
   key = sigz
     .type = str
@@ -117,7 +121,7 @@ def assert_same_length(*args: Tuple[Sequence]) -> None:
     if (lens := len({len(arg) for arg in args})) > 1:
         raise ValueError(f'Iterable input lengths do not match: {lens}')
 
-
+@lru_cache(maxsize=5)
 def read_pickled_dataframes(stage1_path: str = '.') -> Stage1Results:
     pickle_glob = stage1_path + '/**/pandas/hopper_results_rank*.pkl'
     pickle_paths = glob.glob(pickle_glob, recursive=True)
@@ -250,8 +254,9 @@ def plot_heatmap(x: pd.Series,
     axh.set_xscale('log' if x_is_log else 'linear')
     axh.set_yscale('log' if y_is_log else 'linear')
 
-    axh.legend(handles=[Patch(color=color, label=label) for color, label
-                        in zip('rgb', color_names) if color is not None])
+    if any(c is not None for c in (r, g, b)):
+        axh.legend(handles=[Patch(color=color, label=label) for color, label
+                            in zip('rgb', color_names) if label])
     x_hist = axx.hist(xa, bins=x_bins, orientation='vertical')
     for bar, x_color in zip(x_hist[2], x_colors):
         bar.set_facecolor(x_color)
@@ -282,13 +287,16 @@ def prepare_series(parameters, default_path: str) -> pd.DataFrame:
 
 
 def main(parameters) -> None:
+    # TODO process unequal lens,
+    # TODO remove outliers for plot, simplify defaults,
+    # TODO optimize x/y binning for more loops
     stage1_path = p if (p := parameters.stage1) else '.'
     x = prepare_series(parameters.x, stage1_path)
     y = prepare_series(parameters.y, stage1_path)
     r = prepare_series(parameters.r, stage1_path)
     g = prepare_series(parameters.g, stage1_path)
     b = prepare_series(parameters.b, stage1_path)
-    plot_heatmap(x, y, r, g, b)
+    plot_heatmap(x, y, r, g, b, parameters.n_bins)
 
 
 params = []
