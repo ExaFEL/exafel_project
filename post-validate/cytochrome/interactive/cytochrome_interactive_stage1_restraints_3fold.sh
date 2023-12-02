@@ -75,6 +75,7 @@ refiner {
 }
 
 simulator {
+  spectrum.stride = 4
   oversample = 1
   crystal {
     has_isotropic_ncells = False
