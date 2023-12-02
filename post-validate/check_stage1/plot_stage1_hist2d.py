@@ -1,5 +1,5 @@
 """
-Read stage 1 pandas table and draw desired contents as histogram or heatmap.
+Read stage 1 pandas table and draw desired contents on a double histogram.
 """
 import copy
 from functools import lru_cache
@@ -46,6 +46,9 @@ x {
     .type = str
     .help = Directory with stage 1 results to be used for x axis.
     .help = If None, `stage1` from the outer scope will be used.
+  tukey_limit = None
+    .type = float
+    .help = If given, don't plot Tukey outliers above `tukey_limit * iqr`.
   }
 y {
   key = sigz
@@ -60,6 +63,9 @@ y {
     .type = str
     .help = Directory with stage 1 results to be used for y axis.
     .help = If None, `stage1` from the outer scope will be used.
+  tukey_limit = None
+    .type = float
+    .help = If given, don't plot Tukey outliers above `tukey_limit * iqr`.
   }
 r {
   key = ncells_dist0/ncells_init0
@@ -74,6 +80,9 @@ r {
     .type = str
     .help = Directory with stage 1 results to be used for red coloring.
     .help = If None, `stage1` from the outer scope will be used.
+  tukey_limit = None
+    .type = float
+    .help = If given, don't plot Tukey outliers above `tukey_limit * iqr`.
   }
 g {
   key = ncells_dist1/ncells_init1
@@ -88,6 +97,9 @@ g {
     .type = str
     .help = Directory with stage 1 results to be used for green coloring.
     .help = If None, `stage1` from the outer scope will be used.
+  tukey_limit = None
+    .type = float
+    .help = If given, don't plot Tukey outliers above `tukey_limit * iqr`.
   }
 b {
   key = ncells_dist2/ncells_init2
@@ -102,6 +114,9 @@ b {
     .type = str
     .help = Directory with stage 1 results to be used for blue coloring.
     .help = If None, `stage1` from the outer scope will be used.
+  tukey_limit = None
+    .type = float
+    .help = If given, don't plot Tukey outliers above `tukey_limit * iqr`.
   }
 """
 
@@ -144,8 +159,8 @@ def calculate_dist_columns(df: Stage1Results) -> Stage1Results:
     and `ncells_init=Series([(4,4,4)])` it adds `ncells_dist=Series([(3,3,3)])`.
     For cols of numeric, this is a signed difference, i.e. for `a=Series([6,9])`
     and `a_init=Series([8,8])`, it adds a column `a_dist=Series([-2,1])`."""
-    cols_with_init = {r: k for k in df if '_init' in k and
-                      ((r := k.replace('_init', '')) in df)}
+    cols_with_init = {k: k_init for k_init in df if '_init' in k_init and
+                      ((k := k_init.replace('_init', '')) in df)}
     for cwi_key, cwi_init_key in cols_with_init.items():
         cwi = np.array(list(df[cwi_key]))
         cwi_init = np.array(list(df[cwi_init_key]))
@@ -202,6 +217,24 @@ def normalize_colors(
     return c.T
 
 
+def exclude_tukey_outliers(*series: pd.Series) -> Tuple[pd.Series]:
+    outlier_mask = np.zeros_like(series[0], dtype=bool)
+    limited_series = [s for s in series if s is not None and
+                      s.attrs.get('tukey_limit', None)]
+    for s in limited_series:
+        quartiles = s.quantile([0.0, 0.25, 0.5, 0.75, 1.0])
+        iqr = quartiles[3] - quartiles[1]
+        lim0 = quartiles[1] - (iqr * s.attrs.get('tukey_limit'))
+        lim1 = quartiles[3] + (iqr * s.attrs.get('tukey_limit'))
+        om = ((series < lim0) | (series > lim1)).values
+        if any(om):
+            print(f'Skipping{sum(om):7d} for plotting: outliers in {s.name}')
+        outlier_mask |= om
+    if any(outlier_mask):
+        print(f'Skipping{sum(outlier_mask):7d} for plotting in total.')
+    return tuple(s if s is None else s[outlier_mask] for s in series)
+
+
 def plot_heatmap(x: pd.Series,
                  y: pd.Series,
                  r: pd.Series = None,
@@ -223,6 +256,7 @@ def plot_heatmap(x: pd.Series,
         print(f'{sk}: "{sv.name}"' + f' (log)' * int(ls))
         sv.name = sk
     print(pd.concat([s.describe() for s in series.values()], axis=1))
+    (x, y, r, g, b,) = exclude_tukey_outliers(x, y, r, g, b)  # noqa
 
     x_name = x.name
     y_name = y.name
@@ -294,6 +328,7 @@ def prepare_series(parameters, default_path: str) -> pd.DataFrame:
         df[key] = df.eval(key)
     series = pd.Series(df[key], name=path + ': ' + key)
     series.attrs['log_scale'] = parameters.log_scale
+    series.attrs['tukey_limit'] = parameters.tukey_limit
     return series
 
 
