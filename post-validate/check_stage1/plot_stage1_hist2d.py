@@ -201,6 +201,7 @@ def normalize_colors(
         g: Sequence = None,
         b: Sequence = None,
         ) -> Tuple[Sequence, Sequence, Sequence]:
+    """Generate color for each point based on relative values of rgb series"""
     r_full = np.array([0.9, 0.0, 0.0])
     r_null = np.array([0.1, 0.0, 0.0])
     g_full = np.array([0.0, 0.9, 0.0])
@@ -218,21 +219,21 @@ def normalize_colors(
 
 
 def exclude_tukey_outliers(*series: pd.Series) -> Tuple[pd.Series]:
+    """Exclude all points outside `[q1-tukey_limit*iqr, q3+tukey_limit*iqr]`"""
     outlier_mask = np.zeros_like(series[0], dtype=bool)
     limited_series = [s for s in series if s is not None and
                       s.attrs.get('tukey_limit', None)]
     for s in limited_series:
-        quartiles = s.quantile([0.0, 0.25, 0.5, 0.75, 1.0])
+        quartiles = list(s.quantile([0.0, 0.25, 0.5, 0.75, 1.0]))
         iqr = quartiles[3] - quartiles[1]
         lim0 = quartiles[1] - (iqr * s.attrs.get('tukey_limit'))
         lim1 = quartiles[3] + (iqr * s.attrs.get('tukey_limit'))
-        om = ((series < lim0) | (series > lim1)).values
-        if any(om):
-            print(f'Skipping{sum(om):7d} for plotting: outliers in {s.name}')
+        om = ((s < lim0) | (s > lim1)).values
+        print(f'Skipping{sum(om):7d} points on plot: outliers in "{s.name}"')
         outlier_mask |= om
     if any(outlier_mask):
-        print(f'Skipping{sum(outlier_mask):7d} for plotting in total.')
-    return tuple(s if s is None else s[outlier_mask] for s in series)
+        print(f'Skipping{sum(outlier_mask):7d} points on plot in total.')
+    return tuple(s if s is None else s[~outlier_mask] for s in series)
 
 
 def plot_heatmap(x: pd.Series,
