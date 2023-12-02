@@ -2,9 +2,11 @@
 Read stage 1 pandas table and draw desired contents as histogram or heatmap.
 """
 import copy
+from functools import lru_cache
 from collections import deque
 import glob
 from itertools import islice
+from numbers import Number
 
 from matplotlib.patches import Patch
 import matplotlib.pyplot as plt
@@ -19,6 +21,9 @@ phil_scope_str = """
 stage1 = None
   .type = str
   .help = Directory with stage 1 results. If None, look recursively in work dir.
+n_bins = None
+  .type = int
+  .help = Number of bins to group data along x and y. Default log2(len(x)).
 x {
   key = sigz
     .type = str
@@ -30,8 +35,10 @@ x {
     .help = 'exp_idx', 'fp_fdp_shift', 'ga', 'ga_init', 'lam0', 'lam1',
     .help = 'ncells[0-2]', 'ncells_def[0-2]', 'ncells_init[0-2]', 'niter', 
     .help = 'osc_deg', 'oversample', 'phi_deg', 'rotX', 'rotY', 'rotZ', 'sigz',
-    .help = 'spot_scales', 'spot_scales_init', 'total_flux', and 'ncells_dist',
-    .help = as well as their arithmetic combinations, i.e. 'ncells2 - ncells0'.
+    .help = 'spot_scales', 'spot_scales_init', 'total_flux'.
+    .help = Additionally, for all columns that have an `_init` defined,
+    .help = a distance to init is calculated, i.e. 'ncells_dist' or `c_dist`.
+    .help = Arithmetic combinations are also allowed, i.e. 'ncells2 - ncells0'.
   log_scale = False
     .type = bool
     .help = If true, make the x axis log-scale on the produced plot
@@ -55,7 +62,7 @@ y {
     .help = If None, `stage1` from the outer scope will be used.
   }
 r {
-  key = (ncells0-ncells_init0)/ncells_init0
+  key = ncells_dist0/ncells_init0
     .type = str
     .help = Key of the pandas stage 1 results table that should be visualized
     .help = as the brightness of red color.
@@ -69,7 +76,7 @@ r {
     .help = If None, `stage1` from the outer scope will be used.
   }
 g {
-  key = (ncells1-ncells_init1)/ncells_init1
+  key = ncells_dist1/ncells_init1
     .type = str
     .help = Key of the pandas stage 1 results table that should be visualized
     .help = as the brightness of green color.
@@ -83,7 +90,7 @@ g {
     .help = If None, `stage1` from the outer scope will be used.
   }
 b {
-  key = (ncells2-ncells_init2)/ncells_init2
+  key = ncells_dist2/ncells_init2
     .type = str
     .help = Key of the pandas stage 1 results table that should be visualized
     .help = as the brightness of blue color.
@@ -118,6 +125,7 @@ def assert_same_length(*args: Tuple[Sequence]) -> None:
         raise ValueError(f'Iterable input lengths do not match: {lens}')
 
 
+@lru_cache(maxsize=5)
 def read_pickled_dataframes(stage1_path: str = '.') -> Stage1Results:
     pickle_glob = stage1_path + '/**/pandas/hopper_results_rank*.pkl'
     pickle_paths = glob.glob(pickle_glob, recursive=True)
@@ -131,10 +139,21 @@ def read_pickled_dataframes(stage1_path: str = '.') -> Stage1Results:
     return df
 
 
-def calculate_n_cells_dist(df: Stage1Results) -> Stage1Results:
-    n_cells = np.array(list(df['ncells']))
-    n_cells_init = np.array(list(df['ncells_init']))
-    df['ncells_dist'] = np.sum((n_cells - n_cells_init) ** 2, axis=1) ** 0.5
+def calculate_dist_columns(df: Stage1Results) -> Stage1Results:
+    """Calculate distance to init for all cols with relevant `_init` defined.
+    For cols of tuples, this is second norm, i.e. for `ncells=Series([(5,5,5)])`
+    and `ncells_init=Series([(4,4,4)])` it adds `ncells_dist=Series([(3,3,3)])`.
+    For cols of numeric, this is a signed difference, i.e. for `a=Series([6,9])`
+    and `a_init=Series([8,8])`, it adds a column `a_dist=Series([-2,1])`."""
+    cols_with_init = {r: k for k in df if (r := k.replace('_init', '')) in df}
+    for cwi_key, cwi_init_key in cols_with_init.items():
+        cwi = np.array(list(df[cwi_key]))
+        cwi_init = np.array(list(df[cwi_init_key]))
+        dist_key = cwi_init_key.replace('_init', '_dist')
+        if isinstance(df[dist_key][0], Number):
+           df[dist_key] = cwi - cwi_init
+        elif isinstance(df[dist_key][0], tuple):
+            df[dist_key] = np.sum((cwi - cwi_init) ** 2, axis=1) ** 0.5
     return df
 
 
@@ -220,20 +239,10 @@ def plot_heatmap(x: pd.Series,
     y_space = np.geomspace if y_is_log else np.linspace
     x_bins = x_space(min(xa), max(xa), num=bins+1)
     y_bins = y_space(min(ya), max(ya), num=bins+1)
-    heat = np.zeros(shape=(bins, bins), dtype=int)
-    x_bin = np.zeros(len(xa), dtype=int)
-    y_bin = np.zeros(len(ya), dtype=int)
-
-    for x_bin_max in x_bins[1:-1]:
-        x_bin += x > x_bin_max
-    for y_bin_max in y_bins[1:-1]:
-        y_bin += y > y_bin_max
-
-    for x_i in range(bins):
-        for y_i in range(bins):
-            heat[x_i, y_i] = sum((x_bin == x_i) & (y_bin == y_i))
-    x_colors = [np.mean(c[x_bin == x_i], axis=0) for x_i in range(bins)]
-    y_colors = [np.mean(c[y_bin == y_i], axis=0) for y_i in range(bins)]
+    x_bin_idx = np.digitize(xa, bins, right=True)
+    y_bin_idx = np.digitize(ya, bins, right=True)
+    x_colors = [np.mean(c[x_bin_idx == x_i], axis=0) for x_i in range(bins)]
+    y_colors = [np.mean(c[y_bin_idx == y_i], axis=0) for y_i in range(bins)]
 
     fig, ((axx, axn), (axh, axy)) = plt.subplots(2, 2, sharex='col',
         sharey='row', width_ratios=[2, 1], height_ratios=[1, 2])
@@ -250,8 +259,9 @@ def plot_heatmap(x: pd.Series,
     axh.set_xscale('log' if x_is_log else 'linear')
     axh.set_yscale('log' if y_is_log else 'linear')
 
-    axh.legend(handles=[Patch(color=color, label=label) for color, label
-                        in zip('rgb', color_names) if color is not None])
+    if any(c is not None for c in (r, g, b)):
+        axh.legend(handles=[Patch(color=color, label=label) for color, label
+                            in zip('rgb', color_names) if label])
     x_hist = axx.hist(xa, bins=x_bins, orientation='vertical')
     for bar, x_color in zip(x_hist[2], x_colors):
         bar.set_facecolor(x_color)
@@ -272,7 +282,7 @@ def prepare_series(parameters, default_path: str) -> pd.DataFrame:
         return None
     path = p if (p := parameters.stage1) else default_path
     df = read_pickled_dataframes(path)
-    df = calculate_n_cells_dist(df)
+    df = calculate_dist_columns(df)
     df = split_tuple_columns(df)
     if (key := parameters.key) not in df:
         df[key] = df.eval(key)
@@ -282,13 +292,14 @@ def prepare_series(parameters, default_path: str) -> pd.DataFrame:
 
 
 def main(parameters) -> None:
+    # TODO process unequal lens, remove outliers for plot, simplify defaults
     stage1_path = p if (p := parameters.stage1) else '.'
     x = prepare_series(parameters.x, stage1_path)
     y = prepare_series(parameters.y, stage1_path)
     r = prepare_series(parameters.r, stage1_path)
     g = prepare_series(parameters.g, stage1_path)
     b = prepare_series(parameters.b, stage1_path)
-    plot_heatmap(x, y, r, g, b)
+    plot_heatmap(x, y, r, g, b, parameters.n_bins)
 
 
 params = []

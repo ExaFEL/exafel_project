@@ -40,6 +40,8 @@ export CCTBX_GPUS_PER_NODE=4
 env > env.out
 
 echo "
+symmetrize_Flatt = True
+lbfgs_maxiter = 1500
 spectrum_from_imageset = True
 method = 'L-BFGS-B'
 outdir = 'stage1'
@@ -64,7 +66,7 @@ fix {
 
 sigmas {
   ucell = .1 .1
-  RotXYZ = 0.01 0.01 0.01
+  RotXYZ = 0.001 0.001 0.001
   G = 1
   Nabc = 1 1 1
 }
@@ -75,7 +77,7 @@ init {
 }
 
 refiner {
-  num_devices=4
+  num_devices = ${DEVICES_PER_NODE}
   verbose = 0
   sigma_r = 3
   adu_per_photon = 1

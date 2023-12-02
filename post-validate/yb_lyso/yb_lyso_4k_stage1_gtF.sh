@@ -63,7 +63,7 @@ fix {
 
 sigmas {
   ucell = .1 .1
-  RotXYZ = 0.01 0.01 0.01
+  RotXYZ = 0.001 0.001 0.001
   G = 1
   Nabc = 1 1 1
 }

@@ -8,7 +8,7 @@
 #SBATCH -A m2859_g         # allocation
 #SBATCH -C gpu
 #SBATCH -q regular         # regular or special queue
-#SBATCH -t 01:30:00        # wall clock time limit
+#SBATCH -t 00:20:00        # wall clock time limit
 #SBATCH --gpus-per-node 4
 #SBATCH -o %j.out
 #SBATCH -e %j.err
@@ -40,6 +40,8 @@ export CCTBX_GPUS_PER_NODE=4
 env > env.out
 
 echo "
+symmetrize_Flatt = True
+lbfgs_maxiter = 1500
 spectrum_from_imageset = True
 method = 'L-BFGS-B'
 outdir = 'stage1'
@@ -65,7 +67,7 @@ fix {
 
 sigmas {
   ucell = .1 .1
-  RotXYZ = 0.01 0.01 0.01
+  RotXYZ = 0.001 0.001 0.001
   G = 1
   Nabc = 1 1 1
   eta_abc = 0.1 0.1 0.1
@@ -78,7 +80,7 @@ init {
 }
 
 refiner {
-  num_devices=4
+  num_devices = ${DEVICES_PER_NODE}
   verbose = 0
   sigma_r = 3
   adu_per_photon = 1
@@ -88,7 +90,8 @@ refiner {
 simulator {
   oversample = 1
   crystal.has_isotropic_ncells = False
-  crystal.num_mosaicity_samples = 12
+  crystal.has_isotropic_mosaicity = True
+  crystal.num_mosaicity_samples = 6
   structure_factors {
     mtz_column = 'Iobs(+),SIGIobs(+),Iobs(-),SIGIobs(-)'
   }
@@ -108,7 +111,6 @@ maxs {
   detz_shift = 1.5
   Nabc = 1600 1600 1600
   RotXYZ = 15 15 15
-  G = 1e6
 }
 ucell_edge_perc = 15
 ucell_ang_abs = 1

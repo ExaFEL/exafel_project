@@ -5,7 +5,7 @@
 #SBATCH -A m2859_g         # allocation
 #SBATCH -C gpu
 #SBATCH -q regular         # regular or special queue
-#SBATCH -t 00:60:00        # wall clock time limit
+#SBATCH -t 00:40:00        # wall clock time limit
 #SBATCH --gpus-per-node 4
 #SBATCH -o %j.out
 #SBATCH -e %j.err
