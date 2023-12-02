@@ -49,14 +49,14 @@ angles = []
 angles_dials = []
 refined_ucells = []
 refined_ncells = []
+refined_etas = []
 sigzs = []
-etas = []
 tdata = []
 
 if dfs:
     df = pandas.concat(dfs).reset_index(drop=True)
     gt_ncells = None
-    for i_df, (e, i_exp, A, ncells, sigz, eta_abc) in enumerate(zip(df.exp_name, df.exp_idx, df.Amats, df.ncells, df.sigz, df.eta)):
+    for i_df, (e, i_exp, A, ncells, etas, sigz) in enumerate(zip(df.exp_name, df.exp_idx, df.Amats, df.ncells, df.eta_abc, df.sigz)):
         expt = ExperimentList.from_file(e, False)[i_exp]
         C = expt.crystal
         C_dials = deepcopy(C)
@@ -85,15 +85,15 @@ if dfs:
         print("missori=%.5f -> %.5f deg.; ucell=[%s]; nabc=[%s] (shot %d / %d)" % (ang_dials, ang, ucell_s, nabc_s, i_df, len(df)))
         tdata.append(" ".join(["%.6f"%u for u in refined_ucells[-1]]) + " %s"%("".join(symbol.split())))
         refined_ncells.append( ncells)
+        refined_etas.append(etas)
         sigzs.append(sigz)
-        etas.append(eta_abc)
 
 angles = COMM.reduce(angles)
 angles_dials = COMM.reduce(angles_dials)
 refined_ncells = COMM.reduce(refined_ncells)
+refined_etas = COMM.reduce(refined_etas)
 refined_ucells = COMM.reduce(refined_ucells)
 sigzs = COMM.reduce(sigzs)
-etas = COMM.reduce(etas)
 tdata = COMM.reduce(tdata)
 if COMM.rank==0:
     #handle tdata
@@ -142,6 +142,16 @@ if COMM.rank==0:
     for name, med, mn, sig  in zip(labels, N_meds, N_mns, N_sigs):
         print("%s: Median, Mean, Stdev = %.4f , %.4f %.4f (unit cells)" %(name, med, mn, sig))
     print("Ground truth Ncells_abc=", gt_ncells)
+
+
+    print("\n<Eta_abc>:")
+    labels = ["eta_a", "eta_b", "eta_c"]
+    eta_meds = np.median(refined_etas, axis=0)
+    eta_mns= np.median(refined_etas, axis=0)
+    eta_sigs = np.std(refined_etas, axis=0)
+    for name, med, mn, sig  in zip(labels, eta_meds, eta_mns, eta_sigs):
+        print("%s: Median, Mean, Stdev = %.4f , %.4f %.4f (unit cells)" %(name, med, mn, sig))
+    print("Ground truth Eta_abc=0.05 (is this right?)")
 
     print("\n<SigmaZ>")
     N_meds = np.median(refined_ncells, axis=0)
