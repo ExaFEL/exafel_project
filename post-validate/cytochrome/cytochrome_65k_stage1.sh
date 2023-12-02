@@ -69,11 +69,12 @@ sigmas {
   RotXYZ = 0.001 0.001 0.001
   G = 1
   Nabc = 1 1 1
+  eta_abc = 1 1 1
 }
 
 init {
   Nabc = 29 29 29
-  G = 1e5
+  G = 1e4
 }
 
 refiner {
@@ -101,11 +102,14 @@ simulator {
 mins {
   detz_shift = -1.5
   RotXYZ = -15 -15 -15
+  G = 1e2
 }
 maxs {
   detz_shift = 1.5
   Nabc = 1600 1600 1600
-  RotXYZ = 15 15 15
+  RotXYZ = 3.14 3.14 3.14
+  G = 1e6
+  eta_abc = 360 360 360
 }
 ucell_edge_perc = 15
 ucell_ang_abs = 1

@@ -73,7 +73,7 @@ sigmas {
 
 init {
   Nabc = 29 29 29
-  G = 1e5
+  G = 1e4
 }
 
 refiner {
@@ -105,7 +105,8 @@ mins {
 maxs {
   detz_shift = 1.5
   Nabc = 1600 1600 1600
-  RotXYZ = 15 15 15
+  RotXYZ = 3.14 3.14 3.14
+  G = 1e6
 }
 ucell_edge_perc = 15
 ucell_ang_abs = 1

@@ -8,7 +8,7 @@
 #SBATCH -t 00:30:00        # wall clock time limit
 #SBATCH -o %j.out
 #SBATCH -e %j.err
-SRUN="srun -n 256 -c 16"
+SRUN="srun -n 1024 -c 4"
 
 export SCRATCH_FOLDER=$SCRATCH/cytochrome/$SLURM_JOB_ID
 mkdir -p "$SCRATCH_FOLDER"; cd "$SCRATCH_FOLDER" || exit

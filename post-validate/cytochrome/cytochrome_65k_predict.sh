@@ -40,30 +40,24 @@ export CCTBX_GPUS_PER_NODE=1
 export MPI4PY_RC_RECV_MPROBE='False'
 env > env.out
 
+cat $HOPPER_RESULTS/diff.phil > pred.phil
 echo "
-simulator.detector.force_zero_thickness=True
-spectrum_from_imageset = True
-downsamp_spec {
-  skip = True
-}
 debug_mode = False
 predictions {
   verbose = False
   laue_mode = False
   qcut = 0.0035
   label_weak_col = 'rlp'
-  weak_fraction = 0.33
-  threshold = 10
   oversample_override = 1
   Nabc_override = None
   pink_stride_override = None
-  default_Famplitude = 1e3
   resolution_range = [1.5,999]
   symbol_override = P6522
   method = *diffbragg exascale
   use_peak_detection = False
+  weak_fraction = 1
 }
-" > pred.phil
+" >> pred.phil
 
 echo "
 spotfinder.threshold.algorithm=dispersion
@@ -87,7 +81,7 @@ integration.summation.detector_gain=1
 echo "jobstart $(date)";pwd
 $SRUN diffBragg.integrate pred.phil predict_stage1_kokkos.phil \
     "${HOPPER_RESULTS}" predict \
-    --cmdlinePhil oversample_override=1 Nabc_override=[52,52,52] \
+    --cmdlinePhil oversample_override=1 \
     predictions.threshold=1 label_weak_col=rlp \
-    --numdev $CCTBX_DEVICE_PER_NODE
+    --numdev $CCTBX_DEVICE_PER_NODE --scanWeakFracs
 echo "jobend $(date)";pwd

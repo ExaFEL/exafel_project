@@ -101,7 +101,7 @@ logging {
 
 echo "jobstart $(date)";pwd
 $SRUN simtbx.diffBragg.stage_two stage_two.phil \
-    io.output_dir="${SLURM_JOB_ID}" \
+    io.output_dir="${SLURM_JOB_ID}" refls_key=predictions_77perc \
     pandas_table="${PANDA}" num_devices="${PERL_NDEV}" \
     simulator.structure_factors.mtz_name="${MTZ}"
 echo "jobend $(date)";pwd

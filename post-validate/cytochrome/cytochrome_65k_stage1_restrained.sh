@@ -73,11 +73,11 @@ sigmas {
   RotXYZ = 0.001 0.001 0.001
   G = 1
   Nabc = 1 1 1
-  eta_abc = .1 .1 .1
+  eta_abc = 1 1 1
 }
 
 init {
-  G = 1e5
+  G = 1e4
 }
 
 refiner {
@@ -92,7 +92,7 @@ simulator {
   crystal {
     has_isotropic_ncells = False
     has_isotropic_mosaicity = True
-    num_mosaicity_samples = 6
+    num_mosaicity_samples = 26
   }
   structure_factors {
     mtz_column = 'Iobs(+),SIGIobs(+),Iobs(-),SIGIobs(-)'
@@ -108,11 +108,14 @@ simulator {
 mins {
   detz_shift = -1.5
   RotXYZ = -15 -15 -15
+  G = 1e2
 }
 maxs {
   detz_shift = 1.5
   Nabc = 1600 1600 1600
-  RotXYZ = 15 15 15
+  RotXYZ = 3.14 3.14 3.14
+  G = 1e6
+  eta_abc = 360 360 360
 }
 ucell_edge_perc = 15
 ucell_ang_abs = 1
@@ -128,10 +131,11 @@ downsamp_spec {
 
 echo "jobstart $(date)";pwd
 # read the stills process folder for domain size estimates, and append them to stage1.phil
-diffBragg.estimate_Ncells_Eta $INDEX_PATH --updatePhil stage1.phil --njobs 32
+$SRUN diffBragg.estimate_Ncells_Eta $INDEX_PATH --updatePhil stage1.phil
+sleep 10
 # first run stage 1 to estimate parameter trends
 $SRUN hopper stage1.phil structure_factors.mtz_name="$MTZ_PATH" exp_ref_spec_file="$SPEC_PATH" max_process=${N_FIRST_PASS} outdir=$OUTDIR
-
+sleep 11
 # use the results from the first stage 1 pass to estimate better initial conditions and averages
 NEW_PHIL=stage1_updated.phil
 diffBragg.update_stage1_phil $OUTDIR $NEW_PHIL
