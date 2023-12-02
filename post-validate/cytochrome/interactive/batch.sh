@@ -1,20 +1,26 @@
 #!/bin/bash
 # with dependency=singleton jobs are linked by userid+jobname and then run in order of submission
 
-# command line args:
+# arguments differing from run to run
 sample=$1 # contents of the crystal -- one of cytochrome, yb_lyso, thermolysin, or cry11ba
 n_thousand=$2  # an integer from >= 1.  Set to e.g., 64 to simulate 64*1024 shots
 length=$3  # length of crystal in micron
-tag=$4  # a tag for the output folder
-# other settings
+detdist=$4 # detector distance in mm
+dmin=$5 # high resolution limit for simulation and refinement
+tag=$6  # a tag for the output folder
+
+echo "Initializing diffBragg analysis of $n_thousand thousands of $sample crystals, $length um in length,"
+echo "at a detector distance of $detdist and examined to a high resolution limit of $dmin Angstroms, with tag $tag."
+
+# SLURM settings
 Q=regular  # NERSC queue
-A=m2859  # NERSC account (_g will automatically be appended for GPU accounts)
+A=m2859  # NERSC account for the ExaFEL project (_g will automatically be appended for GPU accounts)
 
 nshot=$((1024*n_thousand)) # number of shots to sim (always multiples of 1024)
 N=$((1*n_thousand))  # NERSC number of nodes for cytochrome 2 Node per 1024 shots
 n_unrestrain=$((nshot/8))  # number of shots for first pass of stage1
 job=${tag}_${nshot}img_${length}um  # job name
-odir=${CFS}/m2859/cytochrome/${job}  # output results will be here
+odir=${CFS}/m2859/$tag/${job}  # output results will be here
 GPU="-N$N --cpus-per-gpu=8 --ntasks-per-node=32 --gpus-per-node=4 -A${A}_g -Cgpu -q$Q -dsingleton"
 CPU="-N$N --ntasks-per-node=32 -A$A -Ccpu -q$Q -dsingleton"
 
