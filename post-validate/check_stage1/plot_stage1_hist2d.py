@@ -8,7 +8,7 @@ import glob
 from itertools import islice
 from numbers import Number
 
-from matplotlib.patches import Patch
+from matplotlib.patches import Patch, Rectangle
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -23,10 +23,10 @@ stage1 = None
   .help = Directory with stage 1 results. If None, look recursively in work dir.
 heat = False
   .type = bool
-  .help = If True, represent all data using a 2D heatmap instead of plotting
-  .help = individual points, which might represent voluminous data better.
-  .help = Since heat expresses point concentration using opacity which can be
-  .help = confused with brightness, avoid using it alongside continuous r/g/b.
+  .help = If True, represent all data using a 2D heatmap instead of individual
+  .help = points, which might represent voluminous data better. 2D heat is
+  .help = drawn as a sqrt of point count in each bin with opacity. It can be
+  .help = confused with brightness, so avoid using it alongside continuous rgb.
 n_bins = None
   .type = int
   .help = Number of bins to group data along x and y. Default log2(len(x)).
@@ -248,7 +248,7 @@ def plot_heatmap(x: pd.Series,
                  g: pd.Series = None,
                  b: pd.Series = None,
                  bins: int = None,
-                 heat: bool = False) -> Stage1Results:
+                 heat: bool = False) -> None:
     x_is_log = x is not None and x.attrs.get('log_scale', False)
     y_is_log = y is not None and y.attrs.get('log_scale', False)
     r_is_log = r is not None and r.attrs.get('log_scale', False)
@@ -280,8 +280,8 @@ def plot_heatmap(x: pd.Series,
     y_space = np.geomspace if y_is_log else np.linspace
     x_bins = x_space(min(xa), max(xa), num=bins+1)
     y_bins = y_space(min(ya), max(ya), num=bins+1)
-    x_bin_idx = np.digitize(xa, x_bins, right=True)
-    y_bin_idx = np.digitize(ya, y_bins, right=True)
+    x_bin_idx = np.digitize(xa, x_bins, right=True) - 1  # in digitize, 0 = out
+    y_bin_idx = np.digitize(ya, y_bins, right=True) - 1  # in digitize, 0 = out
     x_colors = [np.mean(c[x_bin_idx == x_i], axis=0) for x_i in range(bins)]
     y_colors = [np.mean(c[y_bin_idx == y_i], axis=0) for y_i in range(bins)]
 
@@ -297,8 +297,14 @@ def plot_heatmap(x: pd.Series,
                 xy_heat[x_i, y_i, 3] = (sum_ := np.sum(mask))
                 xy_heat[x_i, y_i, :3] = c[mask].mean(axis=0) if sum_ else 0.
         xy_heat[:, :, 3] /= np.max(xy_heat[:, :, 3])
-        axh_extent = (x_bins[0], x_bins[-1], y_bins[0], y_bins[-1])
-        axh.imshow(xy_heat.T, extent=axh_extent, origin='lower')
+        xy_heat[:, :, 3] **= 0.5  # use square root to emphasize smaller bins
+        for x_i in range(bins):
+            for y_i in range(bins):
+                rect_s = (x_bins[x_i], y_bins[y_i])
+                rect_w = x_bins[x_i+1] - x_bins[x_i]
+                rect_h = y_bins[y_i+1] - y_bins[y_i]
+                axh.add_patch(Rectangle(rect_s, rect_w, rect_h, ec=None,
+                                        color=xy_heat[x_i, y_i, :]))
     else:
         axh.scatter(x=xa, y=ya, c=c, s=10, marker='.')
 
@@ -353,7 +359,6 @@ def prepare_series(parameters, default_path: str) -> pd.DataFrame:
 
 
 def main(parameters) -> None:
-    # TODO process unequal lens, remove outliers for plot
     stage1_path = p if (p := parameters.stage1) else '.'
     x = prepare_series(parameters.x, stage1_path)
     y = prepare_series(parameters.y, stage1_path)
