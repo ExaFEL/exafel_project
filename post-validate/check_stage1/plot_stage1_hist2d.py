@@ -21,12 +21,11 @@ phil_scope_str = """
 stage1 = None
   .type = str
   .help = Directory with stage 1 results. If None, look recursively in work dir.
-style = heat pixels *points
-  .type = choice
-  .help = The overall style of the plot: 'points' and 'pixels' show every spot
-  .help = individually, whereas 'heat' replaces all points with heatmap.
-  .help = The latter options will expedite plotting large amounts of data.
-  .help = Since 'heat' expresses point concentration using opacity which can be
+heat = False
+  .type = bool
+  .help = If True, represent all data using a 2D heatmap instead of plotting
+  .help = individual points, which might represent voluminous data better.
+  .help = Since heat expresses point concentration using opacity which can be
   .help = confused with brightness, avoid using it alongside continuous r/g/b.
 n_bins = None
   .type = int
@@ -249,7 +248,7 @@ def plot_heatmap(x: pd.Series,
                  g: pd.Series = None,
                  b: pd.Series = None,
                  bins: int = None,
-                 style: str = 'points') -> Stage1Results:
+                 heat: bool = False) -> Stage1Results:
     x_is_log = x is not None and x.attrs.get('log_scale', False)
     y_is_log = y is not None and y.attrs.get('log_scale', False)
     r_is_log = r is not None and r.attrs.get('log_scale', False)
@@ -290,19 +289,18 @@ def plot_heatmap(x: pd.Series,
         sharey='row', width_ratios=[2, 1], height_ratios=[1, 2])
     plt.subplots_adjust(wspace=0, hspace=0)
 
-    if style == 'heat':
-        heat = np.zeros(shape=(bins, bins, 4), dtype=float)
+    if heat:
+        xy_heat = np.zeros(shape=(bins, bins, 4), dtype=float)
         for x_i in range(bins):
             for y_i in range(bins):
                 mask = (x_bin_idx == x_i) & (y_bin_idx == y_i)
-                heat[x_i, y_i, :3] = c[mask].mean(axis=0)
-                heat[x_i, y_i, 3] = sum(mask)
-        heat[:, :, 3] /= max(heat[:, :, 3])
+                xy_heat[x_i, y_i, 3] = (sum_ := np.sum(mask))
+                xy_heat[x_i, y_i, :3] = c[mask].mean(axis=0) if sum_ else 0.
+        xy_heat[:, :, 3] /= np.max(xy_heat[:, :, 3])
         axh_extent = (x_bins[0], x_bins[-1], y_bins[0], y_bins[-1])
-        axh.imshow(heat.T, extent=axh_extent, origin='lower')
+        axh.imshow(xy_heat.T, extent=axh_extent, origin='lower')
     else:
-        marker = {'points': '.', 'pixels': ','}[style]
-        axh.scatter(x=xa, y=ya, c=c, s=10, marker=marker)
+        axh.scatter(x=xa, y=ya, c=c, s=10, marker='.')
 
     axh.axvline(x=xa.mean(), color='k')
     axh.axhline(y=ya.mean(), color='k')
@@ -362,7 +360,7 @@ def main(parameters) -> None:
     r = prepare_series(parameters.r, stage1_path)
     g = prepare_series(parameters.g, stage1_path)
     b = prepare_series(parameters.b, stage1_path)
-    plot_heatmap(x, y, r, g, b, bins=parameters.n_bins, style=parameters.style)
+    plot_heatmap(x, y, r, g, b, bins=parameters.n_bins, heat=parameters.heat)
 
 
 params = []
