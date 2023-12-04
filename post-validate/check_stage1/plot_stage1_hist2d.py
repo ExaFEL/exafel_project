@@ -21,6 +21,13 @@ phil_scope_str = """
 stage1 = None
   .type = str
   .help = Directory with stage 1 results. If None, look recursively in work dir.
+style = heat pixels *points
+  .type = choice
+  .help = The overall style of the plot: 'points' and 'pixels' show every spot
+  .help = individually, whereas 'heat' replaces all points with heatmap.
+  .help = The latter options will expedite plotting large amounts of data.
+  .help = Since 'heat' expresses point concentration using opacity which can be
+  .help = confused with brightness, avoid using it alongside continuous r/g/b.
 n_bins = None
   .type = int
   .help = Number of bins to group data along x and y. Default log2(len(x)).
@@ -241,8 +248,8 @@ def plot_heatmap(x: pd.Series,
                  r: pd.Series = None,
                  g: pd.Series = None,
                  b: pd.Series = None,
-                 bins: int = None) -> Stage1Results:
-    # TODO: Allow log-scale, allow individual rgb colors via r, g, b parameters
+                 bins: int = None,
+                 style: str = 'points') -> Stage1Results:
     x_is_log = x is not None and x.attrs.get('log_scale', False)
     y_is_log = y is not None and y.attrs.get('log_scale', False)
     r_is_log = r is not None and r.attrs.get('log_scale', False)
@@ -283,10 +290,24 @@ def plot_heatmap(x: pd.Series,
         sharey='row', width_ratios=[2, 1], height_ratios=[1, 2])
     plt.subplots_adjust(wspace=0, hspace=0)
 
+    if style == 'heat':
+        heat = np.zeros(shape=(bins, bins, 4), dtype=float)
+        for x_i in range(bins):
+            for y_i in range(bins):
+                mask = (x_bin_idx == x_i) & (y_bin_idx == y_i)
+                heat[x_i, y_i, :3] = c[mask].mean(axis=0)
+                heat[x_i, y_i, 3] = sum(mask)
+        heat[:, :, 3] /= max(heat[:, :, 3])
+        axh_extent = (x_bins[0], x_bins[-1], y_bins[0], y_bins[-1])
+        axh.imshow(heat.T, extent=axh_extent, origin='lower')
+    else:
+        marker = {'points': '.', 'pixels': ','}[style]
+        axh.scatter(x=xa, y=ya, c=c, s=10, marker=marker)
+
     axh.axvline(x=xa.mean(), color='k')
     axh.axhline(y=ya.mean(), color='k')
     axh.set_aspect('auto')
-    axh.scatter(x=xa, y=ya, c=c, s=10)
+
     axh.set_xlabel(x_name)
     axh.set_ylabel(y_name)
     axh.set_xlim(min(xa), max(xa))
@@ -341,7 +362,7 @@ def main(parameters) -> None:
     r = prepare_series(parameters.r, stage1_path)
     g = prepare_series(parameters.g, stage1_path)
     b = prepare_series(parameters.b, stage1_path)
-    plot_heatmap(x, y, r, g, b, parameters.n_bins)
+    plot_heatmap(x, y, r, g, b, bins=parameters.n_bins, style=parameters.style)
 
 
 params = []
