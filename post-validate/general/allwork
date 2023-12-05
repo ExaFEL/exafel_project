@@ -1,0 +1,23 @@
+#sample n_thousand length_microns
+./batch.sh cyto 2 40
+#./batch.sh cyto 1 25
+#./batch.sh cyto 1 10
+#./batch.sh cyto 1 5
+./batch.sh cyto 2 2
+./batch.sh cry11ba 2 16
+#./batch.sh cry11ba 1 8
+#./batch.sh cry11ba 1 4
+#./batch.sh cry11ba 1 2
+./batch.sh cry11ba 2 0.5
+./batch.sh thermo 2 20
+#./batch.sh thermo 1 10
+#./batch.sh thermo 1 5
+#./batch.sh thermo 1 2
+./batch.sh thermo 2 1
+./batch.sh yb_lyso 2 2
+#./batch.sh yb_lyso 1 1
+#./batch.sh yb_lyso 1 0.5
+#./batch.sh yb_lyso 1 0.25
+./batch.sh yb_lyso 2 0.125
+
+
