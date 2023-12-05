@@ -1,5 +1,5 @@
 #sample n_thousand length_microns
-BATCH_PATH=$MODULES/exafel_project/post-validate/general/batch.sh
+BATCH_PATH=$MODULES/exafel_project/post-validate/general/batch_dmt.sh
 $BATCH_PATH cyto 64 40
 $BATCH_PATH cyto 64 25
 $BATCH_PATH cyto 64 10
