@@ -35,6 +35,7 @@ echo "CPU settings:    "$CPU
 echo "Number of shots: "$nshot
 echo "w/ unrestrained: "n_unrestrain
 
+mkdir -p odir
 # times calibrated for 1 node per 1024 shots
 sbatch -J$job $GPU -t 40  -o${odir}/sim.out -e${odir}/sim.err ${script_dir}/general_sim.sh $length $nshot $detdist $pdb $odir
 sbatch -J$job $CPU -t 15  -o${odir}/idx.out -e${odir}/idx.err ${script_dir}/general_index.sh $dmin $spcgrp $ucell $odir
