@@ -1,12 +1,11 @@
 #!/bin/bash
 SRUN="srun -c2"
-$sample $length $nshot $detdist $odir
-export SAMPLE=$1
-export LENGTH=$2 # micron length of crystal
-export N_SIM=$3 # total number of images to simulate
-export DETDIST=$4
-export PDB=$5
-export SCRATCH_FOLDER=$6
+
+export LENGTH=$1 # micron length of crystal
+export N_SIM=$2 # total number of images to simulate
+export DETDIST=$3
+export PDB=$4
+export SCRATCH_FOLDER=$5
 mkdir -p "$SCRATCH_FOLDER"; cd "$SCRATCH_FOLDER" || exit
 
 export N_START=0

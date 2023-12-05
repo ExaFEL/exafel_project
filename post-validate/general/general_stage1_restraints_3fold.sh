@@ -9,9 +9,9 @@
 SRUN="srun -c2"
 export SIGU=$1
 export SPCGRP=$2
-H5_SIM_PATH=$1
+H5_SIM_PATH=$3
 H5_SIM_PATH=${H5_SIM_PATH%/} # remove any trailing forward slash
-N_FIRST_PASS=$2 # number of shots to process in order to gauge restraints
+N_FIRST_PASS=$4 # number of shots to process in order to gauge restraints
 export INDEX_PATH=${H5_SIM_PATH}/index # stills process output folder
 export MTZ_PATH=${H5_SIM_PATH}/merge/out/ly99sim_all.mtz  # xfel.merge output file
 export SPEC_PATH=${H5_SIM_PATH}/integ_exp_ref.txt  # diffBragg.make_input_file output file
