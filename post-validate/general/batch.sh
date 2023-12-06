@@ -26,6 +26,7 @@ job=${sample}_${n_thousand}Kimg_${length}um  # job name
 odir=${SCRATCH}/m2859/$sample/${job}  # output results will be here
 GPU="-N$N --cpus-per-gpu=8 --ntasks-per-node=32 --gpus-per-node=4 -A${A}_g -Cgpu -q$Q -dsingleton"
 CPU="-N$N --ntasks-per-node=32 -A$A -Ccpu -q$Q -dsingleton"
+script_dir="$MODULES/exafel_project/post-validate/general"
 
 echo "GPU settings: "$GPU
 echo "CPU settings: "$CPU
@@ -35,16 +36,16 @@ echo "output root: "$odir
 mkdir -p ${odir}
 # times calibrated for 1 node per 1024 shots
 echo sim for $sample $nshot $length um $detdist $pdb $odir
-sbatch -J$job $GPU -t 50 -o${odir}/sim.out -e${odir}/sim.err ./general_sim.sh $length $nshot $detdist $pdb $odir
 echo index for $dmin $spcgrp $ucell $odir
-sbatch -J$job $CPU -t 60 -o${odir}/idx.out -e${odir}/idx.err ./general_index.sh $dmin $spcgrp $ucell $odir
 echo merge for $cov $pdb $dmin $odir
-sbatch -J$job $CPU -t 20 -o${odir}/mrg.out -e${odir}/mrg.err ./general_merge.sh $cov $pdb $dmin $odir
-sbatch -J$job $CPU -t 20 -o${odir}/spl.out -e${odir}/spl.err ./general_split.sh $odir
 echo stage1 $sigu $spcgrp $odir ${n_unrestrain}
-sbatch -J$job $GPU -t 60 -o${odir}/st1.out -e${odir}/st1.err ./general_stage1_restraints_3fold.sh $sigu $spcgrp $odir ${n_unrestrain}
 echo predict $dmin $spcgrp $ucell $odir
-sbatch -J$job $GPU -t 60 -o${odir}/prd.out -e${odir}/prd.err ./general_predict.sh $dmin $spcgrp $ucell $odir
-sbatch -J$job $GPU -t 120 -o${odir}/st2.out -e${odir}/st2.err ./general_stage2.sh $dmin $odir
+sbatch -J$job $GPU -t 50 -o${odir}/sim.out -e${odir}/sim.err ${script_dir}/general_sim.sh $length $nshot $detdist $pdb $odir
+sbatch -J$job $CPU -t 60 -o${odir}/idx.out -e${odir}/idx.err ${script_dir}/general_index.sh $dmin $spcgrp $ucell $odir
+sbatch -J$job $CPU -t 20 -o${odir}/mrg.out -e${odir}/mrg.err ${script_dir}/general_merge.sh $cov $pdb $dmin $odir
+sbatch -J$job $CPU -t 20 -o${odir}/spl.out -e${odir}/spl.err ${script_dir}/general_split.sh $odir
+sbatch -J$job $GPU -t 60 -o${odir}/st1.out -e${odir}/st1.err ${script_dir}/general_stage1_restraints_3fold.sh $sigu $spcgrp $odir ${n_unrestrain}
+sbatch -J$job $GPU -t 60 -o${odir}/prd.out -e${odir}/prd.err ${script_dir}/general_predict.sh $dmin $spcgrp $ucell $odir
+sbatch -J$job $GPU -t 120 -o${odir}/st2.out -e${odir}/st2.err ${script_dir}/general_stage2.sh $dmin $odir
 # optional ens.hopper:
-sbatch -J$job $GPU -t 120 -o${odir}/ens.out -e${odir}/ens.err ./general_ensHopper.sh $dmin $odir
+sbatch -J$job $GPU -t 120 -o${odir}/ens.out -e${odir}/ens.err ${script_dir}/general_ensHopper.sh $dmin $odir
