@@ -32,6 +32,7 @@ echo "CPU settings: "$CPU
 echo "Jobname: "$job
 echo "output root: "$odir
 
+mkdir -p ${odir}
 # times calibrated for 1 node per 1024 shots
 echo sim for $sample $nshot $length um $detdist $pdb $odir
 sbatch -J$job $GPU -t 50 -o${odir}/sim.out -e${odir}/sim.err ./general_sim.sh $length $nshot $detdist $pdb $odir

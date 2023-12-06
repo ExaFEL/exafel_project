@@ -1,6 +1,6 @@
 #!/bin/bash
-nrank=$((12*$SLURM_NNODES))  # 12 tasks per node was critical for kokkos 4+ on Perlmutter
-SRUN="srun -n $nrank --ntasks-per-node=12 --cpus-per-gpu=3 --gpus-per-node=4 -c 2"
+
+SRUN="srun -c2"
 export DMIN=$1
 export SPCGRP=$2
 export UCELL=$3
