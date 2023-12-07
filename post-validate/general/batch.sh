@@ -28,18 +28,15 @@ GPU="-N$N --cpus-per-gpu=8 --ntasks-per-node=32 --gpus-per-node=4 -A${A}_g -Cgpu
 CPU="-N$N --ntasks-per-node=32 -A$A -Ccpu -q$Q -dsingleton"
 script_dir="$MODULES/exafel_project/post-validate/general"
 
-echo "GPU settings: "$GPU
-echo "CPU settings: "$CPU
-echo "Jobname: "$job
-echo "output root: "$odir
+echo "Job name:        "$job
+echo "Output root:     "$odir
+echo "GPU settings:    "$GPU
+echo "CPU settings:    "$CPU
+echo "Number of shots: "$nshot
+echo "w/ unrestrained: "$n_unrestrain
 
 mkdir -p ${odir}
 # times calibrated for 1 node per 1024 shots
-echo sim for $sample $nshot $length um $detdist $pdb $odir
-echo index for $dmin $spcgrp $ucell $odir
-echo merge for $cov $pdb $dmin $odir
-echo stage1 $sigu $spcgrp $odir ${n_unrestrain}
-echo predict $dmin $spcgrp $ucell $odir
 sbatch -J$job $GPU -t 50 -o${odir}/sim.out -e${odir}/sim.err ${script_dir}/general_sim.sh $length $nshot $detdist $pdb $odir
 sbatch -J$job $CPU -t 60 -o${odir}/idx.out -e${odir}/idx.err ${script_dir}/general_index.sh $dmin $spcgrp $ucell $odir
 sbatch -J$job $CPU -t 20 -o${odir}/mrg.out -e${odir}/mrg.err ${script_dir}/general_merge.sh $cov $pdb $dmin $odir
