@@ -381,7 +381,7 @@ libtbx.python $MODULES/exafel_project/kpp_eval/evaluate_cc12.py d_min=1.5 \
 # ground truth vs diffBragg, 40 um dataset
 libtbx.python $MODULES/exafel_project/kpp_eval/evaluate_cc12.py d_min=1.5 \
     mtz=$SCRATCH/cytochrome/1425204/ground_truth.mtz \
-    mtz=$SCRATCH/cytochrome/1435087/1435087/_fcell_trial0_iter7.mtz
+    mtz=$SCRATCH/cytochrome/1435087/1435087/_fcell_trial0_call10_iter7.mtz
 # ground truth vs DIALS, 2 um dataset
 libtbx.python $MODULES/exafel_project/kpp_eval/evaluate_cc12.py d_min=1.5 \
     mtz=$SCRATCH/cytochrome/1429605/ground_truth.mtz \
@@ -389,7 +389,7 @@ libtbx.python $MODULES/exafel_project/kpp_eval/evaluate_cc12.py d_min=1.5 \
 # ground truth vs diffBragg, 2 um dataset
 libtbx.python $MODULES/exafel_project/kpp_eval/evaluate_cc12.py d_min=1.5 \
     mtz=$SCRATCH/cytochrome/1429605/ground_truth.mtz \
-    mtz=$SCRATCH/cytochrome/1435719/1435719/_fcell_trial0_iter12.mtz
+    mtz=$SCRATCH/cytochrome/1435719/1435719/_fcell_trial0_call15_iter12.mtz
 ```
 
 Typically, values of cc above 90% would be considered very good
@@ -455,7 +455,7 @@ libtbx.python $MODULES/exafel_project/kpp_eval/evaluate_anom.py \
 # diffBragg-refined factors, cytochrome 500k 40 um
 libtbx.python $MODULES/exafel_project/kpp_eval/evaluate_anom.py \
     $MODULES/exafel_project/kpp-frontier/cytochrome/5wp2.pdb \
-    $SCRATCH/cytochrome/1435087/1435087/_fcell_trial0_iter7.mtz \
+    $SCRATCH/cytochrome/1435087/1435087/_fcell_trial0_call10_iter7.mtz \
     selection="element Fe or element S"
 # DIALS-refined structure factors, cytochrome 500k 2 um
 libtbx.python $MODULES/exafel_project/kpp_eval/evaluate_anom.py \
@@ -465,7 +465,7 @@ libtbx.python $MODULES/exafel_project/kpp_eval/evaluate_anom.py \
 # diffBragg-refined factors, cytochrome 500k 2 um
 libtbx.python $MODULES/exafel_project/kpp_eval/evaluate_anom.py \
     $MODULES/exafel_project/kpp-frontier/cytochrome/5wp2.pdb \
-    $SCRATCH/cytochrome/1435719/1435719/_fcell_trial0_iter12.mtz \
+    $SCRATCH/cytochrome/1435719/1435719/_fcell_trial0_call15_iter12.mtz \
     selection="element Fe or element S"
 ```
 

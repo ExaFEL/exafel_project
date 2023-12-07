@@ -4,6 +4,7 @@ Convert the .npz output of simtbx.diffBragg.stage_two to .mtz
 
 import numpy as np
 import os
+import re
 from matplotlib import pyplot as plt
 from scipy.stats import pearsonr
 import glob
@@ -15,6 +16,9 @@ from LS49 import ls49_big_data
 big_data = ls49_big_data
 def full_path(filename):
   return os.path.join(big_data,filename)
+
+def natural_sort(s, filter=re.compile('([0-9]+)')):
+  return [int(text) if text.isdigit() else text.lower() for text in filter.split(s)]
 
 def npz_to_mtz(npz_path,
                f_asu_map,
@@ -90,11 +94,13 @@ if __name__=='__main__':
     ma_proc = ma_proc.as_amplitude_array()
     pearson_coeff, val_0, ground_truth = evaluate_iter(ma_proc, ma_proc, ma_calc)
 
-    all_iter_npz = len(glob.glob(input_path + '/_fcell_trial0_iter*.npz'))
+    all_npz_files = glob.glob(input_path + '/_fcell_trial0_*.npz')
+    all_npz_files.sort(key=natural_sort)
+    all_iter_npz = len(all_npz_files)
 
     pearson_coeff_vec = [pearson_coeff.statistic]
     for num_iter in range(all_iter_npz):
-        npz_file = input_path + '/_fcell_trial0_iter' + str(num_iter)
+        npz_file = all_npz_files[num_iter]
         print(npz_file)
         ma = npz_to_mtz(npz_file,
                         f_asu_map,

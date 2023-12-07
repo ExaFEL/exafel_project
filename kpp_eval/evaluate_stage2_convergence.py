@@ -5,6 +5,7 @@ the evolution of Pearson's R or CC of F or anom as a function of stage2 step.
 from enum import Enum
 import glob
 import os
+import re
 from typing import Callable, List, Sequence, Tuple
 
 from matplotlib import pyplot as plt
@@ -29,6 +30,9 @@ phil_scope_str = """
 stride = 1
   .type = int
   .help = skip this many iterations between plot points
+all_evaluations = False
+  .type = bool
+  .help = If true, use files from all target evaluations. Otherwise use only iterations
 pdb = None
   .type = str
   .help = Path to the pdb file to be analyzed. If None, 1m2a.pdb will be used.
@@ -70,6 +74,9 @@ show = True
 
 
 bin_colors = []  # global list of colors used for plotting bins, filled later
+
+def natural_sort(s, filter=re.compile('([0-9]+)')):
+  return [int(text) if text.isdigit() else text.lower() for text in filter.split(s)]
 
 
 @set_default_return('$MODULES/ls49_big_data/1m2a.pdb')
@@ -267,14 +274,30 @@ def run(parameters) -> None:
     all_iters = len(all_mtz_files)
   else:
     f_asu_map = np.load(input_path + '/f_asu_map.npy', allow_pickle=True)[()]
-    all_iters = len(glob.glob(input_path + '/_fcell_trial0_iter*.npz'))
+    all_npz_files = glob.glob(input_path + '/_fcell_trial0_eval*_iter*.npz')
+    if len(all_npz_files)==0:
+      all_npz_files = glob.glob(input_path + '/_fcell_trial0_iter*.npz')
+      all_npz_files.sort(key=natural_sort)
+      params.all_evaluations = True
+    if not params.all_evaluations:
+      iteration_files = {}
+      for filename in all_npz_files:
+        _, _, trial, eval_count, iter = filename.split("/")[-1].split(".")[0].split("_")
+        eval_count = int(eval_count[4:])
+        iter = int(iter[4:])
+        if iter in iteration_files:
+          if iteration_files[iter]['eval_count'] >= eval_count:
+            continue
+        iteration_files[iter] = {'name':filename, 'eval_count':eval_count}
+      all_npz_files = [iteration_files[x]['name'] for x in range(len(iteration_files))]
+    all_iters = len(all_npz_files)
   for num_iter in range(0,all_iters,params.stride):
     if params.is_ens_hopper:
       mtz_file = all_mtz_files[num_iter]
       print(mtz_file)
       ma = any_reflection_file(mtz_file).as_miller_arrays()[0]
     else:
-      npz_file = f'{input_path}/_fcell_trial0_iter{num_iter}.npz'
+      npz_file = all_npz_files[num_iter]
       print(npz_file)
       ma = read_npz(npz_file, f_asu_map, symmetry, save_mtz=True)
 

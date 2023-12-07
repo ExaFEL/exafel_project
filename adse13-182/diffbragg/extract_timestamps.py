@@ -97,7 +97,7 @@ for rank in tqdm(timepoints):
         elif "Setup ends!" in msg:
             setup['end'].append(time)
 
-        elif "BEGIN FUNC GRAD ; iteration" in msg:
+        elif ("BEGIN FUNC GRAD ; iteration" in msg) or ("BEGIN FUNC GRAD ; call" in msg):
             iterations['start'].append(time)
         elif "DONE WITH FUNC GRAD" in msg:
             iterations['end'].append(time)
