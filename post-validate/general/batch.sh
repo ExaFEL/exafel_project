@@ -11,6 +11,7 @@ spcgrp=`libtbx.python -c "from exafel_project.kpp_utils.cases import cases; prin
 ucell=`libtbx.python -c "from exafel_project.kpp_utils.cases import cases; print(cases['$sample']['ucell'])"`
 cov=`libtbx.python -c "from exafel_project.kpp_utils.cases import cases; print(cases['$sample']['cov'])"`
 sigu=`libtbx.python -c "from exafel_project.kpp_utils.cases import cases; print(cases['$sample']['sigu'])"`
+nabc=`libtbx.python -c "from exafel_project.kpp_utils.cases import cases; print(cases['$sample']['nabc'])"`
 echo "Initializing diffBragg analysis of $n_thousand thousands of $sample crystals, $length um in length,"
 
 # If $4 is given, it must be a string of digits including steps numbers to run:
@@ -43,7 +44,8 @@ if requested 1; then sbatch -J$job $GPU -t 40  -o${odir}/sim.out -e${odir}/sim.e
 if requested 2; then sbatch -J$job $CPU -t 15  -o${odir}/idx.out -e${odir}/idx.err ${script_dir}/general_index.sh $dmin $spcgrp $ucell $odir ; fi
 if requested 3; then sbatch -J$job $CPU -t 10  -o${odir}/mrg.out -e${odir}/mrg.err ${script_dir}/general_merge.sh $cov $pdb $dmin $odir ; fi
 if requested 4; then sbatch -J$job $CPU -t 5   -o${odir}/spl.out -e${odir}/spl.err ${script_dir}/general_split.sh $odir ; fi
-if requested 5; then sbatch -J$job $GPU -t 60  -o${odir}/st1.out -e${odir}/st1.err ${script_dir}/general_stage1_restraints_3fold.sh $sigu $spcgrp $odir ${n_unrestrain} ; fi
+# if requested 5; then sbatch -J$job $GPU -t 60  -o${odir}/st1.out -e${odir}/st1.err ${script_dir}/general_stage1_restraints_3fold.sh $sigu $spcgrp $odir ${n_unrestrain} ; fi
+if requested 5; then sbatch -J$job $GPU -t 60  -o${odir}/st1.out -e${odir}/st1.err ${script_dir}/general_stage1_restraints_to_gt.sh $sigu $spcgrp $odir ${n_unrestrain} $nabc ; fi
 if requested 6; then sbatch -J$job $GPU -t 61  -o${odir}/prd.out -e${odir}/prd.err ${script_dir}/general_predict.sh $dmin $spcgrp $ucell $odir ; fi
 if requested 7; then sbatch -J$job $GPU -t 120 -o${odir}/st2.out -e${odir}/st2.err ${script_dir}/general_stage2.sh $dmin $odir ; fi
 # optional ens.hopper:

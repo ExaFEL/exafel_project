@@ -8,6 +8,7 @@ cases = dict (
     ucell="77.856,77.856,263.615,90,90,120",
     cov="exafel_project/kpp-frontier/cytochrome/covariance_tdata_cells.pickle",
     sigu="[1,1]",
+    nabc="[29,29,29]",
   ),
   cry11ba=dict(
     pdb="exafel_project/kpp-sim/cry11ba/7qyd.pdb",
@@ -17,6 +18,7 @@ cases = dict (
     ucell="168.245,158.528,57.534,90,90,90",
     cov="exafel_project/kpp-frontier/cry11ba/covariance_tdata_cells_20000.pickle",
     sigu="[1,1,1]",
+    nabc="[28,28,28]",
   ),
   thermo=dict(
     pdb="exafel_project/kpp-sim/thermolysin/4tnl.pdb",
@@ -26,6 +28,7 @@ cases = dict (
     ucell="93.0407,93.0407,130.41,90,90,120",
     cov="exafel_project/kpp-sim/thermolysin/covariance_tdata_cells_cropped.pickle",
     sigu="[1,1]",
+    nabc="[32,32,32]",
   ),
   yb_lyso=dict(
     pdb="exafel_project/kpp-frontier/yb_lyso/4bs7.pdb",
@@ -35,5 +38,6 @@ cases = dict (
     ucell="79.1,79.1,38.4,90,90,90",
     cov="exafel_project/kpp-sim/yb_lyso/covariance_tdata_cells.pickle",
     sigu="[1,1]",
+    nabc="[52,52,52]",
   ),
 )
