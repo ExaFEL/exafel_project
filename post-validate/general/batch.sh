@@ -44,7 +44,7 @@ if requested 2; then sbatch -J$job $CPU -t 15  -o${odir}/idx.out -e${odir}/idx.e
 if requested 3; then sbatch -J$job $CPU -t 10  -o${odir}/mrg.out -e${odir}/mrg.err ${script_dir}/general_merge.sh $cov $pdb $dmin $odir ; fi
 if requested 4; then sbatch -J$job $CPU -t 5   -o${odir}/spl.out -e${odir}/spl.err ${script_dir}/general_split.sh $odir ; fi
 if requested 5; then sbatch -J$job $GPU -t 60  -o${odir}/st1.out -e${odir}/st1.err ${script_dir}/general_stage1_restraints_3fold.sh $sigu $spcgrp $odir ${n_unrestrain} ; fi
-if requested 6; then sbatch -J$job $GPU -t 60  -o${odir}/prd.out -e${odir}/prd.err ${script_dir}/general_predict.sh $dmin $spcgrp $ucell $odir ; fi
+if requested 6; then sbatch -J$job $GPU -t 61  -o${odir}/prd.out -e${odir}/prd.err ${script_dir}/general_predict.sh $dmin $spcgrp $ucell $odir ; fi
 if requested 7; then sbatch -J$job $GPU -t 120 -o${odir}/st2.out -e${odir}/st2.err ${script_dir}/general_stage2.sh $dmin $odir ; fi
 # optional ens.hopper:
-if requested 8; then sbatch -J$job $GPU -t 120 -o${odir}/ens.out -e${odir}/ens.err ${script_dir}/general_ensHopper.sh $dmin $odir ; fi
+if requested 8; then sbatch -J$job $GPU -t 121 -o${odir}/ens.out -e${odir}/ens.err ${script_dir}/general_ensHopper.sh $dmin $odir ; fi
