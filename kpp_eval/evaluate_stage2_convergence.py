@@ -319,8 +319,9 @@ def run(parameters) -> None:
   axes.set_xlabel('diffBragg iteration step')
   axes.set_ylabel(stat.value)
   if parameters.n_bins > 1:
-    axes.legend(bbox_to_anchor=(0.5,1.005), bbox_transform=fig.transFigure,
-                ncol=3,handletextpad=.1, borderpad=.2, loc='upper center')
+    axes.legend(loc='lower right')
+  #  axes.legend(bbox_to_anchor=(0.5,1.005), bbox_transform=fig.transFigure,
+  #              ncol=3,handletextpad=.1, borderpad=.2, loc='upper center')
   axes.grid(1, ls='--')
   fig.savefig(stat.value + '.png')
 
