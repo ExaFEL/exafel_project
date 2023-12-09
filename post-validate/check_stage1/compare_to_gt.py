@@ -97,7 +97,7 @@ sigzs = COMM.reduce(sigzs)
 tdata = COMM.reduce(tdata)
 if COMM.rank==0:
     #handle tdata
-    tdata_file = os.path.join(os.getcwd(),"tdata_cells.tdata")
+    tdata_file = os.path.join(os.getcwd(),"tdata_cells_stg1.tdata")
     mycluster = "uc_metrics.dbscan file_name=%s space_group=Pmmm eps=0.02 feature_vector=a,b,c write_covariance=False plot.outliers=False"%tdata_file
     with open(tdata_file,"w") as F:
       F.write("\n".join(tdata))
