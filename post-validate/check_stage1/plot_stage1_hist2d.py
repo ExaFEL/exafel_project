@@ -147,7 +147,7 @@ def assert_same_length(*args: Tuple[Sequence]) -> None:
 
 
 def read_pickled_dataframes(stage1_path: str = '.') -> Stage1Results:
-    pickle_glob = stage1_path + '/**/pandas/hopper_results_rank*.pkl'
+    pickle_glob = stage1_path + '/**/hopper_results_rank*.pkl'
     pickle_paths = glob.glob(pickle_glob, recursive=True)
     stage1_dfs: List[pd.DataFrame] = []
     for pickle_path in pickle_paths:
