@@ -101,13 +101,13 @@ simulator {
 mins {
   detz_shift = -1.5
   RotXYZ = -3.14 -3.14 -3.14
-  G = 1e2
+  G = 1e-2
 }
 maxs {
   detz_shift = 1.5
   Nabc = 1600 1600 1600
   RotXYZ = 3.14 3.14 3.14
-  G = 1e6
+  G = 1e8
   eta_abc = 360 360 360
 }
 ucell_edge_perc = 15
