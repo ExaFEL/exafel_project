@@ -98,13 +98,13 @@ simulator {
 mins {
   detz_shift = -1.5
   RotXYZ = -3.14 -3.14 -3.14
-  G = 1e2
+  G = 1e-2
 }
 maxs {
   detz_shift = 1.5
   Nabc = 1600 1600 1600
   RotXYZ = 3.14 3.14 3.14
-  G = 1e6
+  G = 1e8
   eta_abc = 360 360 360
 }
 ucell_edge_perc = 15
@@ -129,7 +129,7 @@ $SRUN hopper stage1.phil structure_factors.mtz_name="$MTZ_PATH" exp_ref_spec_fil
 sleep 11
 # use the results from the first stage 1 pass to estimate better initial conditions and averages 
 NEW_PHIL=stage1_updated.phil
-diffBragg.update_stage1_phil $OUTDIR $NEW_PHIL 
+diffBragg.update_stage1_phil $OUTDIR $NEW_PHIL --setGlim
 $SRUN hopper $NEW_PHIL max_process=-1 outdir=. filter_during_refinement.enable=True filter_after_refinement.enable=True
 
 echo "jobend $(date)";pwd
