@@ -11,7 +11,6 @@ spcgrp=`libtbx.python -c "from exafel_project.kpp_utils.cases import cases; prin
 ucell=`libtbx.python -c "from exafel_project.kpp_utils.cases import cases; print(cases['$sample']['ucell'])"`
 cov=`libtbx.python -c "from exafel_project.kpp_utils.cases import cases; print(cases['$sample']['cov'])"`
 sigu=`libtbx.python -c "from exafel_project.kpp_utils.cases import cases; print(cases['$sample']['sigu'])"`
-nabc=`libtbx.python -c "from exafel_project.kpp_utils.cases import cases; print(cases['$sample']['nabc'])"`
 echo "Initializing diffBragg analysis of $n_thousand thousands of $sample crystals, $length um in length,"
 
 # If $4 is given, it must be a string of digits including steps numbers to run:

@@ -1,5 +1,5 @@
 #sample n_thousand length_microns
-BATCH_PATH=./debug.batch.sh
+BATCH_PATH=$MODULES/exafel_project/post-validate/general/noGT.batch.sh
 nshot=24
 $BATCH_PATH cyto $nshot 40
 $BATCH_PATH yb_lyso $nshot 2
