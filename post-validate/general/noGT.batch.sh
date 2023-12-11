@@ -26,11 +26,11 @@ N=$((2*n_thousand))  # NERSC number of nodes: 1 node/1000 shots (Q=regular); 2 n
 
 n_unrestrain=$((nshot/8))  # number of shots for first pass of stage1
 job=${sample}_${n_thousand}Kimg_${length}um  # job name
-odir=${SCRATCH}/m2859/$sample/${job}_2  # output results will be here
+odir=${SCRATCH}/m2859_noGT/$sample/${job}  # output results will be here
+mkdir -p $odir
 GPU="-N$N --cpus-per-gpu=8 --ntasks-per-node=32 --gpus-per-node=4 -A${A}_g -Cgpu -q$Q -dsingleton"
 CPU="-N$N --ntasks-per-node=32 -A$A -Ccpu -q$Q -dsingleton"
 script_dir="$MODULES/exafel_project/post-validate/general"
-
 echo "Job name:        "$job
 echo "Output root:     "$odir
 echo "GPU settings:    "$GPU
@@ -43,7 +43,7 @@ if requested 1; then sbatch -J$job $GPU -t 30  -o${odir}/sim.out -e${odir}/sim.e
 if requested 2; then sbatch -J$job $CPU -t 30  -o${odir}/idx.out -e${odir}/idx.err ${script_dir}/general_index.sh $dmin $spcgrp $ucell $odir ; fi
 if requested 3; then sbatch -J$job $CPU -t 30  -o${odir}/mrg.out -e${odir}/mrg.err ${script_dir}/general_merge.sh $cov $pdb $dmin $odir ; fi
 if requested 4; then sbatch -J$job $CPU -t 15   -o${odir}/spl.out -e${odir}/spl.err ${script_dir}/general_split.sh $odir ; fi
-if requested 5; then sbatch -J$job $GPU -t 30  -o${odir}/st1.out -e${odir}/st1.err ${script_dir}/general_stage1_restraints_3fold.sh $sigu $spcgrp $odir ${n_unrestrain} ; fi
+if requested 5; then sbatch -J$job $GPU -t 45  -o${odir}/st1.out -e${odir}/st1.err ${script_dir}/general_stage1_restraints_3fold.sh $sigu $spcgrp $odir ${n_unrestrain} ; fi
 if requested 6; then sbatch -J$job $GPU -t 30  -o${odir}/prd.out -e${odir}/prd.err ${script_dir}/general_predict.sh $dmin $spcgrp $ucell $odir ; fi
 if requested 7; then sbatch -J$job $GPU -t 30 -o${odir}/st2.out -e${odir}/st2.err ${script_dir}/general_stage2.sh $dmin $odir ; fi
 # optional ens.hopper:
