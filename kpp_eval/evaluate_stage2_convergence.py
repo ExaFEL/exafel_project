@@ -27,6 +27,9 @@ from exafel_project.kpp_eval.evaluate_cc12 import CrossCorrelationSums
 
 
 phil_scope_str = """
+figprefix = ""
+  .type = str
+  .help = prefix for savefig
 stride = 1
   .type = int
   .help = skip this many iterations between plot points
@@ -323,7 +326,7 @@ def run(parameters) -> None:
   #  axes.legend(bbox_to_anchor=(0.5,1.005), bbox_transform=fig.transFigure,
   #              ncol=3,handletextpad=.1, borderpad=.2, loc='upper center')
   axes.grid(1, ls='--')
-  fig.savefig(stat.value + '.png')
+  fig.savefig(parameters.figprefix+stat.value + '.png')
 
   if parameters.show:
     plt.show()

@@ -6,7 +6,6 @@ import pandas
 import numpy as np
 from mpi4py import MPI
 COMM = MPI.COMM_WORLD
-import sys
 import os
 from copy import deepcopy
 from dxtbx.model import ExperimentList
@@ -21,6 +20,7 @@ parser.add_argument("--symbol", type=str, default=None, help="space group lookup
 parser.add_argument("--figname", type=str, default=None, help="If provided, will save a histogram plot to this file.")
 parser.add_argument("--nbins", default=70, type=int, help="Number of histogram bins")
 parser.add_argument("--logbins", action="store_true", help="whether to use log-spaced bins for the histogram")
+parser.add_argument("--noDisplay", action="store_true", help="whether to use plt.show()")
 args = parser.parse_args()
 
 stage1_dir = args.dirname
@@ -31,7 +31,7 @@ def print0(*args, **kwargs):
 
 
 import glob
-cols = ["exp_name", "exp_idx", "ncells", "Amats", "a", "b", "c", "al", "be", "ga", "eta_abc", "eta", "sigz", "niter"]
+cols = ["exp_name", "exp_idx", "ncells", "Amats", "a", "b", "c", "al", "be", "ga", "eta_abc", "eta", "sigz", "niter", "spot_scales", "spot_scales_init"]
 pkls = glob.glob(os.path.join(stage1_dir, "pandas/hopper*rank*pkl"))
 if not pkls:
     print("No input files found, check stage1 dir")
@@ -53,6 +53,7 @@ refined_etas = []
 sigzs = []
 tdata = []
 
+df = None
 if dfs:
     df = pandas.concat(dfs).reset_index(drop=True)
     gt_ncells = None
@@ -61,8 +62,6 @@ if dfs:
         C = expt.crystal
         C_dials = deepcopy(C)
         C.set_A(tuple(A))
-
-        refined_ucells.append(C.get_unit_cell().parameters() )
 
         h5 = expt.imageset.get_path(0)
         h5_idx = expt.imageset.indices()[0]
@@ -75,9 +74,12 @@ if dfs:
         symbol = args.symbol
         if args.symbol is None:
             symbol = C.get_space_group().info().type().lookup_symbol()
-            print(symbol)
-        ang = utils.compare_with_ground_truth(a, b, c, [C], symbol=symbol)[0]
-        ang_dials = utils.compare_with_ground_truth(a, b, c, [C_dials], symbol=symbol)[0]
+        try:
+            ang = utils.compare_with_ground_truth(a, b, c, [C], symbol=symbol)[0]
+            ang_dials = utils.compare_with_ground_truth(a, b, c, [C_dials], symbol=symbol)[0]
+        except:
+            continue
+        refined_ucells.append(C.get_unit_cell().parameters() )
         angles.append(ang)
         angles_dials.append(ang_dials)
         ucell_s = ",".join(["%.3f" %u for u in refined_ucells[-1]])
@@ -95,7 +97,10 @@ refined_etas = COMM.reduce(refined_etas)
 refined_ucells = COMM.reduce(refined_ucells)
 sigzs = COMM.reduce(sigzs)
 tdata = COMM.reduce(tdata)
+all_df = COMM.gather(df)
+
 if COMM.rank==0:
+    all_df = pandas.concat([df for df in all_df if df is not None])
     #handle tdata
     tdata_file = os.path.join(os.getcwd(),"tdata_cells_stg1.tdata")
     mycluster = "uc_metrics.dbscan file_name=%s space_group=Pmmm eps=0.02 feature_vector=a,b,c write_covariance=False plot.outliers=False"%tdata_file
@@ -104,6 +109,7 @@ if COMM.rank==0:
       print("Plot unit cell distribution with\n%s"%mycluster)
 
     # PRINT RESULTS
+
     med_d = np.median(angles_dials)
     mn_d = np.mean(angles_dials)
     sig_d = np.std(angles_dials)
@@ -160,6 +166,14 @@ if COMM.rank==0:
     print("Min - Max, Median Mean = %.4f - %.4f, %.4f %.4f" %(
         np.min(sigzs), np.max(sigzs), np.median(sigzs), np.mean(sigzs)))
 
+    print("\nSpot scales (G):")
+    S = all_df.spot_scales
+    Si = all_df.spot_scales_init
+    print("Init: %.4f"% Si.mean()) #  all the same init
+    print("Min - Max, Median, Mean = %.4f - %.4f, %.4f, %.4f"
+          % (S.min(), S.max(), S.median(), S.mean()))
+    print("Done.")
+
     # MAKEPLOT
     import pylab as plt
     fig, ax = plt.subplots(1,1)
@@ -193,7 +207,7 @@ if COMM.rank==0:
     plt.legend()
     plt.subplots_adjust(left=.1, bottom=.18, right=.96, top=.94)
     if args.figname is not None:
-        plt.savefig(args.figname, dpi=500)
+        plt.savefig(args.figname+"_misori.png", dpi=200)
 
     fig, ax = plt.subplots(1,1)
     ax.set_xlabel("<$\sigma$Z>")
@@ -202,5 +216,8 @@ if COMM.rank==0:
             label="$\sigma$Z, median=%.4f" % np.median(sigzs),
             color='tomato')[0]
     plt.legend()
-    plt.show()
+    if args.figname is not None:
+        plt.savefig(args.figname+"_sigZ.png", dpi=200)
+    if not args.noDisplay:
+        plt.show()
 
