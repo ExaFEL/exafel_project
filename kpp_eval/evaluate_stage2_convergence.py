@@ -310,8 +310,13 @@ def run(parameters) -> None:
       ma = any_reflection_file(mtz_file).as_miller_arrays()[0]
     else:
       npz_file = all_npz_files[num_iter]
-      print(npz_file)
-      ma = read_npz(npz_file, f_asu_map, symmetry, save_mtz=parameters.save_mtz)
+      mtz_path = os.path.splitext(npz_file)[0] + '.mtz'
+      try:
+        ma = any_reflection_file(mtz_path).as_miller_arrays()[0]
+        print(mtz_path)
+      except FileNotFoundError:
+        print(npz_file)
+        ma = read_npz(npz_file, f_asu_map, symmetry, save_mtz=parameters.save_mtz)
 
     if stat.input is StatInput.ANOM:
       ma = ma.anomalous_differences()
