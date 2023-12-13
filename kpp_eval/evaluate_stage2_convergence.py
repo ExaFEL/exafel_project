@@ -18,6 +18,7 @@ from cctbx import miller, crystal
 import iotbx.mtz
 import iotbx.pdb
 from libtbx import Auto
+from libtbx.utils import Sorry
 from simtbx.diffBragg.utils import get_complex_fcalc_from_pdb
 from iotbx.reflection_file_reader import any_reflection_file
 
@@ -314,7 +315,7 @@ def run(parameters) -> None:
       try:
         ma = any_reflection_file(mtz_path).as_miller_arrays()[0]
         print(mtz_path)
-      except FileNotFoundError:
+      except Sorry:
         print(npz_file)
         ma = read_npz(npz_file, f_asu_map, symmetry, save_mtz=parameters.save_mtz)
 
