@@ -77,6 +77,9 @@ save_mtz = none *missing all
   .type = choice
   .help = Which npz should be saved as mtz: none, missing (default), or all
   .help = (overwrites existing). Ignored if `is_ens_hopper = True`.
+legend = *corner none top
+  .type = choice
+  .help = Where, and if, the legend should be placed on the final plot.
 """
 
 
@@ -328,9 +331,11 @@ def run(parameters) -> None:
   axes.set_xlabel('diffBragg iteration step')
   axes.set_ylabel(stat.value)
   if parameters.n_bins > 1:
-    axes.legend(loc='lower right')
-  #  axes.legend(bbox_to_anchor=(0.5,1.005), bbox_transform=fig.transFigure,
-  #              ncol=3,handletextpad=.1, borderpad=.2, loc='upper center')
+    if parameters.legend == 'corner':
+      axes.legend(loc='lower right')
+    elif parameters.legend == 'top':
+      axes.legend(bbox_to_anchor=(0.5, 1.005), bbox_transform=fig.transFigure,
+                  ncol=3, handletextpad=.1, borderpad=.2, loc='upper center')
   axes.grid(1, ls='--')
   fig.savefig(parameters.figprefix + stat.value + '.png')
 
