@@ -29,7 +29,7 @@ from exafel_project.kpp_eval.evaluate_cc12 import CrossCorrelationSums
 phil_scope_str = """
 figprefix = ""
   .type = str
-  .help = prefix for savefig
+  .help = A prefix prepended to the name of the saved figure
 stride = 1
   .type = int
   .help = skip this many iterations between plot points
@@ -73,6 +73,10 @@ scatter_ranges = None
 show = True
   .type = bool
   .help = Display final figure in an interactive window
+save_mtz = none *missing all
+  .type = choice
+  .help = Which npz should be saved as mtz: none, missing (default), or all
+  .help = (overwrites existing). Ignored if `is_ens_hopper = True`.
 """
 
 
@@ -111,10 +115,11 @@ def expand_integer_ranges(ranges_str: str) -> List[int]:
         raise IndexError(f'Unknown range string format: "{range_str}"')
   return indices
 
+
 def read_npz(npz_path: str,
              f_asu_map: dict,
              symmetry: 'crystal.symmetry',
-             save_mtz: bool = False,
+             save_mtz: str,  # see help string for phil parameter `save_mtz`
              ) -> miller.array:
   """Read Miller array from .npz and f_asu_map, optionally save it as mtz"""
   f_values = np.load(npz_path)['fvals']
@@ -123,8 +128,9 @@ def read_npz(npz_path: str,
   miller_data = flex.double(f_values)
   ma = miller.array(miller_set, miller_data)
   ma = ma.set_observation_type_xray_amplitude()
-  if save_mtz:
-    mtz_path = os.path.splitext(npz_path)[0] + '.mtz'
+  mtz_path = os.path.splitext(npz_path)[0] + '.mtz'
+  if save_mtz == 'all' or \
+    (save_mtz == 'missing' and not os.path.isfile(mtz_path)):
     ma.as_mtz_dataset(column_root_label='F').mtz_object().write(mtz_path)
   return ma
 
@@ -302,7 +308,7 @@ def run(parameters) -> None:
     else:
       npz_file = all_npz_files[num_iter]
       print(npz_file)
-      ma = read_npz(npz_file, f_asu_map, symmetry, save_mtz=True)
+      ma = read_npz(npz_file, f_asu_map, symmetry, save_mtz=params.save_mtz)
 
     if stat.input is StatInput.ANOM:
       ma = ma.anomalous_differences()
@@ -326,7 +332,7 @@ def run(parameters) -> None:
   #  axes.legend(bbox_to_anchor=(0.5,1.005), bbox_transform=fig.transFigure,
   #              ncol=3,handletextpad=.1, borderpad=.2, loc='upper center')
   axes.grid(1, ls='--')
-  fig.savefig(parameters.figprefix+stat.value + '.png')
+  fig.savefig(parameters.figprefix + stat.value + '.png')
 
   if parameters.show:
     plt.show()
