@@ -279,7 +279,7 @@ def run(parameters) -> None:
   stats_binned_steps = [stat_binned]
 
   # iterate over and evaluate all npz files present
-  if params.is_ens_hopper:
+  if parameters.is_ens_hopper:
     all_mtz_files =glob.glob(input_path + '/optimized_channel0_iter*.mtz')
     get_iter = lambda x: int(x.split("channel0_iter")[1].split(".mtz")[0])
     all_mtz_files = sorted(all_mtz_files, key=get_iter)
@@ -290,8 +290,8 @@ def run(parameters) -> None:
     if len(all_npz_files)==0:
       all_npz_files = glob.glob(input_path + '/_fcell_trial0_iter*.npz')
       all_npz_files.sort(key=natural_sort)
-      params.all_evaluations = True
-    if not params.all_evaluations:
+      parameters.all_evaluations = True
+    if not parameters.all_evaluations:
       iteration_files = {}
       for filename in all_npz_files:
         _, _, trial, eval_count, iter = filename.split("/")[-1].split(".")[0].split("_")
@@ -303,15 +303,15 @@ def run(parameters) -> None:
         iteration_files[iter] = {'name':filename, 'eval_count':eval_count}
       all_npz_files = [iteration_files[x]['name'] for x in range(len(iteration_files))]
     all_iters = len(all_npz_files)
-  for num_iter in range(0,all_iters,params.stride):
-    if params.is_ens_hopper:
+  for num_iter in range(0, all_iters, parameters.stride):
+    if parameters.is_ens_hopper:
       mtz_file = all_mtz_files[num_iter]
       print(mtz_file)
       ma = any_reflection_file(mtz_file).as_miller_arrays()[0]
     else:
       npz_file = all_npz_files[num_iter]
       print(npz_file)
-      ma = read_npz(npz_file, f_asu_map, symmetry, save_mtz=params.save_mtz)
+      ma = read_npz(npz_file, f_asu_map, symmetry, save_mtz=parameters.save_mtz)
 
     if stat.input is StatInput.ANOM:
       ma = ma.anomalous_differences()
@@ -322,7 +322,7 @@ def run(parameters) -> None:
   stats_dataframe = pd.concat(stats_binned_steps, axis=1)
 
   # Plot stat as a function of iteration
-  indices = [-1] + list(range(0,all_iters, params.stride))
+  indices = [-1] + list(range(0,all_iters, parameters.stride))
   plt.close("all")  # remove all previously generated figures from memory
   fig, axes = plt.subplots()
   for bin_i, (bin_range, stats_row) in enumerate(stats_dataframe.iterrows()):
