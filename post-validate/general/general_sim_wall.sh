@@ -46,6 +46,7 @@ crystal {
   pdb.source=file
   pdb.file=${MODULES}/${PDB}
   length_um=${LENGTH}
+  Deff_A=4000.
 }
 detector {
   tiles=multipanel
