@@ -72,6 +72,9 @@ def parse_input():
       length_um = 4.0
         .type = float
         .help = beam path length through the crystal in microns
+      Deff_A = 4000
+        .type = float
+        .help = Size of domain edge in Angstroms (dimension is converted to a spherical volume)
     }
     detector {
       tiles = *single multipanel
