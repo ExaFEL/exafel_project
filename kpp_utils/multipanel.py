@@ -91,9 +91,9 @@ def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,pa
       P = pdb_input(params.crystal.pdb.file)
       symbol = P.crystal_symmetry().space_group().info().type().lookup_symbol()
     elif params.crystal.structure=='ferredoxin':
-      symbol = ""  # TODO
+      symbol = "C 1 2 1"
     elif params.crystal.structure=='PSII':
-      symbol = ""  # TODO
+      symbol = "P 21 21 21"
     else:
       raise NotImplementedError("crystal.structure must be PSII, pdb, or ferrodoxin")
     SIM.set_mosaic_blocks_sym(C_p1, symbol, orig_mos_domains=len(UMAT_nm))
