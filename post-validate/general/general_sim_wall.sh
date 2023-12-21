@@ -2,7 +2,7 @@
 SRUN="" # "srun -c2"
 
 export LENGTH=40 # $1 # micron length of crystal
-export N_SIM=5 # $2 # total number of images to simulate
+export N_SIM=1 # $2 # total number of images to simulate
 export DETDIST=30 # $3
 export PDB="exafel_project/kpp-frontier/cytochrome/5wp2.pdb" # $4
 export SCRATCH_FOLDER=${SCRATCH}/wall # $5
@@ -48,6 +48,7 @@ crystal {
   length_um=${LENGTH}
   Deff_A=4000.
 }
+diffuse.enable=True
 detector {
   tiles=multipanel
   reference=$MODULES/exafel_project/kpp-sim/t000_rg002_chunk000_reintegrated_000000.expt
