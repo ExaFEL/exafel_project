@@ -36,6 +36,7 @@ def get_diffuse_from(params):
   val.stencil_size = params.diffuse.stencil_size
   val.symmetrize_diffuse = params.diffuse.symmetrize_diffuse
   val.laue_group_num = params.diffuse.laue_group_num
+  val.rotate_principal_axes = params.diffuse.rotate_principal_axes
   return val
 
 def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,params,

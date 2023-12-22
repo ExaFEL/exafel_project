@@ -92,6 +92,11 @@ def parse_input():
         .help = use the laue group rotation operators to symmetrize diffuse signals
       laue_group_num = 12
         .type = int
+      rotate_principal_axes = *a,b,c a-b,a+b,c
+        .type = choice
+        .help = Specific cases are implpemented.  Likely to require quotation marks.
+        .help = a,b,c = (1,0,0,0,1,0,0,0,1)
+        .help = a-b,a+b,c = (sqrt(2)/2,-sqrt(2)/2,0,sqrt(2)/2.sqrt(2)/2,0,0,0,1)
     }
     detector {
       tiles = *single multipanel
