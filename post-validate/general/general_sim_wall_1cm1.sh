@@ -1,11 +1,17 @@
 #!/bin/bash
 SRUN="" # "srun -c2"
-
-export LENGTH=40 # $1 # micron length of crystal
+export MODULES=/projects/lunus/exafel/cctbx-kokkos/modules
+export LENGTH=4000 # $1 # micron length of crystal
 export N_SIM=1 # $2 # total number of images to simulate
 export DETDIST=30 # $3
-export PDB="exafel_project/kpp-frontier/cytochrome/5wp2.pdb" # $4
-export SCRATCH_FOLDER=${SCRATCH}/wall # $5
+#export PDB="exafel_project/kpp-frontier/cytochrome/5wp2.pdb" # $4
+export PDB="exafel_project/kpp-frontier/calmodulin/1cm1.pdb" # $4
+#export SCRATCH_FOLDER=${PWD}/results_newcode_bragg # $5
+#export SCRATCH_FOLDER=${PWD}/results_newcode_diffuse_Deff_A_4000 # $5
+#export SCRATCH_FOLDER=${PWD}/results_newcode_bragg_Deff_A_4000 # $5
+#export SCRATCH_FOLDER=${PWD}/results_1cm1_axes1 # $5
+export SCRATCH_FOLDER=${PWD}/results_diffuse # $5
+#export SCRATCH_FOLDER=${PWD}/results_1cm1_bragg # $5
 mkdir -p "$SCRATCH_FOLDER"; cd "$SCRATCH_FOLDER" || exit
 
 export N_START=0
@@ -27,7 +33,7 @@ export MPI4PY_RC_RECV_MPROBE='False'
 env > env.out
 
 echo "
-noise=True
+noise=False
 psf=False
 attenuation=True
 context=kokkos_gpu
@@ -48,7 +54,13 @@ crystal {
   length_um=${LENGTH}
   Deff_A=4000.
 }
-diffuse.enable=True
+diffuse {
+  enable=True
+#  anisoG=(35,85,80)
+#  anisoU=(0,0.25,0)
+  rotate_principal_axes='a,b,c'
+  laue_group_num=5
+}
 detector {
   tiles=multipanel
   reference=$MODULES/exafel_project/kpp-sim/t000_rg002_chunk000_reintegrated_000000.expt

@@ -27,8 +27,21 @@ def specific_expt(params):
   mutate_root.set_frame(mutate_root.get_fast_axis(), mutate_root.get_slow_axis(), (x,y,z))
   return expt_return
 
+def get_diffuse_from(params):
+  from simtbx.kokkos import diffuse_api
+  val = diffuse_api()
+  val.enable = params.diffuse.enable
+  val.anisoG = params.diffuse.anisoG
+  val.anisoU = params.diffuse.anisoU
+  val.stencil_size = params.diffuse.stencil_size
+  val.symmetrize_diffuse = params.diffuse.symmetrize_diffuse
+  val.laue_group_num = params.diffuse.laue_group_num
+  val.rotate_principal_axes = params.diffuse.rotate_principal_axes
+  return val
+
 def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,params,
                 quick=False,save_bragg=False,sfall_channels=None, **kwargs):
+  DIFFUSE = get_diffuse_from(params)
   DETECTOR = reference.detector
   PANEL = DETECTOR[0]
 
@@ -150,6 +163,7 @@ def run_sim2h5(crystal,spectra,reference,rotation,rank,gpu_channels_singleton,pa
     gpu_simulation = exascale_api(nanoBragg = SIM)
     gpu_simulation.allocate()
 
+    gpu_simulation.diffuse = DIFFUSE
     gpu_detector = gpud(deviceId=SIM.device_Id, detector=DETECTOR, beam=consistent_beam)
     gpu_detector.each_image_allocate()
 

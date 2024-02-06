@@ -76,6 +76,28 @@ def parse_input():
         .type = float
         .help = Size of domain edge in Angstroms (dimension is converted to a spherical volume)
     }
+    diffuse {
+      enable = False
+        .type = bool
+      anisoG = (300.,100.,300.)
+        .type = floats(size=3)
+      anisoU = (0.48,0.16,0.16)
+        .type = floats(size=3)
+      stencil_size = 1
+        .type = int
+        .help = Increase to add accuracy to diffuse scattering models, at the expense of longer computations
+        .help = Best to increment by values of 1 when testing
+      symmetrize_diffuse = True
+        .type = bool
+        .help = use the laue group rotation operators to symmetrize diffuse signals
+      laue_group_num = 12
+        .type = int
+      rotate_principal_axes = *a,b,c a-b,a+b,c
+        .type = choice
+        .help = Specific cases are implpemented.  Likely to require quotation marks.
+        .help = a,b,c = (1,0,0,0,1,0,0,0,1)
+        .help = a-b,a+b,c = (sqrt(2)/2,-sqrt(2)/2,0,sqrt(2)/2.sqrt(2)/2,0,0,0,1)
+    }
     detector {
       tiles = *single multipanel
         .type = choice
