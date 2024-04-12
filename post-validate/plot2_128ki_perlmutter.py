@@ -97,7 +97,7 @@ def run():
   ax.set_xlabel('Wall clock time (min)')
   ax.set_xlim(-2, 172)
   ax.set_ylim(0.2,1+len(people))
-  ax.set_title('Perlmutter 1/4 scale SLURM job, 1024 nodes, 8x4096 MPI ranks')
+  ax.set_title('Perlmutter 1/4 scale SLURM job, 8 Tranches x 128 nodes, 8 Tranches x 4096 MPI ranks')
   handles, labels = plt.gca().get_legend_handles_labels()
   s1_handles = [mpatches.Patch(facecolor=cm(i)) for i in (2, 6, 10, 14)]
   pr_handles = [mpatches.Patch(facecolor=cm(i)) for i in (1, 5, 9, 13)]
