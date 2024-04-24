@@ -42,7 +42,7 @@ class Tranche:
     self.prodir = prodir
     self.protein = protein
     self.prolen = self.get_prolen_str(prolen)
-    self.s1_time = -s1_time - pr_time
+    self.s1_time = -s1_time
     self.pr_time = -pr_time
   def get_prolen_str(self, prolen):
     p = float(prolen)
@@ -96,26 +96,26 @@ class Tranche:
     return events
 
 def tranches():
-  yield Tranche(protein='Cytochrome',prodir='cyto',projob=4,prolen=2,s1_time=31.467,pr_time=48.000)
-  yield Tranche(protein='Cytochrome',prodir='cyto',projob=3,prolen=5,s1_time=30.800,pr_time=66.067)
-  yield Tranche(protein='Cytochrome',prodir='cyto',projob=2,prolen=10,s1_time=30.500,pr_time=206.533)
-  yield Tranche(protein='Cytochrome',prodir='cyto',projob=1,prolen=25,s1_time=33.133,pr_time=240.767)
-  yield Tranche(protein='Cytochrome',prodir='cyto',projob=0,prolen=40,s1_time=31.767,pr_time=180.000)
-  yield Tranche(protein='Cry11Ba',prodir='cry11ba',projob=4,prolen=0.5,s1_time=54.533,pr_time=45.700)
-  yield Tranche(protein='Cry11Ba',prodir='cry11ba',projob=3,prolen=2,s1_time=49.200,pr_time=300.400)
-  yield Tranche(protein='Cry11Ba',prodir='cry11ba',projob=2,prolen=4,s1_time=48.967,pr_time=300.417)
-  yield Tranche(protein='Cry11Ba',prodir='cry11ba',projob=1,prolen=8,s1_time=55.333,pr_time=86.033)
-  yield Tranche(protein='Cry11Ba',prodir='cry11ba',projob=0,prolen=16,s1_time=55.317,pr_time=177.050)
-  yield Tranche(protein='Thermolysin',prodir='thermo',projob=4,prolen=1,s1_time=14.800,pr_time=25.783)
-  yield Tranche(protein='Thermolysin',prodir='thermo',projob=3,prolen=2,s1_time=25.167,pr_time=43.450)
-  yield Tranche(protein='Thermolysin',prodir='thermo',projob=2,prolen=5,s1_time=25.233,pr_time=57.800)
-  yield Tranche(protein='Thermolysin',prodir='thermo',projob=1,prolen=10,s1_time=25.367,pr_time=66.467)
-  yield Tranche(protein='Thermolysin',prodir='thermo',projob=0,prolen=20,s1_time=21.683,pr_time=64.133)
-  yield Tranche(protein='Lysozyme',prodir='yb_lyso',projob=4,prolen=.125,s1_time=28.917,pr_time=30.367)
-  yield Tranche(protein='Lysozyme',prodir='yb_lyso',projob=3,prolen=.25,s1_time=45.175,pr_time=46.767)
-  yield Tranche(protein='Lysozyme',prodir='yb_lyso',projob=2,prolen=.5,s1_time=47.325,pr_time=52.867)
-  yield Tranche(protein='Lysozyme',prodir='yb_lyso',projob=1,prolen=1,s1_time=47.908,pr_time=55.567)
-  yield Tranche(protein='Lysozyme',prodir='yb_lyso',projob=0,prolen=2,s1_time=47.283,pr_time=55.483)
+  yield Tranche(protein='Cytochrome',prodir='cyto',projob=4,prolen=2,s1_time=48.000,pr_time=31.467)
+  yield Tranche(protein='Cytochrome',prodir='cyto',projob=3,prolen=5,s1_time=66.067,pr_time=30.800)
+  yield Tranche(protein='Cytochrome',prodir='cyto',projob=2,prolen=10,s1_time=206.53,pr_time=30.5003)
+  yield Tranche(protein='Cytochrome',prodir='cyto',projob=1,prolen=25,s1_time=240.76,pr_time=33.1337)
+  yield Tranche(protein='Cytochrome',prodir='cyto',projob=0,prolen=40,s1_time=180.00,pr_time=31.7670)
+  yield Tranche(protein='Cry11Ba',prodir='cry11ba',projob=4,prolen=0.5,s1_time=45.700,pr_time=54.533)
+  yield Tranche(protein='Cry11Ba',prodir='cry11ba',projob=3,prolen=2,s1_time=300.40,pr_time=49.2000)
+  yield Tranche(protein='Cry11Ba',prodir='cry11ba',projob=2,prolen=4,s1_time=300.41,pr_time=48.9677)
+  yield Tranche(protein='Cry11Ba',prodir='cry11ba',projob=1,prolen=8,s1_time=86.033,pr_time=55.333)
+  yield Tranche(protein='Cry11Ba',prodir='cry11ba',projob=0,prolen=16,s1_time=177.05,pr_time=55.3170)
+  yield Tranche(protein='Thermolysin',prodir='thermo',projob=4,prolen=1,s1_time=25.783,pr_time=14.800)
+  yield Tranche(protein='Thermolysin',prodir='thermo',projob=3,prolen=2,s1_time=43.450,pr_time=25.167)
+  yield Tranche(protein='Thermolysin',prodir='thermo',projob=2,prolen=5,s1_time=57.800,pr_time=25.233)
+  yield Tranche(protein='Thermolysin',prodir='thermo',projob=1,prolen=10,s1_time=66.467,pr_time=25.367)
+  yield Tranche(protein='Thermolysin',prodir='thermo',projob=0,prolen=20,s1_time=64.133,pr_time=21.683)
+  yield Tranche(protein='Lysozyme',prodir='yb_lyso',projob=4,prolen=.125,s1_time=30.367,pr_time=28.917)
+  yield Tranche(protein='Lysozyme',prodir='yb_lyso',projob=3,prolen=.25,s1_time=46.767,pr_time=45.175)
+  yield Tranche(protein='Lysozyme',prodir='yb_lyso',projob=2,prolen=.5,s1_time=52.867,pr_time=47.325)
+  yield Tranche(protein='Lysozyme',prodir='yb_lyso',projob=1,prolen=1,s1_time=55.567,pr_time=47.908)
+  yield Tranche(protein='Lysozyme',prodir='yb_lyso',projob=0,prolen=2,s1_time=55.483,pr_time=47.283)
 
 def run():
   fig, ax = plt.subplots(height_ratios=[0.9])
@@ -125,11 +125,11 @@ def run():
   for idata,d in enumerate(data):
     ax.barh([y_pos[idata]],[d.last],color=d.get_pcolor(),align='center',
         label=f"$F_h$ estimation, {d.protein}" \
-				if idata % 5 == 0 else '_nolegend_')
+                if idata % 5 == 0 else '_nolegend_')
     ax.eventplot(positions=d.events, lineoffsets=y_pos[idata], linelengths=0.10,
         color=d.get_dcolor(), label='_nolegend_')
     ax.annotate(f'$F_h$ estimation: {d.n_last} iters',
-        xy=(d.events[0]*0.009, idata*0.048 + 0.03), xycoords='axes fraction')
+        xy=(0.9, idata*0.048 + 0.03), xycoords='axes fraction')
     ax.barh([y_pos[idata]], [d.gpu], color='#E0E0E0', align='center',
         label="Set up GPU workspace" if idata == 0 else '_nolegend_')
     ax.barh([y_pos[idata]], [d.back], color='orange', align='center',
@@ -147,19 +147,19 @@ def run():
             color='xkcd:tan', align='center',
             label="Stage 1 step" if idata == 0 else '_nolegend_')
   ax.annotate("Sets of 100 iterations",
-    xy=(0.8, 0.715), xycoords='axes fraction',
-    xytext=(-20,20), textcoords='offset points',
+    xy=(0.825, 0.85), xycoords='axes fraction',
+    xytext=(-80,20), textcoords='offset points',
     arrowprops=dict(arrowstyle="simple", fc="0.2", ec="none"))
   ax.set_yticks(y_pos, labels=people)
   ax.tick_params(left=False)
   ax.invert_yaxis()  # labels read top-to-bottom
   ax.set_xlabel('Wall clock time (min)')
-  ax.set_xlim(-362,122)
+  ax.set_xlim(-400,150)
   ax.set_ylim(0.2,1+len(people))
   ax.set_title('Full scale SLURM job, 5120 nodes, 20x4096 MPI ranks')
   handles, labels = plt.gca().get_legend_handles_labels()
-  handles = handles[1:8][::-1] #+ ([handles[0]] + handles[6:])[::-1]
-  labels = labels[1:8][::-1] #+ ([labels[0]] + labels[6:])[::-1]
+  handles = handles[1:][::] #+ ([handles[0]] + handles[6:])[::-1]
+  labels = labels[1:][::] #+ ([labels[0]] + labels[6:])[::-1]
   ax.legend(handles, labels)
   plt.tight_layout()
   plt.show()
