@@ -129,7 +129,7 @@ def run():
     ax.eventplot(positions=d.events, lineoffsets=y_pos[idata], linelengths=0.10,
         color=d.get_dcolor(), label='_nolegend_')
     ax.annotate(f'$F_h$ estimation: {d.n_last} iters',
-        xy=(0.9, idata*0.048 + 0.03), xycoords='axes fraction')
+        xy=(0.82, idata*0.048 + 0.03), xycoords='axes fraction')
     ax.barh([y_pos[idata]], [d.gpu], color='#E0E0E0', align='center',
         label="Set up GPU workspace" if idata == 0 else '_nolegend_')
     ax.barh([y_pos[idata]], [d.back], color='orange', align='center',
@@ -147,19 +147,19 @@ def run():
             color='xkcd:tan', align='center',
             label="Stage 1 step" if idata == 0 else '_nolegend_')
   ax.annotate("Sets of 100 iterations",
-    xy=(0.825, 0.85), xycoords='axes fraction',
+    xy=(0.73, 0.855), xycoords='axes fraction',
     xytext=(-80,20), textcoords='offset points',
     arrowprops=dict(arrowstyle="simple", fc="0.2", ec="none"))
   ax.set_yticks(y_pos, labels=people)
   ax.tick_params(left=False)
   ax.invert_yaxis()  # labels read top-to-bottom
   ax.set_xlabel('Wall clock time (min)')
-  ax.set_xlim(-400,150)
+  ax.set_xlim(-360,230)
   ax.set_ylim(0.2,1+len(people))
   ax.set_title('Full scale SLURM job, 5120 nodes, 20x4096 MPI ranks')
   handles, labels = plt.gca().get_legend_handles_labels()
-  handles = handles[1:][::] #+ ([handles[0]] + handles[6:])[::-1]
-  labels = labels[1:][::] #+ ([labels[0]] + labels[6:])[::-1]
+  handles = handles[::-1][3:-1]  # + handles[:5][::-1]
+  labels = labels[::-1][3:-1]  # + labels[:5][::-1]
   ax.legend(handles, labels)
   plt.tight_layout()
   plt.show()
