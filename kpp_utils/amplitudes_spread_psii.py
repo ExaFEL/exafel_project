@@ -58,18 +58,17 @@ def amplitudes_spread_psii(comm, params, **kwargs):
     if x % size != rank: continue
 
     GF.reset_wavelength(wavelengths[x])  # TODO: which to make 3+ and which 4+?
-    GF.reset_specific_at_wavelength(label_has="MN1",
-                                    tables=local_data.get("Mn_oxidized_model"),
-                                    newvalue=wavelengths[x])
-    GF.reset_specific_at_wavelength(label_has="MN2",
-                                    tables=local_data.get("Mn_oxidized_model"),
-                                    newvalue=wavelengths[x])
-    GF.reset_specific_at_wavelength(label_has="MN3",
-                                    tables=local_data.get("Mn_reduced_model"),
-                                    newvalue=wavelengths[x])
-    GF.reset_specific_at_wavelength(label_has="MN4",
-                                    tables=local_data.get("Mn_reduced_model"),
-                                    newvalue=wavelengths[x])
+    control = [
+      dict(MN1="Mn_oxidized_model", MN2="Mn_oxidized_model", MN3="Mn_reduced_model", MN4="Mn_reduced_model"),
+      dict(MN1="Mn_reduced_model", MN2="Mn_reduced_model", MN3="Mn_oxidized_model", MN4="Mn_oxidized_model"),
+      dict(MN1="Mn_oxidized_model", MN2="Mn_reduced_model", MN3="Mn_reduced_model", MN4="Mn_reduced_model"),
+      dict(MN1="Mn_reduced_model", MN2="Mn_oxidized_model", MN3="Mn_oxidized_model", MN4="Mn_oxidized_model"),
+    ]
+    this_case = control[params.crystal.PSII.control]
+    for key in this_case:
+      GF.reset_specific_at_wavelength(label_has=key,
+                                      tables=local_data.get(this_case[key]),
+                                      newvalue=wavelengths[x])
     sfall_channels[x] = GF.get_amplitudes()
 
   sfall_channels = collect_large_dict(comm, sfall_channels, root=0)

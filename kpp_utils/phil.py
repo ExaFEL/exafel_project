@@ -49,6 +49,11 @@ def parse_input():
       structure = *ferredoxin PSII pdb
         .type = choice
         .help = type of crystal structure to be simulated
+      PSII {
+          control = 0
+            .type = int(value_min=0, value_max=3)
+            .help = Manganese charge config, 0=+4+4+3+3, 1=+3+3+4+4, 2=+4+3+3+3, 3=+3+4+4+4
+      }
       pdb {
         source = *code file
           .type = choice
