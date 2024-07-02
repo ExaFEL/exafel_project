@@ -12,7 +12,7 @@ with open('./128ki_timestamps2.csv', 'r') as file:
                   'predict_stop', 'stage2_start', 'stage2_stop']
   table = pd.read_csv(file, index_col=0, parse_dates=date_columns)
 
-cm = plt.cm.get_cmap('tab20c')
+cm = plt.get_cmap('tab20c')
 
 
 class Tranche:
