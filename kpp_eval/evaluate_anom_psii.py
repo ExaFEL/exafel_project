@@ -1,8 +1,15 @@
 """
 This script reports the value of map value, by default the anomalous signal
-map, at the position of selected atoms, by default Fe and S.
+map, at the position of selected atoms, by default Mn and Ca.
 
 This entire script is a refactor of `exafel_project/nks/map_height_at_atoms.py`
+
+Usage:
+libtbx.python exafel_project/kpp_eval/evaluate_anom_psii.py \
+ls49_big_data/7RF1_refine_030_Aa_refine_032_refine_034.pdb \
+/global/cfs/cdirs/m3562/users/dtchon/p20231/common/ensemble1/SPREAD2l/v000/SPREAD2l_v000_all.mtz \
+selection="element Mn or element Ca" \
+plot=False
 """
 
 from __future__ import division, print_function
@@ -26,8 +33,9 @@ resolution_factor = 0.25
   .type = float
 selection = element FE or element S
   .type = atom_selection
+plot = False
+  .type = bool
 """
-
 
 def master_phil():
   from mmtbx.command_line import generate_master_phil_with_inputs
@@ -68,10 +76,13 @@ def run(args, out=sys.stdout):
   for n, v in zip('minimum quartile1 median quartile3 maximum'.split(), grid5):
     print(f'{n+":":21} {v:6.2f}σ', file=out)
   print('', file=out)
+  return xray_structure, selection, real_map, params.plot
 
+def geometry(xray_structure, selection, real_map):
   UC = xray_structure.unit_cell()
   fgrid = [-1.,-.9,-.8,-.7,-.6,-.5,-.4,-.3,-.2,-.1,0.,.1,.2,.3,.4,.5,.6,.7,.8,.9,1.]
   cutoff = {"Ca":7,"Mn":18}
+  result_store = {}
   for i_seq in selection:
     sc = xray_structure.scatterers()[i_seq]
     map_value = real_map.tricubic_interpolation(sc.site)
@@ -104,10 +115,77 @@ def run(args, out=sys.stdout):
     sum_weighted = flex.sum(parts[0]),flex.sum(parts[1]),flex.sum(parts[2])
     denom = flex.sum(all_value)
     centroid = row(( sum_weighted[0] / denom, sum_weighted[1] / denom, sum_weighted[2] / denom))
+    result_store[sc.label]=dict(site=sc_site_ortho, peak=max_ortho, centroid=centroid)
     print( " site_vs_peak %4.2fÅ"%(sc_site_ortho - max_ortho).length(),
            " site_vs_centroid %4.2fÅ"%(sc_site_ortho - centroid).length(),
            " peak_vs_centroid %4.2fÅ"%(max_ortho - centroid).length(),
          )
 
+  from tabulate import tabulate
+  #sample output
+  #print ("Mn 1 vs. 4 %4.2fÅ"%(result_store['pdb="MN1  OEX A 418 "']["centroid"] - result_store['pdb="MN4  OEX A 418 "']["centroid"]).length())
+  data = []
+  for atom_pair,L1,L2 in zip (["Mn 1 vs. 4","Mn 1 vs. 3","Mn 3 vs. 4"],[1,1,3],[4,3,4]):
+    for monomer in ["A","a"]:
+      label1 = 'pdb="MN%1d  OEX %1s 418 "'%(L1,monomer)
+      label2 = 'pdb="MN%1d  OEX %1s 418 "'%(L2,monomer)
+      drow = [atom_pair,monomer]
+      for postype in "site","peak","centroid":
+        position1 = result_store[label1][postype]
+        position2 = result_store[label2][postype]
+        drow.append("%4.2fÅ"%((position1 - position2).length()))
+      data.append(drow)
+  table = tabulate(
+    data,
+    headers=["Atom Pair", "Monomer", "Site distance", "Peak distance", "Centroid distance"],
+    tablefmt="grid"
+  )
+  print(table)
+  return result_store
+
+def runplot(xray_structure, selection, real_map, result_store):
+  from matplotlib import pyplot as plt
+  import matplotlib.gridspec as gridspec
+  UC = xray_structure.unit_cell()
+  fgrid = [-0.2,-0.1,0.0,.1,.2,.3,.4,.5,.6,.7,.8,.9,1.,1.1,1.2]
+
+  fig = plt.figure(figsize=(6,8))
+  gs = gridspec.GridSpec(nrows=3, ncols=1, hspace=.5)
+  igrid=-1
+  for atom_pair,L1,L2 in zip (["Mn 1 vs. 4","Mn 1 vs. 3","Mn 3 vs. 4"],[1,1,3],[4,3,4]):
+    igrid+=1
+    ax = fig.add_subplot(gs[igrid,0])
+    ax.set_title(atom_pair+" centroid section")
+    for monomer in ["A","a"]:
+      data = []
+      label1 = 'pdb="MN%1d  OEX %1s 418 "'%(L1,monomer)
+      label2 = 'pdb="MN%1d  OEX %1s 418 "'%(L2,monomer)
+      postype = "centroid"
+      position1 = result_store[label1][postype]
+      position2 = result_store[label2][postype]
+      diffvec = position2 - position1
+      map_heights = []
+      ortho = []
+      for dx in fgrid:
+        position_ortho = position1 + dx * diffvec
+        d_site_frac = UC.fractionalize(position_ortho)
+        d_value = real_map.tricubic_interpolation(d_site_frac)
+        map_heights.append(d_value)
+        ortho.append(dx * diffvec.length())
+      ax.plot(ortho,map_heights,label="Monomer %s"%monomer)
+    ax.set_xlabel("interatom position (Å)")
+    ax.set_ylabel("Map height (σ)")
+    ax.legend(loc="lower right")
+  plt.show()
+
+
 if __name__ == '__main__':
-  run(sys.argv[1:])
+  #import pickle
+  #with open("temp.pickle","wb") as F:
+  #  pickle.dump(run(sys.argv[1:]), F)
+  xray_structure, selection, real_map, plot = run(sys.argv[1:])
+  #with open("temp.pickle","rb") as F:
+  #  xray_structure, selection, real_map = pickle.load(F)
+  result_store = geometry(xray_structure, selection, real_map)
+  if plot:
+    runplot(xray_structure, selection, real_map, result_store)
