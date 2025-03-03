@@ -76,12 +76,12 @@ def run(args, out=sys.stdout):
   for n, v in zip('minimum quartile1 median quartile3 maximum'.split(), grid5):
     print(f'{n+":":21} {v:6.2f}σ', file=out)
   print('', file=out)
-  return xray_structure, selection, real_map, params.plot
+  return xray_structure, selection, real_map, params.plot, grid5
 
-def geometry(xray_structure, selection, real_map):
+def geometry(xray_structure, selection, real_map, grid5):
   UC = xray_structure.unit_cell()
   fgrid = [-1.,-.9,-.8,-.7,-.6,-.5,-.4,-.3,-.2,-.1,0.,.1,.2,.3,.4,.5,.6,.7,.8,.9,1.]
-  cutoff = {"Ca":7,"Mn":18}
+  cutoff = {"Ca":.3 * grid5[4],"Mn":0.7 * grid5[4]}
   result_store = {}
   for i_seq in selection:
     sc = xray_structure.scatterers()[i_seq]
@@ -180,12 +180,12 @@ def runplot(xray_structure, selection, real_map, result_store):
 
 
 if __name__ == '__main__':
+  xray_structure, selection, real_map, plot, grid5 = run(sys.argv[1:])
   #import pickle
   #with open("temp.pickle","wb") as F:
-  #  pickle.dump(run(sys.argv[1:]), F)
-  xray_structure, selection, real_map, plot = run(sys.argv[1:])
+  #  pickle.dump((xray_structure, selection, real_map, plot, grid5), F)
   #with open("temp.pickle","rb") as F:
-  #  xray_structure, selection, real_map = pickle.load(F)
-  result_store = geometry(xray_structure, selection, real_map)
+  #  xray_structure, selection, real_map, plot, grid5 = pickle.load(F)
+  result_store = geometry(xray_structure, selection, real_map, grid5)
   if plot:
     runplot(xray_structure, selection, real_map, result_store)
