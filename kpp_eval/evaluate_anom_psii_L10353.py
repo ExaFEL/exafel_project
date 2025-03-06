@@ -128,8 +128,8 @@ def geometry(xray_structure, selection, real_map, grid5):
   data = []
   for atom_pair,L1,L2 in zip (["Mn 1 vs. 4","Mn 1 vs. 3","Mn 3 vs. 4"],[1,1,3],[4,3,4]):
     for monomer in ["A","a"]:
-      label1 = 'pdb="MN%1d  OEZ %1s 601 "'%(L1,monomer)
-      label2 = 'pdb="MN%1d  OEZ %1s 601 "'%(L2,monomer)
+      label1 = 'pdb="MN%1d  OEC %1s 601 "'%(L1,monomer)
+      label2 = 'pdb="MN%1d  OEC %1s 601 "'%(L2,monomer)
       drow = [atom_pair,monomer]
       for postype in "site","peak","centroid":
         position1 = result_store[label1][postype]
@@ -162,8 +162,8 @@ def runplot(xray_structure, selection, real_map, result_store, savepng=False):
     ax.set_title(atom_pair+" centroid section")
     for monomer in ["A","a"]:
       data = []
-      label1 = 'pdb="MN%1d  OEZ %1s 601 "'%(L1,monomer)
-      label2 = 'pdb="MN%1d  OEZ %1s 601 "'%(L2,monomer)
+      label1 = 'pdb="MN%1d  OEC %1s 601 "'%(L1,monomer)
+      label2 = 'pdb="MN%1d  OEC %1s 601 "'%(L2,monomer)
       postype = "centroid"
       position1 = result_store[label1][postype]
       position2 = result_store[label2][postype]
