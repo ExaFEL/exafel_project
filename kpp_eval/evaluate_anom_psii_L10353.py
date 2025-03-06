@@ -120,6 +120,7 @@ def geometry(xray_structure, selection, real_map, grid5):
            " site_vs_centroid %4.2fÅ"%(sc_site_ortho - centroid).length(),
            " peak_vs_centroid %4.2fÅ"%(max_ortho - centroid).length(),
          )
+  print()
 
   from tabulate import tabulate
   #sample output
@@ -138,13 +139,16 @@ def geometry(xray_structure, selection, real_map, grid5):
   table = tabulate(
     data,
     headers=["Atom Pair", "Monomer", "Site distance", "Peak distance", "Centroid distance"],
-    tablefmt="grid"
+    tablefmt="pipe"
   )
   print(table)
   return result_store
 
-def runplot(xray_structure, selection, real_map, result_store):
+def runplot(xray_structure, selection, real_map, result_store, savepng=False):
   from matplotlib import pyplot as plt
+  if savepng:
+    import matplotlib
+    matplotlib.use('Agg')
   import matplotlib.gridspec as gridspec
   UC = xray_structure.unit_cell()
   fgrid = [-0.2,-0.1,0.0,.1,.2,.3,.4,.5,.6,.7,.8,.9,1.,1.1,1.2]
@@ -176,8 +180,10 @@ def runplot(xray_structure, selection, real_map, result_store):
     ax.set_xlabel("interatom position (Å)")
     ax.set_ylabel("Map height (σ)")
     ax.legend(loc="lower right")
-  plt.show()
-
+  if savepng:
+            fig.savefig("Mn_transect.png")
+            fig.clf()
+  else: plt.show()
 
 if __name__ == '__main__':
   xray_structure, selection, real_map, plot, grid5 = run(sys.argv[1:])
@@ -188,4 +194,6 @@ if __name__ == '__main__':
   #  xray_structure, selection, real_map, plot, grid5 = pickle.load(F)
   result_store = geometry(xray_structure, selection, real_map, grid5)
   if plot:
-    runplot(xray_structure, selection, real_map, result_store)
+    runplot(xray_structure, selection, real_map, result_store, savepng=False)
+  else:
+    runplot(xray_structure, selection, real_map, result_store, savepng=True)
