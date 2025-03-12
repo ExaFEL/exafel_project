@@ -1,10 +1,12 @@
 """
-Minimal reproducer
-We want to add a phil parameter to impose a high resolution cutoff on the mtz input,
-using if possible existing phil parameters that can be included from fmodel
-
 Usage:
-libtbx.python evaluate_anom_psii_L10353_billy.py $MODULES/ls49_big_data/7RF1_refine_030_Aa_refine_032_refine_034.pdb /global/cfs/cdirs/m3562/users/dtchon/p20231/common/ensemble1/SPREAD2l/v000/SPREAD2l_v000_all.mtz selection="element Mn" miller_array.labels.name="Iobs" xray_data.r_free_flags.generate=True xray_data.high_resolution=3.0
+libtbx.python evaluate_anom_psii_L10353_billy.py \
+$MODULES/ls49_big_data/7RF1_refine_030_Aa_refine_032_refine_034.pdb \
+/global/cfs/cdirs/m3562/users/dtchon/p20231/common/ensemble1/SPREAD2l/v000/SPREAD2l_v000_all.mtz \
+selection="element Mn" \
+miller_array.labels.name="Iobs" \
+xray_data.r_free_flags.required=False \
+xray_data.high_resolution=3.0
 """
 from __future__ import division, print_function
 import sys
@@ -13,38 +15,13 @@ from libtbx.utils import Sorry
 from scitbx.math import five_number_summary
 from scitbx.array_family import flex
 from scitbx.matrix import row
-
-def master_phil():
-  from mmtbx.command_line import generate_master_phil_with_inputs
-  return generate_master_phil_with_inputs(
-    phil_string=master_phil_str,
-    enable_automatic_twin_detection=False)
-def run(args, out=sys.stdout):
-  usage_str = "python eval_anom.py model.pdb data.mtz [other phil pars]"
-  import mmtbx.command_line
-  cmdline = mmtbx.command_line.load_model_and_data(
-    args=args,
-    master_phil=master_phil(),
-    process_pdb_file=False,
-    prefer_anomalous=True,
-    usage_string=usage_str,
-    out=out)
-  params = cmdline.params
-  fmodel = cmdline.fmodel
-  
-"""Issues to resolve with Billy
-1) prefer_anomalous=True
-2) map_type = anom
-3) exclude_free_r_reflections = False
-4) fill_missing_f_obs = False
-5) how to get list of scatterers
-6) how to get R factor statistics
-7) how to get the pdb_hierarchy or modern-day equivalent
-8) enable automatic twin detection
-"""
-
 from iotbx.cli_parser import run_program
 from libtbx.program_template import ProgramTemplate
+
+"""Issues to resolve with Billy
+1) prefer_anomalous=True
+8) enable automatic twin detection
+"""
 
 # =============================================================================
 class MyProgram(ProgramTemplate):
@@ -72,6 +49,7 @@ selection = element FE or element S
   .type = atom_selection
 plot = False
   .type = bool
+  .help = False writes plot to png file, True to x-terminal
 '''
 
   # this shows the standard DataManager PHIL scope containing fmodel parameters
@@ -103,11 +81,14 @@ plot = False
     can be done at the command line.
     '''
     self.fmodel = self.data_manager.get_fmodel(scattering_table=self.params.my_parameter)
+    make_sub_header("X-ray scattering dictionary", out=sys.stdout)
+    self.fmodel.xray_structure.scattering_type_registry().show(out = self.logger)
+    make_sub_header("F(model) initialization", out=sys.stdout)
+    self.fmodel.update_all_scales(log=self.logger)
     self.fmodel.show()
-    
-    xray_structure = self.fmodel.xray_structure
-    pdb_hierarchy = self.data_manager.get_model()
-    sel_cache = pdb_hierarchy.get_atom_selection_cache()
+
+    model_obj = self.data_manager.get_model()
+    sel_cache = model_obj.get_atom_selection_cache()
     selection = sel_cache.selection(self.params.selection).iselection()
     if not selection:
       raise Sorry("No atoms selected!")
@@ -137,6 +118,7 @@ plot = False
 # =============================================================================
 
 def geometry(xray_structure, selection, real_map, grid5):
+  make_sub_header("Anomalous peaks")
   UC = xray_structure.unit_cell()
   fgrid = [-1.,-.9,-.8,-.7,-.6,-.5,-.4,-.3,-.2,-.1,0.,.1,.2,.3,.4,.5,.6,.7,.8,.9,1.]
   cutoff = {"Ca":.25 * grid5[4],"Mn":0.6 * grid5[4]}
@@ -181,8 +163,6 @@ def geometry(xray_structure, selection, real_map, grid5):
   print()
 
   from tabulate import tabulate
-  #sample output
-  #print ("Mn 1 vs. 4 %4.2fÅ"%(result_store['pdb="MN1  OEX A 418 "']["centroid"] - result_store['pdb="MN4  OEX A 418 "']["centroid"]).length())
   data = []
   for atom_pair,L1,L2 in zip (["Mn 1 vs. 4","Mn 1 vs. 3","Mn 3 vs. 4"],[1,1,3],[4,3,4]):
     for monomer in ["A","a"]:
@@ -250,4 +230,3 @@ if __name__ == '__main__':
     runplot(xray_structure, selection, real_map, result_store, savepng=False)
   else:
     runplot(xray_structure, selection, real_map, result_store, savepng=True)
-
