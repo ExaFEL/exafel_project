@@ -5,7 +5,6 @@ $MODULES/ls49_big_data/7RF1_refine_030_Aa_refine_032_refine_034.pdb \
 /global/cfs/cdirs/m3562/users/dtchon/p20231/common/ensemble1/SPREAD2l/v000/SPREAD2l_v000_all.mtz \
 selection="element Mn" \
 miller_array.labels.name="Iobs" \
-xray_data.r_free_flags.required=False \
 xray_data.high_resolution=3.0
 """
 from __future__ import division, print_function
@@ -50,6 +49,10 @@ selection = element FE or element S
 plot = False
   .type = bool
   .help = False writes plot to png file, True to x-terminal
+'''
+  # program-specific custom settings for established phil parameters
+  data_manager_custom_master_phil_str = '''
+data_manager.fmodel.xray_data.r_free_flags.required=False
 '''
 
   # this shows the standard DataManager PHIL scope containing fmodel parameters
