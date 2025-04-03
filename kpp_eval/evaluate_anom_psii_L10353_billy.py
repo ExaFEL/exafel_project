@@ -158,12 +158,29 @@ def geometry(xray_structure, selection, real_map, grid5):
     sum_weighted = flex.sum(parts[0]),flex.sum(parts[1]),flex.sum(parts[2])
     denom = flex.sum(all_value)
     centroid = row(( sum_weighted[0] / denom, sum_weighted[1] / denom, sum_weighted[2] / denom))
-    result_store[sc.label]=dict(site=sc_site_ortho, peak=max_ortho, centroid=centroid)
+    result_store[sc.label]=dict(site=sc_site_ortho, peak=max_ortho, centroid=centroid, map_value=map_value, element=sc.element_symbol())
     print( " site_vs_peak %4.2fÅ"%(sc_site_ortho - max_ortho).length(),
            " site_vs_centroid %4.2fÅ"%(sc_site_ortho - centroid).length(),
            " peak_vs_centroid %4.2fÅ"%(max_ortho - centroid).length(),
          )
   print()
+
+  print("============= BEGIN PDB SECTION ==============")
+  print("REMARK   3      HETATM records giving the anomalous peak coordinates.")
+  print("REMARK   3      Bfactor is populated with the value 100./peak height in sigmas.")
+  p = UC.parameters(); sgi = xray_structure.space_group_info()
+  print(f"CRYST1{p[0]:9.3f}{p[1]:9.3f}{p[2]:9.3f}{p[3]:7.2f}{p[4]:7.2f}{p[5]:7.2f}",sgi)
+  f = UC.fractionalization_matrix()
+  print("SCALE1    %10.6f%10.6f%10.6f        0.00000"%f[0:3])
+  print("SCALE2    %10.6f%10.6f%10.6f        0.00000"%f[3:6])
+  print("SCALE3    %10.6f%10.6f%10.6f        0.00000"%f[6:9])
+  for ikey,key in enumerate(result_store):
+    print("HETATM%5d"%(1+ikey),key.split('"')[1],
+          "  ","%8.3f%8.3f%8.3f"%result_store[key]["peak"].elems," 1.00",
+          "%5.2f"%(100./result_store[key]["map_value"]),"%11s"%(result_store[key]["element"]))
+  print("TER")
+  print("END")
+  print("=============   END PDB SECTION ==============")
 
   from tabulate import tabulate
   data = []
